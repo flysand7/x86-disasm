@@ -1,0 +1,17 @@
+
+# Ignore all extensionless files.
+*
+!*.*
+!*/
+
+# Except the following:
+!justfile
+
+# Testing
+temp/
+test/
+
+# Editor-specific
+/ols.json
+/.vscode
+
