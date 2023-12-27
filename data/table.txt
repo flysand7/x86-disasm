@@ -1,0 +1,8 @@
+
+# Comments allowed btw
+mov 100010 d w : mod rx rm
+mov 1100011  w : 11 000 rx imm
+mov 1011 w rx  : imm
+mov 1100011 w  : mod 000 rm
+mov 1010000 w  : rega disp
+
