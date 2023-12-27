@@ -197,9 +197,12 @@ disasm :: proc(bytes: []u8) {
     bytes := bytes
     for {
         if !disasm_inst(&ctx) {
-            fmt.printf("bad byte: %02x\n", ctx.last_byte)
+            if len(ctx.bytes) > 0 {
+                fmt.printf("bad byte: %02x\n", ctx.last_byte)
+            }
             break
         }
+        ctx.inst_bits = ctx.cpu_bits
     }
 }
 
