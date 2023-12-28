@@ -20,7 +20,7 @@ Reg :: struct {
 Mem_Operand :: struct {
     base:  Reg,
     index: Reg,
-    disp:  i32,
+    disp:  i32 `fmt:"x"`,
     scale: u8,
 }
 

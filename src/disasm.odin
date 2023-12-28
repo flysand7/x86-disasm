@@ -4,6 +4,7 @@ import "core:fmt"
 
 Disasm_Ctx :: struct {
     bytes:      []u8,
+    offset:     int,
     // CPU settings
     cpu_bits:   u8,
     // Instruction ctx
@@ -14,21 +15,23 @@ Disasm_Ctx :: struct {
 }
 
 read_u8 :: proc(ctx: ^Disasm_Ctx) -> (u8, bool) {
-    assert(ctx.bits_offs % 8 == 0)
-    if len(ctx.bytes) >= 1 {
-        b := ctx.bytes[0]
-        ctx.bytes = ctx.bytes[1:]
+    assert(ctx.bits_offs == 0)
+    if len(ctx.bytes) - ctx.offset >= 1 {
+        b := ctx.bytes[ctx.offset]
+        ctx.last_byte = ctx.bytes[ctx.offset]
+        ctx.offset += 1
         return b, true
     }
     return 0, false
 }
 
 read_u16 :: proc(ctx: ^Disasm_Ctx) -> (u16, bool) {
-    assert(ctx.bits_offs % 8 == 0)
-    if len(ctx.bytes) >= 2 {
-        lo := cast(u16) ctx.bytes[0]
-        hi := cast(u16) ctx.bytes[1]
-        ctx.bytes = ctx.bytes[2:]
+    assert(ctx.bits_offs == 0)
+    if len(ctx.bytes) - ctx.offset >= 2 {
+        lo := cast(u16) ctx.bytes[ctx.offset+0]
+        hi := cast(u16) ctx.bytes[ctx.offset+1]
+        ctx.last_byte = ctx.bytes[ctx.offset+0]
+        ctx.offset += 2
         return lo | (hi<<8), true
     }
     return 0, false
@@ -82,12 +85,10 @@ make_mem :: proc(base: Reg, index: Reg = {}, scale := u8(1), disp := i32(0)) -> 
 }
 
 parse_modrm :: proc(ctx: ^Disasm_Ctx, modrm: u8) -> (op1: Operand, op2: Operand, ok: bool) {
-   
     mod := modrm >> 6
     rx := (modrm >> 3) & 0x7
     rm := (modrm) & 0x7
     assert(ctx.inst_bits == 16)
-    
     return nil, nil, false
 }
 
@@ -194,10 +195,9 @@ disasm :: proc(bytes: []u8) {
         cpu_bits  = 16,
         inst_bits = 16,
     }
-    bytes := bytes
     for {
         if !disasm_inst(&ctx) {
-            if len(ctx.bytes) > 0 {
+            if len(ctx.bytes) - ctx.offset > 0 {
                 fmt.printf("bad byte: %02x\n", ctx.last_byte)
             }
             break
