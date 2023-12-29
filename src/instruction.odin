@@ -39,11 +39,19 @@ Operand :: union {
     Mem_Operand,
 }
 
+Inst_Flags :: bit_set[enum{
+    Rep,
+    Repnz,
+    Lock,
+    Bnd,
+}]
+
 Inst :: struct {
     opcode:         string,
     seg_override:   Sreg,
     operands:       [4]Operand,
     operands_count: int,
+    flags:          Inst_Flags,
 }
 
 add_operand :: proc(inst: ^Inst, operand: Operand) {

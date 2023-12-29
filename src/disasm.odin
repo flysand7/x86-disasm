@@ -8,8 +8,12 @@ Disasm_Ctx :: struct {
     // CPU settings
     cpu_bits:   u8,
     // Instruction ctx
-    inst_bits:  u8,
+    data_bits:  u8,
+    addr_bits:  u8,
     seg_override: Sreg,
+    lock:       bool,
+    repnz:      bool,
+    rep_or_bnd: bool,
     // Bit reading
     bits_offs:  u8,
 }
@@ -111,7 +115,7 @@ parse_modrm :: proc(ctx: ^Disasm_Ctx, modrm: u8) -> (op1: Operand, op2: Operand,
     mod := modrm >> 6
     rx := (modrm >> 3) & 0x7
     rm := (modrm) & 0x7
-    assert(ctx.inst_bits == 16)
+    assert(ctx.data_bits == 16)
     return nil, nil, false
 }
 
@@ -120,6 +124,7 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
     has_fields: [Tab_Field]bool
     disp: i32 = 0
     imm:  i64 = 0
+
     for mask in encoding.masks {
         switch m in mask {
         case Tab_Bits:
@@ -145,21 +150,37 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
             }
         }
     }
+
     inst := Inst {
         opcode = encoding.name,
         seg_override = ctx.seg_override,
     }
+    if ctx.lock {
+        inst.flags |= {.Lock}
+    }
+    if ctx.repnz {
+        inst.flags |= {.Repnz}
+    }
+    if ctx.rep_or_bnd {
+        switch inst.opcode {
+            case "call": fallthrough
+            case "ret":  fallthrough
+            case "jmp":  inst.flags |= {.Bnd}
+            case: inst.flags |= {.Rep}
+        }
+    }
+
     if has_fields[.Rx] {
-        add_operand(&inst, make_reg(fields[.Rx], ctx.inst_bits))
+        add_operand(&inst, make_reg(fields[.Rx], ctx.data_bits))
     }
     if has_fields[.Rega] {
-        add_operand(&inst, make_reg(0, ctx.inst_bits))
+        add_operand(&inst, make_reg(0, ctx.data_bits))
     }
     if has_fields[.Rm] {
         assert(has_fields[.Mod])
         mod := fields[.Mod]
         rm := fields[.Rm]
-        if ctx.inst_bits == 16 {
+        if ctx.addr_bits == 16 {
             base_regs: [8]struct{base: Reg, index: Reg} = {
                 {base = {.Bx, 16}, index = {.Si,  16}},
                 {base = {.Bx, 16}, index = {.Di,  16}},
@@ -175,7 +196,7 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
             index := pair.index
             disp: i32 = 0
             if mod == 0b11 {
-                add_operand(&inst, make_reg(rm, ctx.inst_bits))
+                add_operand(&inst, make_reg(rm, ctx.data_bits))
             } else {
                 if mod == 0b01 {
                     disp = cast(i32) pop_u8(ctx) or_return
@@ -188,27 +209,82 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
                 }
                 add_operand(&inst, make_mem(base = base, index = index, disp = disp))
             }
+        } else if ctx.addr_bits == 32 {
+            unimplemented("32-bit addressing not implemented")
         } else {
-            panic("Unhandled instruction bits")
+            panic("Bad addr bits")
         }
     } else if has_fields[.Disp] {
         add_operand(&inst, make_mem(base = {}, index = {}, scale = 1, disp = disp))
     }
+
     print_inst(inst)
     return true, true
 }
 
 disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
-    switch peek_u8(ctx) or_return {
-        case 0x2e: ctx.seg_override = .Cs
-        case 0x36: ctx.seg_override = .Ss
-        case 0x3e: ctx.seg_override = .Ds
-        case 0x26: ctx.seg_override = .Es
-        case 0x64: ctx.seg_override = .Fs
-        case 0x65: ctx.seg_override = .Gs
-    }
-    if ctx.seg_override != nil {
-        pop_u8(ctx) or_return
+    Prefix_Group :: bit_set[enum{
+        Gr1,
+        Gr2,
+        Gr3,
+        Gr4,
+    }]
+    groups := Prefix_Group {}
+    for !(groups == ~{}) {
+        delta  := Prefix_Group {}
+        if .Gr1 not_in groups {
+            delta += {.Gr1}
+            switch peek_u8(ctx) or_return {
+                case 0xf0: ctx.lock = true
+                case 0xf2: ctx.repnz = true
+                case 0xf3: ctx.rep_or_bnd = true
+                case: delta -= {.Gr1}
+            }
+        }
+        if .Gr2 not_in groups {
+            switch peek_u8(ctx) or_return {
+                case 0x2e: ctx.seg_override = .Cs
+                case 0x36: ctx.seg_override = .Ss
+                case 0x3e: ctx.seg_override = .Ds
+                case 0x26: ctx.seg_override = .Es
+                case 0x64: ctx.seg_override = .Fs
+                case 0x65: ctx.seg_override = .Gs
+            }
+            if ctx.seg_override != nil {
+                delta += {.Gr2}
+            } else {
+                switch peek_u8(ctx) or_return {
+                    case 0x2e: fallthrough
+                    case 0x3e: delta += {.Gr2}
+                }
+            }
+        }
+        if .Gr3 not_in groups {
+            if (peek_u8(ctx) or_return) == 0x66 {
+                delta += {.Gr3}
+                if ctx.cpu_bits == 16 {
+                    ctx.data_bits = 32
+                } else {
+                    ctx.data_bits = 16
+                }
+            }
+        }
+        if .Gr4 not_in groups {
+            if (peek_u8(ctx) or_return) == 0x67 {
+                delta += {.Gr4}
+                if ctx.cpu_bits == 16 {
+                    ctx.addr_bits = 32
+                } else {
+                    ctx.addr_bits = 16
+                }
+            }
+        }
+        if delta != nil {
+            pop_u8(ctx) or_return
+            groups |= delta
+        } else {
+            break
+        }
     }
     for enc in decode_table {
         if match_bits(ctx, enc.opcode) or_continue {
@@ -223,17 +299,21 @@ disasm :: proc(bytes: []u8) {
     ctx := Disasm_Ctx {
         bytes = bytes,
         cpu_bits  = 16,
-        inst_bits = 16,
+        data_bits = 16,
     }
     for {
+        ctx.data_bits = ctx.cpu_bits
+        ctx.addr_bits = ctx.cpu_bits
+        ctx.seg_override = nil
+        ctx.lock = false
+        ctx.repnz = false
+        ctx.rep_or_bnd = false
         if !disasm_inst(&ctx) {
             if len(ctx.bytes) - ctx.offset > 0 {
                 fmt.printf("bad byte: %02x\n", peek_u8(&ctx))
             }
             break
         }
-        ctx.inst_bits = ctx.cpu_bits
-        ctx.seg_override = nil
     }
 }
 
@@ -314,6 +394,15 @@ reg_name :: proc(reg: Reg) -> string {
 }
 
 print_inst :: proc(inst: Inst) {
+    if .Lock in inst.flags {
+        fmt.printf("lock ")
+    }
+    if .Rep in inst.flags {
+        fmt.printf("rep ")
+    }
+    if .Repnz in inst.flags {
+        fmt.printf("repnz ")
+    }
     fmt.printf("%s", inst.opcode)
     for i in 0 ..< inst.operands_count {
         fmt.printf(i != 0? ", " : " ")
@@ -333,7 +422,13 @@ print_inst :: proc(inst: Inst) {
                     fmt.printf("%s%d*%s", has_before?"+":"", op.scale, reg_name(op.index))
                 }
                 if op.disp != 0 {
-                    fmt.printf("%04x", op.disp)
+                    sign := '+'
+                    disp := op.disp
+                    if op.disp < 0 {
+                        sign = '-'
+                        disp = -op.disp
+                    }
+                    fmt.printf("%c0x%02x", sign, disp)
                 }
                 fmt.printf("]")
             case Reg:
