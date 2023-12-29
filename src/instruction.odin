@@ -17,6 +17,16 @@ Reg :: struct {
     bits: u8,
 }
 
+Sreg :: enum {
+    None,
+    Cs,
+    Ss,
+    Ds,
+    Es,
+    Fs,
+    Gs,
+}
+
 Mem_Operand :: struct {
     base:  Reg,
     index: Reg,
@@ -31,6 +41,7 @@ Operand :: union {
 
 Inst :: struct {
     opcode:         string,
+    seg_override:   Sreg,
     operands:       [4]Operand,
     operands_count: int,
 }
