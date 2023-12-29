@@ -58,6 +58,20 @@ pop_u16 :: proc(ctx: ^Disasm_Ctx) -> (u16, bool) {
     return 0, false
 }
 
+pop_u32 :: proc(ctx: ^Disasm_Ctx) -> (u32, bool) {
+    assert(ctx.bits_offs % 8 == 0)
+    if len(ctx.bytes) - ctx.offset >= 4 {
+        b0 := ctx.bytes[ctx.offset+0]
+        b1 := ctx.bytes[ctx.offset+1]
+        b2 := ctx.bytes[ctx.offset+2]
+        b3 := ctx.bytes[ctx.offset+3]
+        ctx.bits_offs = 8
+        ctx.offset += 4
+        return u32(b0) | u32(b1)<<8 | u32(b2)<<16 | u32(b3)<<24, true
+    }
+    return 0, false
+}
+
 read_bits :: proc(ctx: ^Disasm_Ctx, count: u8) -> (bits: u8, ok: bool) {
     assert(count <= 8)
     assert(ctx.bits_offs >= count)
@@ -117,6 +131,81 @@ parse_modrm :: proc(ctx: ^Disasm_Ctx, modrm: u8) -> (op1: Operand, op2: Operand,
     rm := (modrm) & 0x7
     assert(ctx.data_bits == 16)
     return nil, nil, false
+}
+
+add_modrm_addr16 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok: bool) {
+    base_regs: [8]struct{base: Reg, index: Reg} = {
+        {base = {.Bx, 16}, index = {.Si,  16}},
+        {base = {.Bx, 16}, index = {.Di,  16}},
+        {base = {.Bp, 16}, index = {.Si,  16}},
+        {base = {.Bp, 16}, index = {.Di,  16}},
+        {base = {.Si, 16}, index = {.None, 0}},
+        {base = {.Di, 16}, index = {.None, 0}},
+        {base = {.Bp, 16}, index = {.None, 0}},
+        {base = {.Bx, 16}, index = {.None, 0}},
+    }
+    pair := base_regs[rm]
+    base := pair.base
+    index := pair.index
+    disp := i32(0)
+    if mod == 0b11 {
+        add_operand(inst, make_reg(rm, 16))
+    } else {
+        if mod == 0b01 {
+            disp = cast(i32) pop_u8(ctx) or_return
+        } else if (mod == 0b00 && rm == 0b110) || mod == 0b10 {
+            disp = cast(i32) pop_u16(ctx) or_return
+            if mod == 0b00 && rm == 0b110 {
+                index = {}
+                base  = {}
+            }
+        }
+        add_operand(inst, make_mem(base = base, index = index, disp = disp))
+    }
+    return true
+}
+
+add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok: bool) {
+    if mod == 0b00 && rm == 0b101 {
+        add_operand(inst, Mem_Operand {
+            disp = cast(i32) pop_u32(ctx) or_return,
+        })
+        return true
+    }
+    disp := i32(0)
+    base := Reg {}
+    index := Reg {}
+    scale := u8(0)
+    if rm == 0b100 {
+        sib := pop_u8(ctx) or_return
+        ss := sib >> 6
+        si := (sib >> 3) & 0x7
+        sb := sib & 0x7
+        if sb == 0b101 && (mod == 0b01 || mod == 0b10) {
+            base = {
+                idx = .Bp,
+                bits = 32,
+            }
+        } else {
+            base = make_reg(sb, 32)
+        }
+        scale = 1<<ss
+        index = make_reg(si, 32)
+    } else {
+        base = make_reg(rm, 32)
+    }
+    if mod == 0b01 {
+        disp = cast(i32) pop_u8(ctx) or_return
+    } else if mod == 0b10 {
+        disp = cast(i32) pop_u32(ctx) or_return
+    }
+    add_operand(inst, Mem_Operand {
+        base = base,
+        index = index,
+        scale = scale,
+        disp = disp,
+    })
+    return true
 }
 
 decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok: bool) {
@@ -181,36 +270,9 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
         mod := fields[.Mod]
         rm := fields[.Rm]
         if ctx.addr_bits == 16 {
-            base_regs: [8]struct{base: Reg, index: Reg} = {
-                {base = {.Bx, 16}, index = {.Si,  16}},
-                {base = {.Bx, 16}, index = {.Di,  16}},
-                {base = {.Bp, 16}, index = {.Si,  16}},
-                {base = {.Bp, 16}, index = {.Di,  16}},
-                {base = {.Si, 16}, index = {.None, 0}},
-                {base = {.Di, 16}, index = {.None, 0}},
-                {base = {.Bp, 16}, index = {.None, 0}},
-                {base = {.Bx, 16}, index = {.None, 0}},
-            }
-            pair := base_regs[rm]
-            base := pair.base
-            index := pair.index
-            disp: i32 = 0
-            if mod == 0b11 {
-                add_operand(&inst, make_reg(rm, ctx.data_bits))
-            } else {
-                if mod == 0b01 {
-                    disp = cast(i32) pop_u8(ctx) or_return
-                } else if (mod == 0b00 && rm == 0b110) || mod == 0b10 {
-                    disp = cast(i32) pop_u16(ctx) or_return
-                    if mod == 0b00 && rm == 0b110 {
-                        index = {}
-                        base  = {}
-                    }
-                }
-                add_operand(&inst, make_mem(base = base, index = index, disp = disp))
-            }
+            add_modrm_addr16(ctx, &inst, mod, rm)
         } else if ctx.addr_bits == 32 {
-            unimplemented("32-bit addressing not implemented")
+            add_modrm_addr32(ctx, &inst, mod, rm)
         } else {
             panic("Bad addr bits")
         }
