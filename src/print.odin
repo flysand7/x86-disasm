@@ -241,6 +241,8 @@ print_inst :: proc(inst: Inst) {
                 fmt.printf("]")
             case Reg:
                 fmt.printf("%s", reg_name(op))
+            case Sreg:
+                fmt.printf("%s", sreg_name(op))
             case Creg_Idx:
                 fmt.printf("%s", creg_name(op))
             case Dreg_Idx:

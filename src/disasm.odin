@@ -356,8 +356,14 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
         assert(fields.bits[.Eee] < cast(u8) max(Creg_Idx))
         add_operand(&inst, cast(Creg_Idx) fields.bits[.Eee])
     } else if fields.has[.Ddd] {
-        assert(fields.bits[.Ddd] < cast(u8) max(Dreg_Idx))
-        add_operand(&inst, cast(Dreg_Idx) fields.bits[.Eee])
+        assert(fields.bits[.Eee] < cast(u8) max(Dreg_Idx))
+        add_operand(&inst, cast(Dreg_Idx) fields.bits[.Ddd])
+    } else if fields.has[.Sr2] {
+        assert(fields.bits[.Sr2] < cast(u8) max(Sreg))
+        add_operand(&inst, make_sreg(fields.bits[.Sr2]))
+    } else if fields.has[.Sr3] {
+        assert(fields.bits[.Sr3] < cast(u8) max(Sreg))
+        add_operand(&inst, make_sreg(fields.bits[.Sr3]))
     }
     if fields.has[.Reg] {
         add_operand(&inst, make_reg(

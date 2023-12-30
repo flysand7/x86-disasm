@@ -98,6 +98,7 @@ Operand :: union {
     Imm_Operand,
     Creg_Idx,
     Dreg_Idx,
+    Sreg,
 }
 
 Inst_Flags :: bit_set[enum{

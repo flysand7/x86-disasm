@@ -18,6 +18,8 @@ Tab_Field :: enum {
     Reg,
     Eee,
     Ddd,
+    Sr2,
+    Sr3,
     // Modrm
     Mod,
     Moda,
@@ -58,6 +60,8 @@ field_widths := [Tab_Field]u8 {
     .Eee   = 3,
     .Ddd   = 3,
     .Tttn  = 4,
+    .Sr2   = 2,
+    .Sr3   = 3,
     .Mod   = 2,
     .Moda  = 2,
     .Modb  = 2,

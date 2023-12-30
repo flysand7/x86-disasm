@@ -23,6 +23,8 @@
 # reg - 3-bit opcode reg field.
 # eee - 3-bit control register field.
 # ddd - 3-bit debug register field.
+# sr3 - 3-bit segment register field (includes GS and FS)
+# sr2 - 2-bit segment register field (doesn't include GS and FS)
 
 # Mod/RM encoding
 # ------------------------------------------------------------------- #
@@ -188,3 +190,6 @@ mov     00001111 : 00100000 : -- eee reg : _64 _d0
 
 mov     00001111 : 00100011 : -- ddd reg : _64
 mov     00001111 : 00100001 : -- ddd reg : _64 _d0
+
+mov     10001110 : mod sr3 rm
+mov     10001100 : mod sr3 rm : _d0
