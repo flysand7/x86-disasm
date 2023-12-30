@@ -10,11 +10,14 @@ Reg_Idx :: enum u8 {
     Bp,
     Si,
     Di,
-}
-
-Reg :: struct {
-    idx:  Reg_Idx,
-    bits: u8,
+    R8,
+    R9,
+    R10,
+    R11,
+    R12,
+    R13,
+    R14,
+    R15,
 }
 
 Sreg :: enum {
@@ -27,6 +30,15 @@ Sreg :: enum {
     Gs,
 }
 
+Reg :: struct {
+    idx:  Reg_Idx,
+    bits: u8,
+}
+
+Imm_Operand :: struct {
+    value: i64,
+}
+
 Mem_Operand :: struct {
     base:  Reg,
     index: Reg,
@@ -37,6 +49,7 @@ Mem_Operand :: struct {
 Operand :: union {
     Reg,
     Mem_Operand,
+    Imm_Operand,
 }
 
 Inst_Flags :: bit_set[enum{

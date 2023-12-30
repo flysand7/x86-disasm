@@ -8,6 +8,7 @@ Disasm_Ctx :: struct {
     // CPU settings
     cpu_bits:   u8,
     // Instruction ctx
+    rex:        u8,
     data_bits:  u8,
     addr_bits:  u8,
     seg_override: Sreg,
@@ -49,11 +50,10 @@ match_u8 :: proc(ctx: ^Disasm_Ctx, b: u8) -> (bool) {
 pop_u16 :: proc(ctx: ^Disasm_Ctx) -> (u16, bool) {
     assert(ctx.bits_offs % 8 == 0)
     if len(ctx.bytes) - ctx.offset >= 2 {
-        lo := ctx.bytes[ctx.offset+0]
-        hi := ctx.bytes[ctx.offset+1]
+        v := cast(u16) (cast(^u16le) &ctx.bytes[ctx.offset])^
         ctx.bits_offs = 8
         ctx.offset += 2
-        return u16(lo) | (u16(hi)<<8), true
+        return v, true
     }
     return 0, false
 }
@@ -61,13 +61,21 @@ pop_u16 :: proc(ctx: ^Disasm_Ctx) -> (u16, bool) {
 pop_u32 :: proc(ctx: ^Disasm_Ctx) -> (u32, bool) {
     assert(ctx.bits_offs % 8 == 0)
     if len(ctx.bytes) - ctx.offset >= 4 {
-        b0 := ctx.bytes[ctx.offset+0]
-        b1 := ctx.bytes[ctx.offset+1]
-        b2 := ctx.bytes[ctx.offset+2]
-        b3 := ctx.bytes[ctx.offset+3]
+        v := cast(u32) (cast(^u32le) &ctx.bytes[ctx.offset])^
         ctx.bits_offs = 8
         ctx.offset += 4
-        return u32(b0) | u32(b1)<<8 | u32(b2)<<16 | u32(b3)<<24, true
+        return v, true
+    }
+    return 0, false
+}
+
+pop_u64 :: proc(ctx: ^Disasm_Ctx) -> (u64, bool) {
+    assert(ctx.bits_offs % 8 == 0)
+    if len(ctx.bytes) - ctx.offset >= 8 {
+        v := cast(u64) (cast(^u64le) &ctx.bytes[ctx.offset])^
+        ctx.bits_offs = 8
+        ctx.offset += 8
+        return v, true
     }
     return 0, false
 }
@@ -125,6 +133,18 @@ make_sreg :: proc(idx: u8) -> Sreg {
     return cast(Sreg) (idx + 1)
 }
 
+rex_extend_b :: #force_inline proc(rex: u8, value: u8) -> u8 {
+    return (rex & 0b0001) << 3 | value
+}
+
+rex_extend_i :: #force_inline proc(rex: u8, value: u8) -> u8 {
+    return (rex & 0b0010) << 2 | value
+}
+
+rex_extend_r :: #force_inline proc(rex: u8, value: u8) -> u8 {
+    return (rex & 0b0100) << 1 | value
+}
+
 parse_modrm :: proc(ctx: ^Disasm_Ctx, modrm: u8) -> (op1: Operand, op2: Operand, ok: bool) {
     mod := modrm >> 6
     rx := (modrm >> 3) & 0x7
@@ -172,6 +192,10 @@ add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok:
         })
         return true
     }
+    if mod == 0b11 {
+        add_operand(inst, make_reg(rex_extend_b(ctx.rex, rm), ctx.data_bits))
+        return true
+    }
     disp := i32(0)
     base := Reg {}
     index := Reg {}
@@ -184,15 +208,15 @@ add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok:
         if sb == 0b101 && (mod == 0b01 || mod == 0b10) {
             base = {
                 idx = .Bp,
-                bits = 32,
+                bits = ctx.addr_bits,
             }
         } else {
-            base = make_reg(sb, 32)
+            base = make_reg(rex_extend_b(ctx.rex, sb), ctx.addr_bits)
         }
         scale = 1<<ss
-        index = make_reg(si, 32)
+        index = make_reg(rex_extend_i(ctx.rex, si), ctx.addr_bits)
     } else {
-        base = make_reg(rm, 32)
+        base = make_reg(rex_extend_b(ctx.rex, rm), ctx.addr_bits)
     }
     if mod == 0b01 {
         disp = cast(i32) pop_u8(ctx) or_return
@@ -228,7 +252,13 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
                 if m == .Disp {
                     disp = cast(i32) pop_u16(ctx) or_return
                 } else if m == .Imm {
-                    disp = cast(i32) pop_u16(ctx) or_return
+                    if ctx.data_bits == 16 {
+                        imm  = cast(i64) pop_u16(ctx) or_return
+                    } else if ctx.data_bits == 32 {
+                        imm  = cast(i64) pop_u32(ctx) or_return
+                    } else if ctx.data_bits == 64 {
+                        imm  = cast(i64) pop_u64(ctx) or_return
+                    }
                 } else if m == .Rega {
                     // No associated data
                 } else {
@@ -260,7 +290,10 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
     }
 
     if has_fields[.Rx] {
-        add_operand(&inst, make_reg(fields[.Rx], ctx.data_bits))
+        add_operand(&inst, make_reg(rex_extend_r(ctx.rex, fields[.Rx]), ctx.data_bits))
+    }
+    if has_fields[.Reg] {
+        add_operand(&inst, make_reg(rex_extend_b(ctx.rex, fields[.Reg]), ctx.data_bits))
     }
     if has_fields[.Rega] {
         add_operand(&inst, make_reg(0, ctx.data_bits))
@@ -271,13 +304,17 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
         rm := fields[.Rm]
         if ctx.addr_bits == 16 {
             add_modrm_addr16(ctx, &inst, mod, rm)
-        } else if ctx.addr_bits == 32 {
+        } else if ctx.addr_bits == 32 || ctx.addr_bits == 64 {
             add_modrm_addr32(ctx, &inst, mod, rm)
         } else {
             panic("Bad addr bits")
         }
     } else if has_fields[.Disp] {
         add_operand(&inst, make_mem(base = {}, index = {}, scale = 1, disp = disp))
+    } else if has_fields[.Imm] {
+        add_operand(&inst, Imm_Operand {
+            value = imm,
+        })
     }
 
     print_inst(inst)
@@ -292,6 +329,8 @@ disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
         Gr4,
     }]
     groups := Prefix_Group {}
+    addr_size_override := false
+    data_size_override := false
     for !(groups == ~{}) {
         delta  := Prefix_Group {}
         if .Gr1 not_in groups {
@@ -324,21 +363,13 @@ disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
         if .Gr3 not_in groups {
             if (peek_u8(ctx) or_return) == 0x66 {
                 delta += {.Gr3}
-                if ctx.cpu_bits == 16 {
-                    ctx.data_bits = 32
-                } else {
-                    ctx.data_bits = 16
-                }
+                data_size_override = true
             }
         }
         if .Gr4 not_in groups {
             if (peek_u8(ctx) or_return) == 0x67 {
                 delta += {.Gr4}
-                if ctx.cpu_bits == 16 {
-                    ctx.addr_bits = 32
-                } else {
-                    ctx.addr_bits = 16
-                }
+                addr_size_override = true
             }
         }
         if delta != nil {
@@ -346,6 +377,30 @@ disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
             groups |= delta
         } else {
             break
+        }
+    }
+    if (peek_u8(ctx) or_return) & 0xf0 == 0x40 {
+        ctx.rex = pop_u8(ctx) or_return
+    }
+    if ctx.rex & 0b1000 == 0b1000 {
+        if addr_size_override {
+           ctx.addr_bits = 32 
+        }
+        ctx.data_bits = 64
+    } else {
+        if data_size_override {
+            if ctx.data_bits == 16 {
+                ctx.data_bits = 32
+            } else if ctx.data_bits == 32 {
+                ctx.data_bits = 16
+            }
+        }
+        if addr_size_override {
+            if ctx.addr_bits == 16 || ctx.addr_bits == 64 {
+                ctx.addr_bits = 32
+            } else if ctx.addr_bits == 32 {
+                ctx.addr_bits = 16
+            }
         }
     }
     for enc in decode_table {
@@ -357,22 +412,23 @@ disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
     return false
 }
 
-disasm :: proc(bytes: []u8) {
+disasm :: proc(bytes: []u8, default_bits := u8(64)) {
     ctx := Disasm_Ctx {
         bytes = bytes,
-        cpu_bits  = 16,
-        data_bits = 16,
+        cpu_bits  = default_bits,
     }
     for {
-        ctx.data_bits = ctx.cpu_bits
+        ctx.data_bits = ctx.cpu_bits == 64? 32 : ctx.cpu_bits
         ctx.addr_bits = ctx.cpu_bits
         ctx.seg_override = nil
         ctx.lock = false
         ctx.repnz = false
         ctx.rep_or_bnd = false
+        ctx.rex = 0
         if !disasm_inst(&ctx) {
             if len(ctx.bytes) - ctx.offset > 0 {
-                fmt.printf("bad byte: %02x\n", peek_u8(&ctx))
+                b, _ := peek_u8(&ctx)
+                fmt.printf("bad byte: %02x\n", b)
             }
             break
         }
@@ -439,9 +495,9 @@ reg_name :: proc(reg: Reg) -> string {
             }
         case .Sp:
             switch reg.bits {
-                case 16: return "sp"
-                case 32: return "esp"
-                case 64: return "rsp"
+                case 16: return "si"
+                case 32: return "esi"
+                case 64: return "rsi"
                 case: unreachable()
             }
         case .Bp:
@@ -449,6 +505,54 @@ reg_name :: proc(reg: Reg) -> string {
                 case 16: return "bp"
                 case 32: return "ebp"
                 case 64: return "rbp"
+                case: unreachable()
+            }
+        case .R8:
+            switch reg.bits {
+                case 32: return "r8d"
+                case 64: return "r8"
+                case: unreachable()
+            }
+        case .R9:
+            switch reg.bits {
+                case 32: return "r9d"
+                case 64: return "r9"
+                case: unreachable()
+            }
+        case .R10:
+            switch reg.bits {
+                case 32: return "r10d"
+                case 64: return "r10"
+                case: unreachable()
+            }
+        case .R11:
+            switch reg.bits {
+                case 32: return "r11d"
+                case 64: return "r11"
+                case: unreachable()
+            }
+        case .R12:
+            switch reg.bits {
+                case 32: return "r12d"
+                case 64: return "r12"
+                case: unreachable()
+            }
+        case .R13:
+            switch reg.bits {
+                case 32: return "r13d"
+                case 64: return "r13"
+                case: unreachable()
+            }
+        case .R14:
+            switch reg.bits {
+                case 32: return "r14d"
+                case 64: return "r14"
+                case: unreachable()
+            }
+        case .R15:
+            switch reg.bits {
+                case 32: return "r15d"
+                case 64: return "r15"
                 case: unreachable()
             }
         case: unreachable()
@@ -495,6 +599,8 @@ print_inst :: proc(inst: Inst) {
                 fmt.printf("]")
             case Reg:
                 fmt.printf("%s", reg_name(op))
+            case Imm_Operand:
+                fmt.printf("%08x", op.value)
         }
     }
     fmt.printf("\n")
