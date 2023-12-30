@@ -307,7 +307,10 @@ match_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, mask: Tab_Mask) -> (
 decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok: bool) {
     fields := Inst_Fields {}
     for mask in encoding.masks {
-        match_field(ctx, &fields, mask) or_return
+        matched := match_field(ctx, &fields, mask) or_return
+        if !matched {
+            return false, true
+        }
     }
     inst := Inst {
         opcode = encoding.name,
@@ -454,7 +457,7 @@ disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
     }
     if ctx.rex & 0b1000 == 0b1000 {
         if addr_size_override {
-           ctx.addr_bits = 32 
+           ctx.addr_bits = 32
         }
         ctx.data_bits = 64
     } else {
@@ -473,10 +476,15 @@ disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
             }
         }
     }
+    saved_offset := ctx.offset
     for enc in decode_table {
+        ctx.offset    = saved_offset
+        ctx.bits_offs = 8
         if match_bits(ctx, enc.opcode) or_continue {
-            decode_inst(ctx, enc) or_return or_continue
-            return true
+            matched := decode_inst(ctx, enc) or_return
+            if matched {
+                return true
+            }
         }
     }
     return false
