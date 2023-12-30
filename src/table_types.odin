@@ -33,6 +33,7 @@ Tab_Field :: enum {
     // Implicit fields
     Rega,
     _d0,
+    _64,
 }
 
 Tab_Mask :: union {
@@ -67,5 +68,6 @@ field_widths := [Tab_Field]u8 {
     .Disp  = 0,
     .Disp8 = 0,
     .Rega  = 0,
-    ._d0    = 0,
+    ._d0   = 0,
+    ._64   = 0,
 }

@@ -291,6 +291,8 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
         case ._d0:
             fields.has[.D] = true
             fields.bits[.D] = 0
+        case ._64:
+            ctx.data_bits = 64
         case:
             panic("Unhandled zero-sized field")
     }

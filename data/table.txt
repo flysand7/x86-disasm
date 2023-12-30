@@ -39,6 +39,7 @@
 # 
 # rega - implicit AL/AX/EAX register.
 # _d0  - implicit d-bit with value 0.
+# _64  - implicit force 64-bit operand size.
 
 # "Immediate" Bytes
 # ------------------------------------------------------------------- #
@@ -181,6 +182,6 @@ mov     1011 w reg : imm
 mov     1100011  w : mod 000 rm
 mov     1010000  w : rega disp
 
-mov     00001111 : 00100010 : -- eee reg
-mov     00001111 : 00100000 : -- eee reg : _d0
+mov     00001111 : 00100010 : -- eee reg : _64
+mov     00001111 : 00100000 : -- eee reg : _64 _d0
 
