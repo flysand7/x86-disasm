@@ -16,9 +16,12 @@
 # ------------------------------------------------------------------- #
 # <binary number> - specifies a string of bits that must be matched
 # in the opcode exactly.
+# <dashes> - specifies a group of bits to be ignored. The number of
+# dashes specifies the number of bits to be ignored.
 # d - 1 bit direction bit.
 # w - 1 bit width bit.
 # reg - 3-bit opcode reg field.
+# eee - 3-bit control register field.
 
 # Mod/RM encoding
 # ------------------------------------------------------------------- #
@@ -35,6 +38,7 @@
 # information about what an opcode means.
 # 
 # rega - implicit AL/AX/EAX register.
+# _d0  - implicit d-bit with value 0.
 
 # "Immediate" Bytes
 # ------------------------------------------------------------------- #
@@ -176,3 +180,7 @@ mov     1100011  w : 11 000 rx imm
 mov     1011 w reg : imm
 mov     1100011  w : mod 000 rm
 mov     1010000  w : rega disp
+
+mov     00001111 : 00100010 : -- eee reg
+mov     00001111 : 00100000 : -- eee reg : _d0
+

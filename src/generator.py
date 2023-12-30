@@ -16,6 +16,9 @@ def write_split(file, split: str):
         split_bits = split
         split_len  = len(split)
         file.write(f'{2*TAB}Tab_Bits {{ 0b{split_bits}, {split_len} }},\n')
+    elif split[0] == '-':
+        ign_count = len(split)
+        file.write(f'{2*TAB}Ign_Bits {{ {ign_count} }},\n')
     else:
         split_enum = split[0].upper() + split[1:]
         file.write(f'{2*TAB}Tab_Field.{split_enum},\n')

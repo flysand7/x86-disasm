@@ -288,6 +288,9 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
             fields.sel = pop_u16(ctx) or_return
         case .Rega:
             // No associated data
+        case ._d0:
+            fields.has[.D] = true
+            fields.bits[.D] = 0
         case:
             panic("Unhandled zero-sized field")
     }
@@ -298,6 +301,9 @@ match_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, mask: Tab_Mask) -> (
     switch m in mask {
         case Tab_Bits:
             return match_bits(ctx, m)
+        case Ign_Bits:
+            _, ok := read_bits(ctx, m.count)
+            return true, ok
         case Tab_Field:
             return read_field(ctx, fields, m)
     }
@@ -368,6 +374,9 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
         } else {
             panic("Bad addr bits")
         }
+    } else if fields.has[.Eee] {
+        assert(fields.bits[.Eee] < cast(u8) max(Creg_Idx))
+        add_operand(&inst, cast(Creg_Idx) fields.bits[.Eee])
     }
 
     /*

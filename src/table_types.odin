@@ -5,6 +5,10 @@ Tab_Bits :: struct {
     count: u8,
 }
 
+Ign_Bits :: struct {
+    count: u8,
+}
+
 Tab_Field :: enum {
     // Opcode fields
     D,
@@ -12,6 +16,7 @@ Tab_Field :: enum {
     S,
     Tttn,
     Reg,
+    Eee,
     // Modrm
     Mod,
     Moda,
@@ -27,10 +32,12 @@ Tab_Field :: enum {
     Disp8,
     // Implicit fields
     Rega,
+    _d0,
 }
 
 Tab_Mask :: union {
     Tab_Bits,
+    Ign_Bits,
     Tab_Field,
 }
 
@@ -46,6 +53,7 @@ field_widths := [Tab_Field]u8 {
     .W     = 1,
     .S     = 1,
     .Reg   = 3,
+    .Eee   = 3,
     .Tttn  = 4,
     .Mod   = 2,
     .Moda  = 2,
@@ -59,4 +67,5 @@ field_widths := [Tab_Field]u8 {
     .Disp  = 0,
     .Disp8 = 0,
     .Rega  = 0,
+    ._d0    = 0,
 }

@@ -163,6 +163,20 @@ reg_name :: proc(reg: Reg) -> string {
     }
 }
 
+creg_name :: proc(creg: Creg_Idx) -> string {
+    switch creg {
+        case .Cr0: return "cr0"
+        case .Cr1: return "cr1"
+        case .Cr2: return "cr2"
+        case .Cr3: return "cr3"
+        case .Cr4: return "cr4"
+        case .Cr5: return "cr5"
+        case .Cr6: return "cr6"
+        case .Cr7: return "cr7"
+        case: unreachable()
+    }
+}
+
 print_inst :: proc(inst: Inst) {
     if .Lock in inst.flags {
         fmt.printf("lock ")
@@ -213,6 +227,8 @@ print_inst :: proc(inst: Inst) {
                 fmt.printf("]")
             case Reg:
                 fmt.printf("%s", reg_name(op))
+            case Creg_Idx:
+                fmt.printf("%s", creg_name(op))
             case Imm_Operand:
                 fmt.printf("%08x", op.value)
         }
