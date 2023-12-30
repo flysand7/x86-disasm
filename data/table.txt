@@ -250,5 +250,8 @@ rdtscp  00001111 : 00000001 : 11111001
 
 # TODO: rep prefix ones
 
+ret     11000011
+ret     11000010 : imm16
 
-
+ret     11001011
+ret     11001010 : imm16
