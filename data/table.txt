@@ -55,8 +55,7 @@
 # disp8 - 8-bit displacement from the next instruction
 # sel  - segment selector, a 2 byte value following disp.
 
-# General purpose instruction formats and encodings for non-64-bit
-# modes.
+# General purpose instruction formats and encodings.
 # ------------------------------------------------------------------- #
 aaa     00110111
 aad     11010101 : 00001010
