@@ -2,6 +2,8 @@ bits 64
 
 section .text
 main:
+    mov al, bh
+    mov r9b, r10b
     mov rax, rbx
     mov rbx, rcx
     mov [rsi], rax

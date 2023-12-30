@@ -288,6 +288,11 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
             case: inst.flags |= {.Rep}
         }
     }
+    if has_fields[.W] {
+        if fields[.W] == 0 {
+            ctx.data_bits = 8
+        }
+    }
 
     if has_fields[.Rx] {
         add_operand(&inst, make_reg(rex_extend_r(ctx.rex, fields[.Rx]), ctx.data_bits))
@@ -427,6 +432,7 @@ disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
 disasm :: proc(bytes: []u8, default_bits := u8(64)) {
     ctx := Disasm_Ctx {
         bytes = bytes,
+        bits_offs = 8,
         cpu_bits  = default_bits,
     }
     for {
@@ -465,6 +471,7 @@ reg_name :: proc(reg: Reg) -> string {
     #partial switch reg.idx {
         case .Ax:
             switch reg.bits {
+                case 8:  return "al"
                 case 16: return "ax"
                 case 32: return "eax"
                 case 64: return "rax"
@@ -472,6 +479,7 @@ reg_name :: proc(reg: Reg) -> string {
             }
         case .Cx:
             switch reg.bits {
+                case 8:  return "cl"
                 case 16: return "cx"
                 case 32: return "ecx"
                 case 64: return "rcx"
@@ -479,6 +487,7 @@ reg_name :: proc(reg: Reg) -> string {
             }
         case .Bx:
             switch reg.bits {
+                case 8:  return "bl"
                 case 16: return "bx"
                 case 32: return "ebx"
                 case 64: return "rbx"
@@ -486,6 +495,7 @@ reg_name :: proc(reg: Reg) -> string {
             }
         case .Dx:
             switch reg.bits {
+                case 8:  return "dl"
                 case 16: return "dx"
                 case 32: return "edx"
                 case 64: return "rdx"
@@ -493,6 +503,7 @@ reg_name :: proc(reg: Reg) -> string {
             }
         case .Di:
             switch reg.bits {
+                case 8:  return "ah"
                 case 16: return "di"
                 case 32: return "edi"
                 case 64: return "rdi"
@@ -500,6 +511,7 @@ reg_name :: proc(reg: Reg) -> string {
             }
         case .Si:
             switch reg.bits {
+                case 8:  return "ch"
                 case 16: return "sp"
                 case 32: return "esp"
                 case 64: return "rsp"
@@ -507,6 +519,7 @@ reg_name :: proc(reg: Reg) -> string {
             }
         case .Sp:
             switch reg.bits {
+                case 8:  return "dh"
                 case 16: return "si"
                 case 32: return "esi"
                 case 64: return "rsi"
@@ -514,6 +527,7 @@ reg_name :: proc(reg: Reg) -> string {
             }
         case .Bp:
             switch reg.bits {
+                case 8:  return "bh"
                 case 16: return "bp"
                 case 32: return "ebp"
                 case 64: return "rbp"
@@ -527,42 +541,49 @@ reg_name :: proc(reg: Reg) -> string {
             }
         case .R9:
             switch reg.bits {
+                case 8:  return "r9b"
                 case 32: return "r9d"
                 case 64: return "r9"
                 case: unreachable()
             }
         case .R10:
             switch reg.bits {
+                case 8:  return "r10b"
                 case 32: return "r10d"
                 case 64: return "r10"
                 case: unreachable()
             }
         case .R11:
             switch reg.bits {
+                case 8:  return "r11b"
                 case 32: return "r11d"
                 case 64: return "r11"
                 case: unreachable()
             }
         case .R12:
             switch reg.bits {
+                case 8:  return "r12b"
                 case 32: return "r12d"
                 case 64: return "r12"
                 case: unreachable()
             }
         case .R13:
             switch reg.bits {
+                case 8:  return "r13b"
                 case 32: return "r13d"
                 case 64: return "r13"
                 case: unreachable()
             }
         case .R14:
             switch reg.bits {
+                case 8:  return "r14b"
                 case 32: return "r14d"
                 case 64: return "r14"
                 case: unreachable()
             }
         case .R15:
             switch reg.bits {
+                case 8:  return "r15b"
                 case 32: return "r15d"
                 case 64: return "r15"
                 case: unreachable()
