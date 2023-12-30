@@ -352,6 +352,9 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
             rex_extend_r(ctx.rex, fields.bits[.Rx]),
             ctx.data_bits,
         ))
+    } else if fields.has[.Eee] {
+        assert(fields.bits[.Eee] < cast(u8) max(Creg_Idx))
+        add_operand(&inst, cast(Creg_Idx) fields.bits[.Eee])
     }
     if fields.has[.Reg] {
         add_operand(&inst, make_reg(
@@ -376,9 +379,6 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
         } else {
             panic("Bad addr bits")
         }
-    } else if fields.has[.Eee] {
-        assert(fields.bits[.Eee] < cast(u8) max(Creg_Idx))
-        add_operand(&inst, cast(Creg_Idx) fields.bits[.Eee])
     }
 
     /*
