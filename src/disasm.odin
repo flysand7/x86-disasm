@@ -309,9 +309,21 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
         } else {
             panic("Bad addr bits")
         }
-    } else if has_fields[.Disp] {
+    }
+
+    /*
+        At this point we only have reg / rm fields
+        So we can just swap the operands if d bit is reset.
+    */
+    if has_fields[.D] && fields[.D] == 0 {
+        assert(inst.operands_count == 2)
+        inst.operands[0], inst.operands[1] = inst.operands[1], inst.operands[0]
+    }
+
+    if has_fields[.Disp] {
         add_operand(&inst, make_mem(base = {}, index = {}, scale = 1, disp = disp))
-    } else if has_fields[.Imm] {
+    }
+    if has_fields[.Imm] {
         add_operand(&inst, Imm_Operand {
             value = imm,
         })

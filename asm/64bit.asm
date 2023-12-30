@@ -4,7 +4,7 @@ section .text
 main:
     mov rax, rbx
     mov rbx, rcx
-    mov rax, [rsi]
-    mov rax, [eax + ecx*2 - 0xff]
+    mov [rsi], rax
+    mov [eax + ecx*2 - 0xff], rax
     mov rax, 0x1122334455667788
 
