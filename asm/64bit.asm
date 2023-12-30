@@ -2,6 +2,7 @@ bits 64
 
 section .text
 main:
+    rcl ax, 1
     mov al, bh
     mov r9b, r10b
     mov rax, rbx

@@ -286,6 +286,8 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
             fields.imm = cast(i64) pop_u8(ctx) or_return
         case .Sel:
             fields.sel = pop_u16(ctx) or_return
+        case ._1:
+        case ._c:
         case .Rega:
             // No associated data
         case ._d0:
@@ -294,7 +296,7 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
         case ._64:
             ctx.data_bits = 64
         case:
-            panic("Unhandled zero-sized field")
+            panic("Unhandled zero-length field")
     }
     return true, true
 }
@@ -364,6 +366,8 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
     } else if fields.has[.Sr3] {
         assert(fields.bits[.Sr3] < cast(u8) max(Sreg))
         add_operand(&inst, make_sreg(fields.bits[.Sr3]))
+    } else if fields.has[._c] {
+        add_operand(&inst, Reg{.Cx, 8})
     }
     if fields.has[.Reg] {
         add_operand(&inst, make_reg(
@@ -407,6 +411,10 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
     if fields.has[.Imm] {
         add_operand(&inst, Imm_Operand {
             value = fields.imm,
+        })
+    } else if fields.has[._1] {
+        add_operand(&inst, Imm_Operand {
+            value = 1,
         })
     }
 

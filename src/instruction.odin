@@ -63,10 +63,10 @@ Test :: enum u8 {
 
 Sreg :: enum {
     None,
+    Es,
     Cs,
     Ss,
     Ds,
-    Es,
     Fs,
     Gs,
 }

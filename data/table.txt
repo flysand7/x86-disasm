@@ -43,6 +43,8 @@
 # rega - implicit AL/AX/EAX register.
 # _d0  - implicit d-bit with value 0.
 # _64  - implicit force 64-bit operand size.
+# _c   - implicit CL/CX/ECX register.
+# _1   - implicit constant 1 operand.
 
 # "Immediate" Bytes
 # ------------------------------------------------------------------- #
@@ -129,8 +131,8 @@ imul    1111011 w  : mod 101 rm : rega
 imul    00001111   : 10101111 : mod rx rm
 imul    011010 s 1 : mod rx rm : imm
 
-in      1110010 w : rega imm8
-in      1110110 w : rega
+in      1110010 w : imm8
+in      1110110 w
 
 inc     1111111 w  : mod 000 rm
 inc     01000 reg
@@ -193,3 +195,60 @@ mov     00001111 : 00100001 : -- ddd reg : _64 _d0
 
 mov     10001110 : mod sr3 rm
 mov     10001100 : mod sr3 rm : _d0
+
+movbe   00001111 : 00111000 : 1111000 d : mod rx rm
+
+movsx   00001111 : 1011111 w : mod rx rm
+
+movzx   00001111 : 1011011 w : mod rx rm
+
+mul     1111011 w : mod 100 rm : rega
+
+nop     1001000
+
+nop     00001111 00011111 : mod 000 rm
+
+not     1111011 w : mod 010 rm
+
+or      0000100 w  : mod rx rm
+or      100000 s w : mod 001 rm : imm
+or      0000110 w  : imm rega
+
+out     1110011 w : imm8
+out     1110111 w
+
+outs    0110111 w
+
+pop     10001111 : mod 000 rm
+pop     01011 reg
+pop     000 sr2 111
+pop     00001111 : 10 sr3 001
+popa    01100001
+popf    10011101
+
+push    11111111 : 11110 reg
+push    01010 reg
+push    11111111 : mod 110 rm
+push    011010 s 0 : imm
+push    000 sr2 110
+push    00001111 : 10 sr3 000
+pusha   01100000
+pushf   10011100
+
+rcl     1101000 w : mod 010 rm : _1
+rcl     1101001 w : mod 010 rm : _c _d
+rcl     1100000 w : mod 010 rm : imm8
+
+rcr     1101000 w : mod 011 rm : _1
+rcr     1101001 w : mod 011 rm : _c _d
+rcr     1100000 w : mod 011 rm : imm8
+
+rdmsr   00001111 : 00110010
+rdpmc   00001111 : 00110011
+rdtsc   00001111 : 00110001
+rdtscp  00001111 : 00000001 : 11111001
+
+# TODO: rep prefix ones
+
+
+

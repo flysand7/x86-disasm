@@ -37,6 +37,8 @@ Tab_Field :: enum {
     Rega,
     _d0,
     _64,
+    _c,
+    _1,
 }
 
 Tab_Mask :: union {
@@ -76,4 +78,6 @@ field_widths := [Tab_Field]u8 {
     .Rega  = 0,
     ._d0   = 0,
     ._64   = 0,
+    ._1    = 0,
+    ._c    = 0,
 }
