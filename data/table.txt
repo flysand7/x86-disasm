@@ -1,5 +1,31 @@
 
-# Comments allowed btw
+# Instruction table.
+# ------------------------------------------------------------------- #
+# Every line in this file represents an instruction. Empty lines and
+# lines starting with the # symbol are to be ignored. Instructions have
+# the following format:
+#     <opcode> <bits...>
+
+# <opcode> specifies the name of the instruction.
+# <bits...> specify the bits to be matched/stored as parameters to the
+# decoder.
+
+# Colons can be used to visually separate bytes of the instruction.
+
+# Bit fields encoding
+# ------------------------------------------------------------------- #
+# <binary number> - specifies a string of bits that must be matched
+# in the opcode exactly.
+# d - 1 bit direction bit.
+# w - 1 bit width bit.
+# reg - 3-bit opcode reg field.
+# mod - 2-bit mod field of the mod/rm byte.
+# rx  - 3-bit reg field of the mod/rm byte.
+# rm  - 3-bit rm field of the mod/rm byte.
+# rega - implicit AL/AX/EAX register.
+# imm - immediate parameter, size depends on current data size.
+# disp - displacement parameter, size depends on current addr size.
+
 mov 100010 d w : mod rx rm
 mov 1100011  w : 11 000 rx imm
 mov 1011 w reg : imm
