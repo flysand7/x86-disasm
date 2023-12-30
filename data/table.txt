@@ -255,3 +255,81 @@ ret     11000010 : imm16
 
 ret     11001011
 ret     11001010 : imm16
+
+rol     1101000 w : mod 000 rm : _1
+rol     1101001 w : mod 000 rm : _c _d0
+rol     1100000 w : mod 000 rm : imm8
+
+ror     1101000 w : mod 001 rm : _1
+ror     1101001 w : mod 001 rm : _c _d0
+ror     1100000 w : mod 001 rm : imm8
+
+rsm     00001111 : 10101010
+sahf    10011110
+
+sar     1101000 w : mod 111 rm : _1
+sar     1101001 w : mod 111 rm : _c _d0
+sar     1100000 w : mod 111 rm : imm8
+
+sbb     110100 d w : mod 111 rm
+sbb     100000 s w : mod 011 rm : imm
+sbb     0001110 w  : rega imm
+
+scas    1010111 w
+
+set     00001111 : 1001 tttn : mod 000 rm
+
+sgdt    00001111 : 00000001 : moda 000 rm
+
+shl     1101000 w : mod 100 rm : _1
+shl     1101001 w : mod 100 rm : _c _d0
+shl     1100000 w : mod 100 rm : imm8
+
+shr     1101000 w : mod 101 rm : _1
+shr     1101001 w : mod 101 rm : _c _d0
+shr     1100000 w : mod 101 rm : imm8
+
+shrd    00001111 : 10101100 : mod rx rm : imm8
+shrd    00001111 : 10101101 : mod rx rm : _cl
+
+sidt    00001111 : 00000001 : moda 001 rm
+sldt    00001111 : 00000000 : mod  000 rm
+smsw    00001111 : 00000001 : mod 100 rm
+
+stc     11111001
+std     11111101
+sti     11111011
+
+stos    1010101 w
+
+str     00001111 : 00000000 : mod 001 rm
+
+sub     001010 d w : mod rx rm
+sub     100000 s w : mod 101 rm : imm
+sub     0010110 w : rega imm
+
+test    1000010 w : mod rx rm
+test    1000011 w : mod 000 rm : imm
+test    1010100 w : rega imm
+
+ud0     00001111 : 11111111 : mod rx rm
+ud1     00001111 : 10111001 : mod rx rm
+ud2     00001111 : 00001011
+
+verr    00001111 : 00000000 : mod 100 rm
+verw    00001111 : 00000000 : mod 101 rm
+
+wait    10011011
+
+wbinvd  00001111 : 00001001
+wrmsr   00001111 : 00110000
+xadd    00001111 : 1100000 w : mod rx rm
+
+xchg    1000011 w : mod rx rm
+xchg    10010 reg : rega
+
+xlat    11010111
+
+xor     001100 d w : mod rx rm
+xor     100000 s w : mod 110 rm : imm
+xor     0011010 w : imm
