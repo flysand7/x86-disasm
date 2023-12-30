@@ -6,14 +6,26 @@ Tab_Bits :: struct {
 }
 
 Tab_Field :: enum {
+    // Opcode fields
     D,
     W,
+    S,
+    Tttn,
+    Reg,
+    // Modrm
     Mod,
+    Moda,
+    Modb,
+    Modab,
     Rx,
     Rm,
+    // Bytes
+    Sel,
     Imm,
-    Reg,
+    Imm8,
     Disp,
+    Disp8,
+    // Implicit fields
     Rega,
 }
 
@@ -30,13 +42,21 @@ Tab_Inst :: struct {
 
 // 0 means it has dynamically-computed size or is just a flag
 field_widths := [Tab_Field]u8 {
-    .D    = 1,
-    .W    = 1,
-    .Mod  = 2,
-    .Rx   = 3,
-    .Rm   = 3,
-    .Reg  = 3,
-    .Imm  = 0,
-    .Disp = 0,
-    .Rega = 0,
+    .D     = 1,
+    .W     = 1,
+    .S     = 1,
+    .Reg   = 3,
+    .Tttn  = 4,
+    .Mod   = 2,
+    .Moda  = 2,
+    .Modb  = 2,
+    .Modab = 2,
+    .Rx    = 3,
+    .Rm    = 3,
+    .Sel   = 0,
+    .Imm   = 0,
+    .Imm8  = 0,
+    .Disp  = 0,
+    .Disp8 = 0,
+    .Rega  = 0,
 }

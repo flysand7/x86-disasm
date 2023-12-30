@@ -12,23 +12,167 @@
 
 # Colons can be used to visually separate bytes of the instruction.
 
-# Bit fields encoding
+# Opcode encoding
 # ------------------------------------------------------------------- #
 # <binary number> - specifies a string of bits that must be matched
 # in the opcode exactly.
 # d - 1 bit direction bit.
 # w - 1 bit width bit.
 # reg - 3-bit opcode reg field.
+
+# Mod/RM encoding
+# ------------------------------------------------------------------- #
 # mod - 2-bit mod field of the mod/rm byte.
+# moda - mod field that is not 11.
+# modb - mod field that is not 10 nor 01.
+# modab - mod field that is expected to be 00.
 # rx  - 3-bit reg field of the mod/rm byte.
 # rm  - 3-bit rm field of the mod/rm byte.
+
+# Implicit operands
+# ------------------------------------------------------------------- #
+# Implicit operands do not appear in the opcode but rather provide
+# information about what an opcode means.
+# 
 # rega - implicit AL/AX/EAX register.
+
+# "Immediate" Bytes
+# ------------------------------------------------------------------- #
 # imm - immediate parameter, size depends on current data size.
+# imm8 - 8-bit immediate parameter.
+# imm16 - 16-bit immediate parameter.
 # disp - displacement parameter, size depends on current addr size.
+# disp8 - 8-bit displacement from the next instruction
+# sel  - segment selector, a 2 byte value following disp.
 
-mov 100010 d w : mod rx rm
-mov 1100011  w : 11 000 rx imm
-mov 1011 w reg : imm
-mov 1100011  w : mod 000 rm
-mov 1010000  w : rega disp
+# General purpose instruction formats and encodings for non-64-bit
+# modes.
+# ------------------------------------------------------------------- #
+aaa     00110111
+aad     11010101 : 00001010
+aam     11010100 : 00001010
+aas     00111111
 
+add     000000 d w : mod rx rm
+add     0000010  w : rega imm
+add     100000 s w : mod 000 reg : imm
+
+adc     000100 d w : mod rx rm
+adc     0001010  w : rega imm
+adc     100000 s w : mod 010 reg : imm
+
+and     1000000  w : rega imm
+and     001000 d w : mod rx rm
+and     100000 s w : mod 100 reg : imm
+
+arpl    01100011 : mod rx rm
+bound   01100010 : moda rx rm
+
+bswap   00001111 : 11001 reg
+bsf     00001111 : 10111100 : mod rx rm
+bsr     00001111 : 10111101 : mod rx rm
+
+bt      00001111 : 10111010 : mod 100 rm : imm8
+bt      00001111 : 10100011 : mod rx rm
+
+btc     00001111 : 10111010 : mod 111 rm : imm8
+btc     00001111 : 10111011 : mod rx rm
+
+btr     00001111 : 10111010 : mod 110 rm : imm8
+btr     00001111 : 10110011 : mod rx rm
+
+bts     00001111 : 10111010 : mod 101 rm : imm8
+bts     00001111 : 10111010 : mod rx rm
+
+call    11101000 : disp
+call    11111111 : mod 010 rm
+call    10011010 : disp sel
+call    11111111 : mod 011 rm
+
+cbw     10011000
+cdq     10011001
+clc     11111000
+cld     11111100
+cli     11111010
+clts    00001111 : 00000110
+cmc     11110101
+
+cmp     001110 d w : mod rx rm
+cmp     100000 s w : mod 111 rm : imm
+cmp     0011110  w : imm
+
+cmps    1010011 w
+cmpxchg 00001111 : 1011000 w : mod rx rm
+cpuid   00001111 : 10100010
+
+cwd     10011001
+cwde    10011000
+daa     00100111
+das     00101111
+
+dec     1111111 w  : mod 001 rm
+dec     01001 reg
+
+hlt     11110100
+
+idiv    1111011 w  : mod 111 rm : rega
+
+imul    1111011 w  : mod 101 rm : rega
+imul    00001111   : 10101111 : mod rx rm
+imul    011010 s 1 : mod rx rm : imm
+
+in      1110010 w : rega imm8
+in      1110110 w : rega
+
+inc     1111111 w  : mod 000 rm
+inc     01000 reg
+
+ins     0110110 w
+
+int     11001101  : imm8
+int3    11001100
+into    11001110
+invd    00001111 : 00001000
+invlpg  00001111 : 00000001 : mod 111 rm
+invpcid 01100110 : 00001111 : 00111000 : 10000010 : mod rx rm
+iret    11001111
+
+j       0111 tttn : disp8
+jcxz    11100011  : disp8
+
+jmp     11101010 : disp8
+jmp     11101001 : disp
+jmp     11111111 : mod 100 rm
+
+lahf    10011111
+
+lar     00001111 : 00000010 : mod rx rm
+lds     11000101 : modab rx rm
+lea     10001101 : moda  rx rm
+leave   11001001
+
+les     11000100 : modab rx rm
+
+lfs     00001111 : 10110100 : moda rx rm
+lgs     00001111 : 10110101 : moda reg rm
+
+lgdt    00001111 : 00000001 : moda 010 rm
+lidt    00001111 : 00000001 : moda 011 rm
+lldt    00001111 : 00000000 : mod  010 rm
+lmsw    00001111 : 00000001 : mod  110 rm
+
+lods    1010110 w
+
+loop    11100010 : disp8
+loopz   11100001 : disp8
+loopnz  11100000 : disp8
+
+lsl     00001111 : 00000011 : mod  rx rm
+lss     00001111 : 10110010 : moda rx rm
+ltr     00001111 : 00000000 : mod 011 rm
+
+mov     100010 d w : mod rx rm
+mov     1100011  w : 11 000 rx imm
+mov     1011 w reg : imm
+mov     1100011  w : mod 000 rm
+mov     1010000  w : rega disp
