@@ -83,9 +83,9 @@ reg_name :: proc(reg: Reg) -> string {
         case .Si:
             switch reg.bits {
                 case 8:  return "ch"
-                case 16: return "sp"
-                case 32: return "esp"
-                case 64: return "rsp"
+                case 16: return "si"
+                case 32: return "esi"
+                case 64: return "rsi"
                 case: unreachable()
             }
         case .Sp:
