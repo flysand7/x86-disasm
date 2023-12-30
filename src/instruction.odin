@@ -20,6 +20,25 @@ Reg_Idx :: enum u8 {
     R15,
 }
 
+Test :: enum u8 {
+    O,
+    No,
+    B,
+    Ae,
+    Z,
+    Nz,
+    Be,
+    A,
+    S,
+    Ns,
+    P,
+    Np,
+    L,
+    Ge,
+    Le,
+    G,
+}
+
 Sreg :: enum {
     None,
     Cs,
@@ -46,9 +65,14 @@ Mem_Operand :: struct {
     scale: u8,
 }
 
+Mem_Short_Operand :: struct {
+    disp: i8,
+}
+
 Operand :: union {
     Reg,
     Mem_Operand,
+    Mem_Short_Operand,
     Imm_Operand,
 }
 
@@ -63,6 +87,7 @@ Inst :: struct {
     opcode:         string,
     seg_override:   Sreg,
     selector:       Maybe(u16),
+    test:           Maybe(Test),
     operands:       [4]Operand,
     operands_count: int,
     flags:          Inst_Flags,

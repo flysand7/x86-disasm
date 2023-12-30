@@ -15,6 +15,28 @@ sreg_name :: proc(sreg: Sreg) -> string {
     }
 }
 
+test_name :: proc(test: Test) -> string {
+    switch test {
+        case .O:  return "o"
+        case .No: return "no"
+        case .B:  return "b"
+        case .Ae: return "ae"
+        case .Z:  return "z"
+        case .Nz: return "nz"
+        case .Be: return "be"
+        case .A:  return "a"
+        case .S:  return "s"
+        case .Ns: return "ns"
+        case .P:  return "p"
+        case .Np: return "np"
+        case .L:  return "l"
+        case .Ge: return "ge"
+        case .Le: return "le"
+        case .G:  return "g"
+        case: panic("Bad cc")
+    }
+}
+
 reg_name :: proc(reg: Reg) -> string {
     assert(reg.idx != nil)
     #partial switch reg.idx {
@@ -151,11 +173,18 @@ print_inst :: proc(inst: Inst) {
     if .Repnz in inst.flags {
         fmt.printf("repnz ")
     }
-    fmt.printf("%s", inst.opcode)
+    if test, ok := inst.test.?; ok {
+        fmt.printf("%s%s", inst.opcode, test_name(test))
+    } else {
+        fmt.printf("%s", inst.opcode)
+    }
     for i in 0 ..< inst.operands_count {
         fmt.printf(i != 0? ", " : " ")
         operand := inst.operands[i]
         switch op in operand {
+            case Mem_Short_Operand:
+                fmt.printf("short ")
+                fmt.printf("%c%02x", op.disp<0?'-':'+', op.disp<0?-op.disp:op.disp)
             case Mem_Operand:
                 if inst.seg_override != nil {
                     fmt.printf("%s:", sreg_name(inst.seg_override))

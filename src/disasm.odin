@@ -22,9 +22,10 @@ Disasm_Ctx :: struct {
 Inst_Fields :: struct {
     bits: [Tab_Field]u8,
     has:  [Tab_Field]bool,
-    disp: i32,
-    imm:  i64,
-    sel:  u16,
+    disp:  i32,
+    disp8: i8,
+    imm:   i64,
+    sel:   u16,
 }
 
 pop_u8 :: proc(ctx: ^Disasm_Ctx) -> (u8, bool) {
@@ -270,7 +271,7 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
         case .Disp:
             fields.disp = cast(i32) pop_u16(ctx) or_return
         case .Disp8:
-            fields.disp = cast(i32) pop_u8(ctx) or_return
+            fields.disp8 = cast(i8) pop_u8(ctx) or_return
         case .Imm:
             if ctx.data_bits == 16 {
                 fields.imm = cast(i64) pop_u16(ctx) or_return
@@ -329,6 +330,9 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
             ctx.data_bits = 8
         }
     }
+    if fields.has[.Tttn] {
+        inst.test = cast(Test) fields.bits[.Tttn]
+    }
 
     if fields.has[.Rx] {
         add_operand(&inst, make_reg(
@@ -372,6 +376,8 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
 
     if fields.has[.Disp] {
         add_operand(&inst, make_mem(base = {}, index = {}, scale = 1, disp = fields.disp))
+    } else if fields.has[.Disp8] {
+        add_operand(&inst, Mem_Short_Operand { disp = fields.disp8 })
     }
     if fields.has[.Imm] {
         add_operand(&inst, Imm_Operand {

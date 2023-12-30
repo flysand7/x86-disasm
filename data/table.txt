@@ -140,7 +140,7 @@ iret    11001111
 j       0111 tttn : disp8
 jcxz    11100011  : disp8
 
-jmp     11101010 : disp8
+jmp     11101011 : disp8
 jmp     11101001 : disp
 jmp     11111111 : mod 100 rm
 

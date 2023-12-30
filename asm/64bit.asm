@@ -9,4 +9,5 @@ main:
     mov [rsi], rax
     mov [eax + ecx*2 - 0xff], rax
     mov rax, 0x1122334455667788
+    jge main
 
