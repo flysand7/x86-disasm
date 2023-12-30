@@ -160,6 +160,9 @@ print_inst :: proc(inst: Inst) {
                 if inst.seg_override != nil {
                     fmt.printf("%s:", sreg_name(inst.seg_override))
                 }
+                if selector, ok := inst.selector.?; ok {
+                    fmt.printf("%02x:", selector)
+                }
                 fmt.printf("[")
                 has_before := false
                 if op.base.idx != nil {

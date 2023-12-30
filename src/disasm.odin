@@ -19,6 +19,14 @@ Disasm_Ctx :: struct {
     bits_offs:  u8,
 }
 
+Inst_Fields :: struct {
+    bits: [Tab_Field]u8,
+    has:  [Tab_Field]bool,
+    disp: i32,
+    imm:  i64,
+    sel:  u16,
+}
+
 pop_u8 :: proc(ctx: ^Disasm_Ctx) -> (u8, bool) {
     assert(ctx.bits_offs % 8 == 0)
     if len(ctx.bytes) - ctx.offset >= 1 {
@@ -232,44 +240,72 @@ add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok:
     return true
 }
 
-decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok: bool) {
-    fields: [Tab_Field]u8
-    has_fields: [Tab_Field]bool
-    disp: i32 = 0
-    imm:  i64 = 0
-
-    for mask in encoding.masks {
-        switch m in mask {
-        case Tab_Bits:
-            if !(match_bits(ctx, m) or_return) {
+read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> (matched, ok: bool) {
+    field := field
+    field_size := field_widths[field]
+    assert(!fields.has[field])
+    fields.has[field] = true
+    if field_size != 0 {
+        bits := read_bits(ctx, field_size) or_return
+        if field == .Moda {
+            field = .Mod
+            if bits == 0b11 {
                 return false, true
             }
-        case Tab_Field:
-            field_size := field_widths[m]
-            assert(!has_fields[m])
-            has_fields[m] = true
-            if field_size == 0 {
-                if m == .Disp {
-                    disp = cast(i32) pop_u16(ctx) or_return
-                } else if m == .Imm {
-                    if ctx.data_bits == 16 {
-                        imm  = cast(i64) pop_u16(ctx) or_return
-                    } else if ctx.data_bits == 32 {
-                        imm  = cast(i64) pop_u32(ctx) or_return
-                    } else if ctx.data_bits == 64 {
-                        imm  = cast(i64) pop_u64(ctx) or_return
-                    }
-                } else if m == .Rega {
-                    // No associated data
-                } else {
-                    panic("Unhandled zero-sized field")
-                }
-            } else {
-                fields[m] = read_bits(ctx, field_size) or_return
+        } else if field == .Modb {
+            field = .Mod
+            if bits == 0b10 || bits == 0b01 {
+                return false, true
+            }
+        } else if field == .Modab {
+            field = .Mod
+            if bits != 0b00 {
+                return false, true
             }
         }
+        fields.bits[field] = bits
+        return true, true
     }
+    #partial switch field {
+        case .Disp:
+            fields.disp = cast(i32) pop_u16(ctx) or_return
+        case .Disp8:
+            fields.disp = cast(i32) pop_u8(ctx) or_return
+        case .Imm:
+            if ctx.data_bits == 16 {
+                fields.imm = cast(i64) pop_u16(ctx) or_return
+            } else if ctx.data_bits == 32 {
+                fields.imm = cast(i64) pop_u32(ctx) or_return
+            } else if ctx.data_bits == 64 {
+                fields.imm = cast(i64) pop_u64(ctx) or_return
+            }
+        case .Imm8:
+            fields.imm = cast(i64) pop_u8(ctx) or_return
+        case .Sel:
+            fields.sel = pop_u16(ctx) or_return
+        case .Rega:
+            // No associated data
+        case:
+            panic("Unhandled zero-sized field")
+    }
+    return true, true
+}
 
+match_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, mask: Tab_Mask) -> (matched, ok: bool) {
+    switch m in mask {
+        case Tab_Bits:
+            return match_bits(ctx, m)
+        case Tab_Field:
+            return read_field(ctx, fields, m)
+    }
+    return true, true
+}
+
+decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok: bool) {
+    fields := Inst_Fields {}
+    for mask in encoding.masks {
+        match_field(ctx, &fields, mask) or_return
+    }
     inst := Inst {
         opcode = encoding.name,
         seg_override = ctx.seg_override,
@@ -288,25 +324,34 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
             case: inst.flags |= {.Rep}
         }
     }
-    if has_fields[.W] {
-        if fields[.W] == 0 {
+    if fields.has[.W] {
+        if fields.bits[.W] == 0 {
             ctx.data_bits = 8
         }
     }
 
-    if has_fields[.Rx] {
-        add_operand(&inst, make_reg(rex_extend_r(ctx.rex, fields[.Rx]), ctx.data_bits))
+    if fields.has[.Rx] {
+        add_operand(&inst, make_reg(
+            rex_extend_r(ctx.rex, fields.bits[.Rx]),
+            ctx.data_bits,
+        ))
     }
-    if has_fields[.Reg] {
-        add_operand(&inst, make_reg(rex_extend_b(ctx.rex, fields[.Reg]), ctx.data_bits))
+    if fields.has[.Reg] {
+        add_operand(&inst, make_reg(
+            rex_extend_b(ctx.rex, fields.bits[.Reg]),
+            ctx.data_bits,
+        ))
     }
-    if has_fields[.Rega] {
+    if fields.has[.Rega] {
         add_operand(&inst, make_reg(0, ctx.data_bits))
     }
-    if has_fields[.Rm] {
-        assert(has_fields[.Mod])
-        mod := fields[.Mod]
-        rm := fields[.Rm]
+    if fields.has[.Sel] {
+        inst.selector = fields.sel
+    }
+    if fields.has[.Rm] {
+        assert(fields.has[.Mod])
+        mod := fields.bits[.Mod]
+        rm := fields.bits[.Rm]
         if ctx.addr_bits == 16 {
             add_modrm_addr16(ctx, &inst, mod, rm)
         } else if ctx.addr_bits == 32 || ctx.addr_bits == 64 {
@@ -320,17 +365,17 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
         At this point we only have reg / rm fields
         So we can just swap the operands if d bit is reset.
     */
-    if has_fields[.D] && fields[.D] == 0 {
+    if fields.has[.D] && fields.bits[.D] == 0 {
         assert(inst.operands_count == 2)
         inst.operands[0], inst.operands[1] = inst.operands[1], inst.operands[0]
     }
 
-    if has_fields[.Disp] {
-        add_operand(&inst, make_mem(base = {}, index = {}, scale = 1, disp = disp))
+    if fields.has[.Disp] {
+        add_operand(&inst, make_mem(base = {}, index = {}, scale = 1, disp = fields.disp))
     }
-    if has_fields[.Imm] {
+    if fields.has[.Imm] {
         add_operand(&inst, Imm_Operand {
-            value = imm,
+            value = fields.imm,
         })
     }
 
