@@ -284,6 +284,8 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
             }
         case .Imm8:
             fields.imm = cast(i64) pop_u8(ctx) or_return
+        case .Imm16:
+            fields.imm = cast(i64) pop_u16(ctx) or_return
         case .Sel:
             fields.sel = pop_u16(ctx) or_return
         case ._1:

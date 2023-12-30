@@ -236,11 +236,11 @@ pusha   01100000
 pushf   10011100
 
 rcl     1101000 w : mod 010 rm : _1
-rcl     1101001 w : mod 010 rm : _c _d
+rcl     1101001 w : mod 010 rm : _c _d0
 rcl     1100000 w : mod 010 rm : imm8
 
 rcr     1101000 w : mod 011 rm : _1
-rcr     1101001 w : mod 011 rm : _c _d
+rcr     1101001 w : mod 011 rm : _c _d0
 rcr     1100000 w : mod 011 rm : imm8
 
 rdmsr   00001111 : 00110010
