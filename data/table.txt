@@ -22,6 +22,7 @@
 # w - 1 bit width bit.
 # reg - 3-bit opcode reg field.
 # eee - 3-bit control register field.
+# ddd - 3-bit debug register field.
 
 # Mod/RM encoding
 # ------------------------------------------------------------------- #
@@ -185,3 +186,5 @@ mov     1010000  w : rega disp
 mov     00001111 : 00100010 : -- eee reg : _64
 mov     00001111 : 00100000 : -- eee reg : _64 _d0
 
+mov     00001111 : 00100011 : -- ddd reg : _64
+mov     00001111 : 00100001 : -- ddd reg : _64 _d0

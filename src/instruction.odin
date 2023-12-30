@@ -31,6 +31,17 @@ Creg_Idx :: enum u8 {
     Cr7,
 }
 
+Dreg_Idx :: enum u8 {
+    Dr0,
+    Dr1,
+    Dr2,
+    Dr3,
+    Dr4,
+    Dr5,
+    Dr6,
+    Dr7,
+}
+
 Test :: enum u8 {
     O,
     No,
@@ -86,6 +97,7 @@ Operand :: union {
     Mem_Short_Operand,
     Imm_Operand,
     Creg_Idx,
+    Dreg_Idx,
 }
 
 Inst_Flags :: bit_set[enum{
