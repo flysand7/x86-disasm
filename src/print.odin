@@ -106,6 +106,8 @@ reg_name :: proc(reg: Reg) -> string {
             }
         case .R8:
             switch reg.bits {
+                case 8:  return "r8b"
+                case 16: return "r8w"
                 case 32: return "r8d"
                 case 64: return "r8"
                 case: unreachable()
@@ -113,6 +115,7 @@ reg_name :: proc(reg: Reg) -> string {
         case .R9:
             switch reg.bits {
                 case 8:  return "r9b"
+                case 16: return "r9w"
                 case 32: return "r9d"
                 case 64: return "r9"
                 case: unreachable()
@@ -120,6 +123,7 @@ reg_name :: proc(reg: Reg) -> string {
         case .R10:
             switch reg.bits {
                 case 8:  return "r10b"
+                case 16: return "r10w"
                 case 32: return "r10d"
                 case 64: return "r10"
                 case: unreachable()
@@ -127,6 +131,7 @@ reg_name :: proc(reg: Reg) -> string {
         case .R11:
             switch reg.bits {
                 case 8:  return "r11b"
+                case 16: return "r11w"
                 case 32: return "r11d"
                 case 64: return "r11"
                 case: unreachable()
@@ -134,6 +139,7 @@ reg_name :: proc(reg: Reg) -> string {
         case .R12:
             switch reg.bits {
                 case 8:  return "r12b"
+                case 16: return "r12w"
                 case 32: return "r12d"
                 case 64: return "r12"
                 case: unreachable()
@@ -141,6 +147,7 @@ reg_name :: proc(reg: Reg) -> string {
         case .R13:
             switch reg.bits {
                 case 8:  return "r13b"
+                case 16: return "r13w"
                 case 32: return "r13d"
                 case 64: return "r13"
                 case: unreachable()
@@ -148,6 +155,7 @@ reg_name :: proc(reg: Reg) -> string {
         case .R14:
             switch reg.bits {
                 case 8:  return "r14b"
+                case 16: return "r14w"
                 case 32: return "r14d"
                 case 64: return "r14"
                 case: unreachable()
@@ -155,6 +163,7 @@ reg_name :: proc(reg: Reg) -> string {
         case .R15:
             switch reg.bits {
                 case 8:  return "r15b"
+                case 16: return "r15w"
                 case 32: return "r15d"
                 case 64: return "r15"
                 case: unreachable()
