@@ -222,8 +222,10 @@ add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok:
         } else {
             base = make_reg(rex_extend_b(ctx.rex, sb), ctx.addr_bits)
         }
-        scale = 1<<ss
-        index = make_reg(rex_extend_i(ctx.rex, si), ctx.addr_bits)
+        if si != 0b100 {
+            scale = 1<<ss
+            index = make_reg(rex_extend_i(ctx.rex, si), ctx.addr_bits)
+        }
     } else {
         base = make_reg(rex_extend_b(ctx.rex, rm), ctx.addr_bits)
     }
