@@ -129,26 +129,26 @@ cwde    10011000
 daa     00100111
 das     00101111
 
-dec     1111111w  : mod 001 rm
+dec     1111111w : mod 001 rm
 dec     01001rrr : +n64
 
 hlt     11110100
 
-idiv    1111011w  : mod 111 rm : _a
+idiv    1111011w : mod 111 rm : _a
 
-imul    1111011w  : mod 101 rm : _a
-imul    00001111   : 10101111 : mod rx rm
-imul    011010 s 1 : mod rx rm : imm
+imul    1111011w : mod 101 rm : _a
+imul    00001111 : 10101111 : mod rx rm
+imul    011010s1 : mod rx rm : imm
 
 in      1110010w : imm8
 in      1110110w
 
-inc     1111111w  : mod 000 rm
+inc     1111111w : mod 000 rm
 inc     01000rrr : +n64
 
 ins     0110110w
 
-int     11001101  : imm8
+int     11001101 : imm8
 int3    11001100
 into    11001110
 invd    00001111 : 00001000
@@ -157,7 +157,7 @@ invpcid 01100110 : 00001111 : 00111000 : 10000010 : mod rx rm
 iret    11001111
 
 j       0111tttt : disp8
-jcxz    11100011  : disp8
+jcxz    11100011 : disp8
 
 jmp     11101011 : disp8
 jmp     11101001 : disp
@@ -218,9 +218,9 @@ nop     00001111 00011111 : mod 000 rm
 
 not     1111011w : mod 010 rm
 
-or      0000100w  : mod rx rm
+or      0000100w : mod rx rm
 or      100000sw : mod 001 rm : imm
-or      0000110w  : imm _a
+or      0000110w : imm _a
 
 out     1110011w : imm8
 out     1110111w
@@ -281,7 +281,7 @@ sar     1100000w : mod 111 rm : imm8
 
 sbb     110100dw : mod 111 rm
 sbb     100000sw : mod 011 rm : imm
-sbb     0001110w  : _a imm
+sbb     0001110w : _a imm
 
 scas    1010111w
 
