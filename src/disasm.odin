@@ -287,6 +287,8 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
         case .Imm:
             if fields.has[.S] && fields.bits[.S] != 0 && fields.has[.W] && fields.bits[.W] != 0 {
                 fields.imm = cast(i64) pop_u8(ctx) or_return
+            } else if fields.has[.W] && fields.bits[.W] == 0 {
+                fields.imm = cast(i64) pop_u8(ctx) or_return
             } else if ctx.data_bits == 16 {
                 fields.imm = cast(i64) pop_u16(ctx) or_return
             } else if ctx.data_bits == 32 {
