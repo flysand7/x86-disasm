@@ -270,7 +270,7 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
             if bits != 0b00 {
                 return false, true
             }
-        } else if field == .Sr2 || field == .Sr3 {
+        } else if field == .Ss || field == .Sss {
             if bits == 1 {
                 return false, true
             }
@@ -361,8 +361,8 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
             ctx.data_bits = 8
         }
     }
-    if fields.has[.Tttn] {
-        inst.test = cast(Test) fields.bits[.Tttn]
+    if fields.has[.Tttt] {
+        inst.test = cast(Test) fields.bits[.Tttt]
     }
 
     if fields.has[.Rx] {
@@ -376,18 +376,18 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
     } else if fields.has[.Ddd] {
         assert(fields.bits[.Eee] < cast(u8) max(Dreg_Idx))
         add_operand(&inst, cast(Dreg_Idx) fields.bits[.Ddd])
-    } else if fields.has[.Sr2] {
-        assert(fields.bits[.Sr2] < cast(u8) max(Sreg))
-        add_operand(&inst, make_sreg(fields.bits[.Sr2]))
-    } else if fields.has[.Sr3] {
-        assert(fields.bits[.Sr3] < cast(u8) max(Sreg))
-        add_operand(&inst, make_sreg(fields.bits[.Sr3]))
+    } else if fields.has[.Ss] {
+        assert(fields.bits[.Ss] < cast(u8) max(Sreg))
+        add_operand(&inst, make_sreg(fields.bits[.Ss]))
+    } else if fields.has[.Sss] {
+        assert(fields.bits[.Sss] < cast(u8) max(Sreg))
+        add_operand(&inst, make_sreg(fields.bits[.Sss]))
     } else if fields.has[._c] {
         add_operand(&inst, Reg{.Cx, 8})
     }
-    if fields.has[.Reg] {
+    if fields.has[.Rrr] {
         add_operand(&inst, make_reg(
-            rex_extend_b(ctx.rex, fields.bits[.Reg]),
+            rex_extend_b(ctx.rex, fields.bits[.Rrr]),
             ctx.data_bits,
         ))
     }

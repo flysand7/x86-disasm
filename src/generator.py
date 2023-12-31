@@ -68,9 +68,19 @@ def tokenize_line(splits: list[str], line: str):
             while idx < len(line) and line[idx].isdigit():
                 idx += 1
             splits.append(line[:idx])
+            last_bit: None|str = None
+            last_cnt: int = 0
             while idx < len(line) and line[idx].isalpha():
-                splits.append(line[idx])
+                ch = line[idx]
+                if not(last_bit is None):
+                    if ch != last_bit:
+                        splits.append(last_cnt*last_bit)
+                        last_cnt = 0
                 idx += 1
+                last_bit = ch
+                last_cnt += 1
+            if not(last_bit is None):
+                splits.append(last_cnt*last_bit)
             line = line[idx:]
         else:
             line = line[1:]

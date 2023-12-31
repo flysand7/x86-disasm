@@ -19,12 +19,15 @@
 # <dashes> - specifies a group of bits to be ignored. The number of
 # dashes specifies the number of bits to be ignored.
 # d - 1 bit direction bit.
-#w - 1 bitwidth bit.
-# reg - 3-bit opcode reg field.
+# w - 1 bitwidth bit.
+# tttt - 4-bit test bits field. Note that the test bits are supposed
+#        to be appended to the opcode of the instruction.
+#        i.e. `Jcc` is specified as `j`.
+# rrr - 3-bit opcode reg field.
 # eee - 3-bit control register field.
 # ddd - 3-bit debug register field.
-# sr3 - 3-bit segment register field (includes GS and FS)
-# sr2 - 2-bit segment register field (doesn't include GS and FS)
+# sss - 3-bit segment register field (includes GS and FS)
+# ss  - 2-bit segment register field (doesn't include GS and FS)
 
 # Mod/RM encoding
 # ------------------------------------------------------------------- #
@@ -84,7 +87,7 @@ and     100000sw : mod 100 rm : imm
 arpl    01100011 : mod rx rm
 bound   01100010 : moda rx rm
 
-bswap   00001111 : 11001 reg
+bswap   00001111 : 11001rrr
 bsf     00001111 : 10111100 : mod rx rm
 bsr     00001111 : 10111101 : mod rx rm
 
@@ -127,7 +130,7 @@ daa     00100111
 das     00101111
 
 dec     1111111w  : mod 001 rm
-dec     01001 reg : +n64
+dec     01001rrr : +n64
 
 hlt     11110100
 
@@ -141,7 +144,7 @@ in      1110010w : imm8
 in      1110110w
 
 inc     1111111w  : mod 000 rm
-inc     01000 reg : +n64
+inc     01000rrr : +n64
 
 ins     0110110w
 
@@ -153,7 +156,7 @@ invlpg  00001111 : 00000001 : mod 111 rm
 invpcid 01100110 : 00001111 : 00111000 : 10000010 : mod rx rm
 iret    11001111
 
-j       0111 tttn : disp8
+j       0111tttt : disp8
 jcxz    11100011  : disp8
 
 jmp     11101011 : disp8
@@ -170,7 +173,7 @@ leave   11001001
 les     11000100 : modab rx rm
 
 lfs     00001111 : 10110100 : moda rx rm
-lgs     00001111 : 10110101 : moda reg rm
+lgs     00001111 : 10110101 : moda rx rm
 
 lgdt    00001111 : 00000001 : moda 010 rm
 lidt    00001111 : 00000001 : moda 011 rm
@@ -189,17 +192,17 @@ ltr     00001111 : 00000000 : mod 011 rm
 
 mov     100010dw : mod rx rm
 mov     1100011w : mod 000 rm : imm
-mov     1011w reg : imm
+mov     1011wrrr : imm
 mov     1010000w : _a disp
 
-mov     00001111 : 00100010 : -- eee reg : _64
-mov     00001111 : 00100000 : -- eee reg : _64 _d
+mov     00001111 : 00100010 : -- eee rrr : _64
+mov     00001111 : 00100000 : -- eee rrr : _64 _d
 
-mov     00001111 : 00100011 : -- ddd reg : _64
-mov     00001111 : 00100001 : -- ddd reg : _64 _d
+mov     00001111 : 00100011 : -- ddd rrr : _64
+mov     00001111 : 00100001 : -- ddd rrr : _64 _d
 
-mov     10001110 : mod sr3 rm
-mov     10001100 : mod sr3 rm : _d
+mov     10001110 : mod sss rm
+mov     10001100 : mod sss rm : _d
 
 movbe   00001111 : 00111000 : 1111000 d : mod rx rm
 
@@ -225,18 +228,18 @@ out     1110111w
 outs    0110111w
 
 pop     10001111 : mod 000 rm
-pop     01011 reg
-pop     000 sr2 111
-pop     00001111 : 10 sr3 001 +ncs
+pop     01011rrr
+pop     000ss111
+pop     00001111 : 10 sss 001 +ncs
 popa    01100001
 popf    10011101
 
-push    11111111 : 11110 reg
-push    01010 reg
+push    11111111 : 11110rrr
+push    01010rrr
 push    11111111 : mod 110 rm
-push    011010 s 0 : imm
-push    000 sr2 110
-push    00001111 : 10 sr3 000
+push    011010s0 : imm
+push    000ss110
+push    00001111 : 10sss000
 pusha   01100000
 pushf   10011100
 
@@ -282,7 +285,7 @@ sbb     0001110w  : _a imm
 
 scas    1010111w
 
-set     00001111 : 1001 tttn : mod 000 rm
+set     00001111 : 1001tttt : mod 000 rm
 
 sgdt    00001111 : 00000001 : moda 000 rm
 
@@ -331,7 +334,7 @@ wrmsr   00001111 : 00110000
 xadd    00001111 : 1100000w : mod rx rm
 
 xchg    1000011w : mod rx rm
-xchg    10010 reg : _a
+xchg    10010rrr : _a
 
 xlat    11010111
 
@@ -353,4 +356,4 @@ cmpxchg8b 00001111 : 11000111 : mod 001 rm
 # P6 family instruction formats and encodings
 # ------------------------------------------------------------------- #
 
-cmov    00001111 : 0100 tttn : mod rx rm
+cmov    00001111 : 0100tttt : mod rx rm
