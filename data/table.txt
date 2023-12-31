@@ -77,7 +77,7 @@ adc     000100dw : mod rx rm
 adc     0001010w : _a imm
 adc     100000sw : mod 010 rm : imm
 
-and     1000000w : _a imm
+and     0010010w : _a imm
 and     001000dw : mod rx rm
 and     100000sw : mod 100 rm : imm
 
