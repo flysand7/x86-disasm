@@ -2,7 +2,7 @@
 # Instruction table.
 # ------------------------------------------------------------------- #
 # Every line in this file represents an instruction. Empty lines and
-# lines starting with the # symbol are to be ignored. Instructions have
+# lines startingwith the # symbol are to be ignored. Instructions have
 # the following format:
 #     <opcode> <bits...>
 
@@ -19,7 +19,7 @@
 # <dashes> - specifies a group of bits to be ignored. The number of
 # dashes specifies the number of bits to be ignored.
 # d - 1 bit direction bit.
-# w - 1 bit width bit.
+#w - 1 bitwidth bit.
 # reg - 3-bit opcode reg field.
 # eee - 3-bit control register field.
 # ddd - 3-bit debug register field.
@@ -38,9 +38,9 @@
 # Implicit operands
 # ------------------------------------------------------------------- #
 # Implicit operands do not appear in the opcode but rather provide
-# information about what an opcode means.
+# information aboutwhat an opcode means.
 # 
-# _d0  - implicit d-bit with value 0.
+# _d0  - implicit d-bitwith value 0.
 # _64  - implicit force 64-bit operand size.
 # _a   - implicit AL/AX/EAX register.
 # _c   - implicit CL/CX/ECX register.
@@ -65,17 +65,17 @@ aad     11010101 : 00001010
 aam     11010100 : 00001010
 aas     00111111
 
-add     000000 d w : mod rx rm
-add     0000010  w : _a imm
-add     100000 s w : mod 000 rm : imm
+add     000000dw : mod rx rm
+add     0000010w : _a imm
+add     100000sw : mod 000 rm : imm
 
-adc     000100 d w : mod rx rm
-adc     0001010  w : _a imm
-adc     100000 s w : mod 010 rm : imm
+adc     000100dw : mod rx rm
+adc     0001010w : _a imm
+adc     100000sw : mod 010 rm : imm
 
-and     1000000  w : _a imm
-and     001000 d w : mod rx rm
-and     100000 s w : mod 100 rm : imm
+and     1000000w : _a imm
+and     001000dw : mod rx rm
+and     100000sw : mod 100 rm : imm
 
 arpl    01100011 : mod rx rm
 bound   01100010 : moda rx rm
@@ -109,12 +109,12 @@ cli     11111010
 clts    00001111 : 00000110
 cmc     11110101
 
-cmp     001110 d w : mod rx rm
-cmp     100000 s w : mod 111 rm : imm
-cmp     0011110  w : imm
+cmp     001110dw : mod rx rm
+cmp     100000sw : mod 111 rm : imm
+cmp     0011110w : imm
 
-cmps    1010011 w
-cmpxchg 00001111 : 1011000 w : mod rx rm
+cmps    1010011w
+cmpxchg 00001111 : 1011000w : mod rx rm
 cpuid   00001111 : 10100010
 
 cwd     10011001
@@ -122,24 +122,24 @@ cwde    10011000
 daa     00100111
 das     00101111
 
-dec     1111111 w  : mod 001 rm
+dec     1111111w  : mod 001 rm
 dec     01001 reg
 
 hlt     11110100
 
-idiv    1111011 w  : mod 111 rm : _a
+idiv    1111011w  : mod 111 rm : _a
 
-imul    1111011 w  : mod 101 rm : _a
+imul    1111011w  : mod 101 rm : _a
 imul    00001111   : 10101111 : mod rx rm
 imul    011010 s 1 : mod rx rm : imm
 
-in      1110010 w : imm8
-in      1110110 w
+in      1110010w : imm8
+in      1110110w
 
-inc     1111111 w  : mod 000 rm
+inc     1111111w  : mod 000 rm
 inc     01000 reg
 
-ins     0110110 w
+ins     0110110w
 
 int     11001101  : imm8
 int3    11001100
@@ -173,7 +173,7 @@ lidt    00001111 : 00000001 : moda 011 rm
 lldt    00001111 : 00000000 : mod  010 rm
 lmsw    00001111 : 00000001 : mod  110 rm
 
-lods    1010110 w
+lods    1010110w
 
 loop    11100010 : disp8
 loopz   11100001 : disp8
@@ -183,11 +183,11 @@ lsl     00001111 : 00000011 : mod  rx rm
 lss     00001111 : 10110010 : moda rx rm
 ltr     00001111 : 00000000 : mod 011 rm
 
-mov     100010 d w : mod rx rm
-mov     1100011  w : 11 000 rx imm
-mov     1011 w reg : imm
-mov     1100011  w : mod 000 rm
-mov     1010000  w : _a disp
+mov     100010dw : mod rx rm
+mov     1100011w : 11 000 rx imm
+mov     1011w reg : imm
+mov     1100011w : mod 000 rm
+mov     1010000w : _a disp
 
 mov     00001111 : 00100010 : -- eee reg : _64
 mov     00001111 : 00100000 : -- eee reg : _64 _d0
@@ -200,26 +200,26 @@ mov     10001100 : mod sr3 rm : _d0
 
 movbe   00001111 : 00111000 : 1111000 d : mod rx rm
 
-movsx   00001111 : 1011111 w : mod rx rm
+movsx   00001111 : 1011111w : mod rx rm
 
-movzx   00001111 : 1011011 w : mod rx rm
+movzx   00001111 : 1011011w : mod rx rm
 
-mul     1111011 w : mod 100 rm : _a
+mul     1111011w : mod 100 rm : _a
 
 nop     1001000
 
 nop     00001111 00011111 : mod 000 rm
 
-not     1111011 w : mod 010 rm
+not     1111011w : mod 010 rm
 
-or      0000100 w  : mod rx rm
-or      100000 s w : mod 001 rm : imm
-or      0000110 w  : imm _a
+or      0000100w  : mod rx rm
+or      100000sw : mod 001 rm : imm
+or      0000110w  : imm _a
 
-out     1110011 w : imm8
-out     1110111 w
+out     1110011w : imm8
+out     1110111w
 
-outs    0110111 w
+outs    0110111w
 
 pop     10001111 : mod 000 rm
 pop     01011 reg
@@ -237,13 +237,13 @@ push    00001111 : 10 sr3 000
 pusha   01100000
 pushf   10011100
 
-rcl     1101000 w : mod 010 rm : _1
-rcl     1101001 w : mod 010 rm : _c _d0
-rcl     1100000 w : mod 010 rm : imm8
+rcl     1101000w : mod 010 rm : _1
+rcl     1101001w : mod 010 rm : _c _d0
+rcl     1100000w : mod 010 rm : imm8
 
-rcr     1101000 w : mod 011 rm : _1
-rcr     1101001 w : mod 011 rm : _c _d0
-rcr     1100000 w : mod 011 rm : imm8
+rcr     1101000w : mod 011 rm : _1
+rcr     1101001w : mod 011 rm : _c _d0
+rcr     1100000w : mod 011 rm : imm8
 
 rdmsr   00001111 : 00110010
 rdpmc   00001111 : 00110011
@@ -258,38 +258,38 @@ ret     11000010 : imm16
 ret     11001011
 ret     11001010 : imm16
 
-rol     1101000 w : mod 000 rm : _1
-rol     1101001 w : mod 000 rm : _c _d0
-rol     1100000 w : mod 000 rm : imm8
+rol     1101000w : mod 000 rm : _1
+rol     1101001w : mod 000 rm : _c _d0
+rol     1100000w : mod 000 rm : imm8
 
-ror     1101000 w : mod 001 rm : _1
-ror     1101001 w : mod 001 rm : _c _d0
-ror     1100000 w : mod 001 rm : imm8
+ror     1101000w : mod 001 rm : _1
+ror     1101001w : mod 001 rm : _c _d0
+ror     1100000w : mod 001 rm : imm8
 
 rsm     00001111 : 10101010
 sahf    10011110
 
-sar     1101000 w : mod 111 rm : _1
-sar     1101001 w : mod 111 rm : _c _d0
-sar     1100000 w : mod 111 rm : imm8
+sar     1101000w : mod 111 rm : _1
+sar     1101001w : mod 111 rm : _c _d0
+sar     1100000w : mod 111 rm : imm8
 
-sbb     110100 d w : mod 111 rm
-sbb     100000 s w : mod 011 rm : imm
-sbb     0001110 w  : _a imm
+sbb     110100dw : mod 111 rm
+sbb     100000sw : mod 011 rm : imm
+sbb     0001110w  : _a imm
 
-scas    1010111 w
+scas    1010111w
 
 set     00001111 : 1001 tttn : mod 000 rm
 
 sgdt    00001111 : 00000001 : moda 000 rm
 
-shl     1101000 w : mod 100 rm : _1
-shl     1101001 w : mod 100 rm : _c _d0
-shl     1100000 w : mod 100 rm : imm8
+shl     1101000w : mod 100 rm : _1
+shl     1101001w : mod 100 rm : _c _d0
+shl     1100000w : mod 100 rm : imm8
 
-shr     1101000 w : mod 101 rm : _1
-shr     1101001 w : mod 101 rm : _c _d0
-shr     1100000 w : mod 101 rm : imm8
+shr     1101000w : mod 101 rm : _1
+shr     1101001w : mod 101 rm : _c _d0
+shr     1100000w : mod 101 rm : imm8
 
 shrd    00001111 : 10101100 : mod rx rm : imm8
 shrd    00001111 : 10101101 : mod rx rm : _c
@@ -302,17 +302,17 @@ stc     11111001
 std     11111101
 sti     11111011
 
-stos    1010101 w
+stos    1010101w
 
 str     00001111 : 00000000 : mod 001 rm
 
-sub     001010 d w : mod rx rm
-sub     100000 s w : mod 101 rm : imm
-sub     0010110 w : _a imm
+sub     001010dw : mod rx rm
+sub     100000sw : mod 101 rm : imm
+sub     0010110w : _a imm
 
-test    1000010 w : mod rx rm
-test    1000011 w : mod 000 rm : imm
-test    1010100 w : _a imm
+test    1000010w : mod rx rm
+test    1000011w : mod 000 rm : imm
+test    1010100w : _a imm
 
 ud0     00001111 : 11111111 : mod rx rm
 ud1     00001111 : 10111001 : mod rx rm
@@ -325,16 +325,16 @@ wait    10011011
 
 wbinvd  00001111 : 00001001
 wrmsr   00001111 : 00110000
-xadd    00001111 : 1100000 w : mod rx rm
+xadd    00001111 : 1100000w : mod rx rm
 
-xchg    1000011 w : mod rx rm
+xchg    1000011w : mod rx rm
 xchg    10010 reg : _a
 
 xlat    11010111
 
-xor     001100 d w : mod rx rm
-xor     100000 s w : mod 110 rm : imm
-xor     0011010 w : imm
+xor     001100dw : mod rx rm
+xor     100000sw : mod 110 rm : imm
+xor     0011010w : imm
 
 
 

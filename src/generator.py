@@ -10,8 +10,6 @@ def read_lines(path: str) -> list[str]:
         return list(f.readlines())
 
 def write_split(file, split: str):
-    if split == ':':
-        return
     if split[0] == '0' or split[0] == '1':
         split_bits = split
         split_len  = len(split)
@@ -32,6 +30,27 @@ def write_line(file, splits: list[str]):
         write_split(file, split)
     file.write(f'{TAB}}}}},\n')
 
+def tokenize_line(splits: list[str], line: str):
+    while len(line) > 0:
+        if line[0].isalpha() or line[0] == '_':
+            idx = 0
+            while idx < len(line) and (line[idx].isdigit() or line[idx].isalpha() or line[idx] == '_'):
+                idx += 1
+            splits.append(line[:idx])
+            line = line[idx:]
+        elif line[0].isdigit():
+            idx = 0
+            while idx < len(line) and line[idx].isdigit():
+                idx += 1
+            splits.append(line[:idx])
+            while idx < len(line) and line[idx].isalpha():
+                splits.append(line[idx])
+                idx += 1
+            line = line[idx:]
+        else:
+            line = line[1:]
+            
+
 out = open(TABLE_OUT_FILENAME, 'w')
 out.write(f'package {PACKAGE_NAME}\n\n')
 out.write(f'// THIS FILE IS AUTO-GENERATED FROM table.txt BY codegen.py\n\n')
@@ -39,7 +58,8 @@ out.write('decode_table := []Tab_Inst {\n')
 for line in read_lines(TABLE_IN_FILENAME):
     line = line[:len(line)-1]
     if len(line) != 0 and line[0] != '#':
-        splits = [s for s in line.split(' ') if s]
+        splits = []
+        tokenize_line(splits, line)
         write_line(out, splits)
 out.write('}\n\n')
 out.close()
