@@ -210,10 +210,10 @@ print_inst :: proc(inst: Inst) {
         fmt.printf(i != 0? ", " : " ")
         operand := inst.operands[i]
         switch op in operand {
-            case Mem_Short_Operand:
+            case Mem_Short:
                 fmt.printf("short ")
                 fmt.printf("%c%02x", op.disp<0?'-':'+', op.disp<0?-op.disp:op.disp)
-            case Mem_Operand:
+            case Mem:
                 if inst.seg_override != nil {
                     fmt.printf("%s:", sreg_name(inst.seg_override))
                 }
@@ -247,7 +247,7 @@ print_inst :: proc(inst: Inst) {
                 fmt.printf("%s", creg_name(op))
             case Dreg_Idx:
                 fmt.printf("%s", dreg_name(op))
-            case Imm_Operand:
+            case Imm:
                 fmt.printf("%08x", op.value)
         }
     }

@@ -129,7 +129,7 @@ make_reg :: proc(idx: u8, bits: u8) -> Reg {
     }
 }
 
-make_mem :: proc(base: Reg, index: Reg = {}, scale := u8(1), disp := i32(0)) -> Mem_Operand {
+make_mem :: proc(base: Reg, index: Reg = {}, scale := u8(1), disp := i32(0)) -> Mem {
     return {
         base  = base,
         index = index,
@@ -196,7 +196,7 @@ add_modrm_addr16 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok:
 
 add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok: bool) {
     if mod == 0b00 && rm == 0b101 {
-        add_operand(inst, Mem_Operand {
+        add_operand(inst, Mem {
             disp = cast(i32) pop_u32(ctx) or_return,
         })
         return true
@@ -234,7 +234,7 @@ add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok:
     } else if mod == 0b10 {
         disp = cast(i32) pop_u32(ctx) or_return
     }
-    add_operand(inst, Mem_Operand {
+    add_operand(inst, Mem {
         base = base,
         index = index,
         scale = scale,
@@ -413,14 +413,14 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
     if fields.has[.Disp] {
         add_operand(&inst, make_mem(base = {}, index = {}, scale = 1, disp = fields.disp))
     } else if fields.has[.Disp8] {
-        add_operand(&inst, Mem_Short_Operand { disp = fields.disp8 })
+        add_operand(&inst, Mem_Short { disp = fields.disp8 })
     }
     if fields.has[.Imm] {
-        add_operand(&inst, Imm_Operand {
+        add_operand(&inst, Imm {
             value = fields.imm,
         })
     } else if fields.has[._1] {
-        add_operand(&inst, Imm_Operand {
+        add_operand(&inst, Imm {
             value = 1,
         })
     }

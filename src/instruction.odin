@@ -76,26 +76,26 @@ Reg :: struct {
     bits: u8,
 }
 
-Imm_Operand :: struct {
+Imm :: struct {
     value: i64,
 }
 
-Mem_Operand :: struct {
+Mem :: struct {
     base:  Reg,
     index: Reg,
     disp:  i32 `fmt:"x"`,
     scale: u8,
 }
 
-Mem_Short_Operand :: struct {
+Mem_Short :: struct {
     disp: i8,
 }
 
 Operand :: union {
     Reg,
-    Mem_Operand,
-    Mem_Short_Operand,
-    Imm_Operand,
+    Mem,
+    Mem_Short,
+    Imm,
     Creg_Idx,
     Dreg_Idx,
     Sreg,
