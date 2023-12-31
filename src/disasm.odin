@@ -215,7 +215,9 @@ add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok:
         ss := sib >> 6
         si := (sib >> 3) & 0x7
         sb := sib & 0x7
-        if sb == 0b101 && (mod == 0b01 || mod == 0b10) {
+        if sb == 0b101 && mod == 0b00 {
+            disp = cast(i32) pop_u32(ctx) or_return
+        } else if sb == 0b101 && (mod == 0b01 || mod == 0b10) {
             base = {
                 idx = .Bp,
                 bits = ctx.addr_bits,
