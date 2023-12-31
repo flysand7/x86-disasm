@@ -192,6 +192,13 @@ dreg_name :: proc(dreg: Dreg_Idx) -> string {
 }
 
 print_inst :: proc(inst: Inst) {
+    WIDTH :: 10
+    for i in 0 ..< len(inst.bytes) {
+        fmt.printf("%02x", inst.bytes[i])
+    }
+    for i in len(inst.bytes) ..< WIDTH {
+        fmt.printf("  ")
+    }
     if .Lock in inst.flags {
         fmt.printf("lock ")
     }

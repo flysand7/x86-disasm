@@ -8,6 +8,7 @@ Disasm_Ctx :: struct {
     // CPU settings
     cpu_bits:   u8,
     // Instruction ctx
+    start_offs: int,
     rex:        u8,
     data_bits:  u8,
     addr_bits:  u8,
@@ -428,7 +429,7 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
             value = 1,
         })
     }
-
+    inst.bytes = ctx.bytes[ctx.start_offs:ctx.offset]
     print_inst(inst)
     return true, true
 }
@@ -546,6 +547,7 @@ disasm :: proc(bytes: []u8, default_bits := u8(64)) {
         ctx.repnz = false
         ctx.rep_or_bnd = false
         ctx.rex = 0
+        ctx.start_offs = ctx.offset
         if !disasm_inst(&ctx) {
             if len(ctx.bytes) - ctx.offset > 0 {
                 b, _ := peek_u8(&ctx)

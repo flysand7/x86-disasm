@@ -110,6 +110,7 @@ Inst_Flags :: bit_set[enum{
 
 Inst :: struct {
     opcode:         string,
+    bytes:          []u8,
     seg_override:   Sreg,
     selector:       Maybe(u16),
     test:           Maybe(Test),
