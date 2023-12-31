@@ -289,7 +289,7 @@ shr     1101001 w : mod 101 rm : _c _d0
 shr     1100000 w : mod 101 rm : imm8
 
 shrd    00001111 : 10101100 : mod rx rm : imm8
-shrd    00001111 : 10101101 : mod rx rm : _cl
+shrd    00001111 : 10101101 : mod rx rm : _c
 
 sidt    00001111 : 00000001 : moda 001 rm
 sldt    00001111 : 00000000 : mod  000 rm
