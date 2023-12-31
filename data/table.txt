@@ -184,9 +184,8 @@ lss     00001111 : 10110010 : moda rx rm
 ltr     00001111 : 00000000 : mod 011 rm
 
 mov     100010dw : mod rx rm
-mov     1100011w : 11 000 rx imm
+mov     1100011w : mod 000 rm : imm
 mov     1011w reg : imm
-mov     1100011w : mod 000 rm
 mov     1010000w : _a disp
 
 mov     00001111 : 00100010 : -- eee reg : _64
