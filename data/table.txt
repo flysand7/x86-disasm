@@ -55,6 +55,10 @@
 # disp8 - 8-bit displacement from the next instruction
 # sel  - segment selector, a 2 byte value following disp.
 
+# Encoding flags
+# ------------------------------------------------------------------- #
+# +n64 - do not decode on 64-bit platforms
+# +ncs - do not decode if cr2 or cr3 field turned out to be cs
 
 
 # ------------------------------------------------------------------- #
@@ -223,7 +227,7 @@ outs    0110111w
 pop     10001111 : mod 000 rm
 pop     01011 reg
 pop     000 sr2 111
-pop     00001111 : 10 sr3 001
+pop     00001111 : 10 sr3 001 +ncs
 popa    01100001
 popf    10011101
 

@@ -2,6 +2,7 @@ package disasm
 
 Enc_Flags :: bit_set[enum{
     N64,
+    Ncs,
 }]
 
 Tab_Bits :: struct {

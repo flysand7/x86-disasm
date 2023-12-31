@@ -267,6 +267,10 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
             if bits != 0b00 {
                 return false, true
             }
+        } else if field == .Sr2 || field == .Sr3 {
+            if bits == 1 {
+                return false, true
+            }
         } else {
             fields.bits[field] = bits
         }
