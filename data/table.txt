@@ -55,6 +55,9 @@
 # disp8 - 8-bit displacement from the next instruction
 # sel  - segment selector, a 2 byte value following disp.
 
+
+
+# ------------------------------------------------------------------- #
 # General purpose instruction formats and encodings.
 # ------------------------------------------------------------------- #
 aaa     00110111
@@ -332,3 +335,11 @@ xlat    11010111
 xor     001100 d w : mod rx rm
 xor     100000 s w : mod 110 rm : imm
 xor     0011010 w : imm
+
+
+
+# ------------------------------------------------------------------- #
+# Pentium processor family instructions
+# ------------------------------------------------------------------- #
+
+cmpxchg8b 00001111 : 11000111 : mod 001 rm
