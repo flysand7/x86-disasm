@@ -297,7 +297,7 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
         case ._c:
         case ._a:
             // No associated data
-        case ._d0:
+        case ._d:
             fields.has[.D] = true
             fields.bits[.D] = 0
         case ._64:

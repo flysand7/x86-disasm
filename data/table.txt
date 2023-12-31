@@ -40,7 +40,7 @@
 # Implicit operands do not appear in the opcode but rather provide
 # information aboutwhat an opcode means.
 # 
-# _d0  - implicit d-bitwith value 0.
+# _d   - implicit d-bit with value 0.
 # _64  - implicit force 64-bit operand size.
 # _a   - implicit AL/AX/EAX register.
 # _c   - implicit CL/CX/ECX register.
@@ -189,13 +189,13 @@ mov     1011w reg : imm
 mov     1010000w : _a disp
 
 mov     00001111 : 00100010 : -- eee reg : _64
-mov     00001111 : 00100000 : -- eee reg : _64 _d0
+mov     00001111 : 00100000 : -- eee reg : _64 _d
 
 mov     00001111 : 00100011 : -- ddd reg : _64
-mov     00001111 : 00100001 : -- ddd reg : _64 _d0
+mov     00001111 : 00100001 : -- ddd reg : _64 _d
 
 mov     10001110 : mod sr3 rm
-mov     10001100 : mod sr3 rm : _d0
+mov     10001100 : mod sr3 rm : _d
 
 movbe   00001111 : 00111000 : 1111000 d : mod rx rm
 
@@ -237,11 +237,11 @@ pusha   01100000
 pushf   10011100
 
 rcl     1101000w : mod 010 rm : _1
-rcl     1101001w : mod 010 rm : _c _d0
+rcl     1101001w : mod 010 rm : _c _d
 rcl     1100000w : mod 010 rm : imm8
 
 rcr     1101000w : mod 011 rm : _1
-rcr     1101001w : mod 011 rm : _c _d0
+rcr     1101001w : mod 011 rm : _c _d
 rcr     1100000w : mod 011 rm : imm8
 
 rdmsr   00001111 : 00110010
@@ -258,18 +258,18 @@ ret     11001011
 ret     11001010 : imm16
 
 rol     1101000w : mod 000 rm : _1
-rol     1101001w : mod 000 rm : _c _d0
+rol     1101001w : mod 000 rm : _c _d
 rol     1100000w : mod 000 rm : imm8
 
 ror     1101000w : mod 001 rm : _1
-ror     1101001w : mod 001 rm : _c _d0
+ror     1101001w : mod 001 rm : _c _d
 ror     1100000w : mod 001 rm : imm8
 
 rsm     00001111 : 10101010
 sahf    10011110
 
 sar     1101000w : mod 111 rm : _1
-sar     1101001w : mod 111 rm : _c _d0
+sar     1101001w : mod 111 rm : _c _d
 sar     1100000w : mod 111 rm : imm8
 
 sbb     110100dw : mod 111 rm
@@ -283,11 +283,11 @@ set     00001111 : 1001 tttn : mod 000 rm
 sgdt    00001111 : 00000001 : moda 000 rm
 
 shl     1101000w : mod 100 rm : _1
-shl     1101001w : mod 100 rm : _c _d0
+shl     1101001w : mod 100 rm : _c _d
 shl     1100000w : mod 100 rm : imm8
 
 shr     1101000w : mod 101 rm : _1
-shr     1101001w : mod 101 rm : _c _d0
+shr     1101001w : mod 101 rm : _c _d
 shr     1100000w : mod 101 rm : imm8
 
 shrd    00001111 : 10101100 : mod rx rm : imm8
