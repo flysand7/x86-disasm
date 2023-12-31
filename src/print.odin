@@ -2,6 +2,91 @@ package disasm
 
 import "core:fmt"
 
+@(private="file")
+fmt_int :: proc(#any_int hex: i64) {
+    sign_ch := '+'
+    hex_abs := hex
+    if hex < 0 {
+        sign_ch = '-'
+        hex_abs = -hex
+    }
+    if hex_abs < 10 {
+        fmt.printf("%c%d", sign_ch, hex_abs)
+    } else if hex_abs <= auto_cast max(u8) {
+        fmt.printf("%c0x%02x", sign_ch, hex_abs)
+    } else if hex_abs <= auto_cast max(u16) {
+        fmt.printf("%c0x%04x", sign_ch, hex_abs)
+    } else if hex_abs <= auto_cast max(u32) {
+        fmt.printf("%c0x%08x", sign_ch, hex_abs)
+    } else {
+        fmt.printf("%c0x%016x", sign_ch, hex_abs)
+    }
+}
+
+print_inst :: proc(inst: Inst) {
+    WIDTH :: 10
+    for i in 0 ..< len(inst.bytes) {
+        fmt.printf("%02x", inst.bytes[i])
+    }
+    for i in len(inst.bytes) ..< WIDTH {
+        fmt.printf("  ")
+    }
+    if .Lock in inst.flags {
+        fmt.printf("lock ")
+    }
+    if .Rep in inst.flags {
+        fmt.printf("rep ")
+    }
+    if .Repnz in inst.flags {
+        fmt.printf("repnz ")
+    }
+    if test, ok := inst.test.?; ok {
+        fmt.printf("%s%s", inst.opcode, test_name(test))
+    } else {
+        fmt.printf("%s", inst.opcode)
+    }
+    for i in 0 ..< inst.operands_count {
+        fmt.printf(i != 0? ", " : " ")
+        operand := inst.operands[i]
+        switch op in operand {
+            case Mem_Short:
+                fmt.printf("short ")
+                fmt_int(op.disp)
+            case Mem:
+                if inst.seg_override != nil {
+                    fmt.printf("%s:", sreg_name(inst.seg_override))
+                }
+                if selector, ok := inst.selector.?; ok {
+                    fmt.printf("%02x:", selector)
+                }
+                fmt.printf("[")
+                has_before := false
+                if op.base.idx != nil {
+                    fmt.printf("%s", reg_name(op.base))
+                    has_before = true
+                }
+                if op.index.idx != nil {
+                    fmt.printf("%s%d*%s", has_before?"+":"", op.scale, reg_name(op.index))
+                }
+                if op.disp != 0 {
+                    fmt_int(op.disp)
+                }
+                fmt.printf("]")
+            case Reg:
+                fmt.printf("%s", reg_name(op))
+            case Sreg:
+                fmt.printf("%s", sreg_name(op))
+            case Creg_Idx:
+                fmt.printf("%s", creg_name(op))
+            case Dreg_Idx:
+                fmt.printf("%s", dreg_name(op))
+            case Imm:
+                fmt_int(op.value)
+        }
+    }
+    fmt.printf("\n")
+}
+
 sreg_name :: proc(sreg: Sreg) -> string {
     assert(sreg != nil)
     #partial switch sreg {
@@ -200,72 +285,3 @@ dreg_name :: proc(dreg: Dreg_Idx) -> string {
     }
 }
 
-print_inst :: proc(inst: Inst) {
-    WIDTH :: 10
-    for i in 0 ..< len(inst.bytes) {
-        fmt.printf("%02x", inst.bytes[i])
-    }
-    for i in len(inst.bytes) ..< WIDTH {
-        fmt.printf("  ")
-    }
-    if .Lock in inst.flags {
-        fmt.printf("lock ")
-    }
-    if .Rep in inst.flags {
-        fmt.printf("rep ")
-    }
-    if .Repnz in inst.flags {
-        fmt.printf("repnz ")
-    }
-    if test, ok := inst.test.?; ok {
-        fmt.printf("%s%s", inst.opcode, test_name(test))
-    } else {
-        fmt.printf("%s", inst.opcode)
-    }
-    for i in 0 ..< inst.operands_count {
-        fmt.printf(i != 0? ", " : " ")
-        operand := inst.operands[i]
-        switch op in operand {
-            case Mem_Short:
-                fmt.printf("short ")
-                fmt.printf("%c%02x", op.disp<0?'-':'+', op.disp<0?-op.disp:op.disp)
-            case Mem:
-                if inst.seg_override != nil {
-                    fmt.printf("%s:", sreg_name(inst.seg_override))
-                }
-                if selector, ok := inst.selector.?; ok {
-                    fmt.printf("%02x:", selector)
-                }
-                fmt.printf("[")
-                has_before := false
-                if op.base.idx != nil {
-                    fmt.printf("%s", reg_name(op.base))
-                    has_before = true
-                }
-                if op.index.idx != nil {
-                    fmt.printf("%s%d*%s", has_before?"+":"", op.scale, reg_name(op.index))
-                }
-                if op.disp != 0 {
-                    sign := '+'
-                    disp := op.disp
-                    if op.disp < 0 {
-                        sign = '-'
-                        disp = -op.disp
-                    }
-                    fmt.printf("%c0x%02x", sign, disp)
-                }
-                fmt.printf("]")
-            case Reg:
-                fmt.printf("%s", reg_name(op))
-            case Sreg:
-                fmt.printf("%s", sreg_name(op))
-            case Creg_Idx:
-                fmt.printf("%s", creg_name(op))
-            case Dreg_Idx:
-                fmt.printf("%s", dreg_name(op))
-            case Imm:
-                fmt.printf("%08x", op.value)
-        }
-    }
-    fmt.printf("\n")
-}
