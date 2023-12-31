@@ -242,29 +242,32 @@ add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok:
 }
 
 read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> (matched, ok: bool) {
-    field := field
     field_size := field_widths[field]
     assert(!fields.has[field])
     fields.has[field] = true
     if field_size != 0 {
         bits := read_bits(ctx, field_size) or_return
         if field == .Moda {
-            field = .Mod
+            fields.bits[.Mod] = bits
+            fields.has[.Mod]  = true
             if bits == 0b11 {
                 return false, true
             }
         } else if field == .Modb {
-            field = .Mod
+            fields.bits[.Mod] = bits
+            fields.has[.Mod]  = true
             if bits == 0b10 || bits == 0b01 {
                 return false, true
             }
         } else if field == .Modab {
-            field = .Mod
+            fields.bits[.Mod] = bits
+            fields.has[.Mod]  = true
             if bits != 0b00 {
                 return false, true
             }
+        } else {
+            fields.bits[field] = bits
         }
-        fields.bits[field] = bits
         return true, true
     }
     #partial switch field {
