@@ -1,5 +1,9 @@
 package disasm
 
+Enc_Flags :: bit_set[enum{
+    N64,
+}]
+
 Tab_Bits :: struct {
     value: u8,
     count: u8,
@@ -49,9 +53,10 @@ Tab_Mask :: union {
 }
 
 Tab_Inst :: struct {
-    name: string,
+    name:   string,
+    flags:  Enc_Flags,
     opcode: Tab_Bits,
-    masks: []Tab_Mask,
+    masks:  []Tab_Mask,
 }
 
 // 0 means it has dynamically-computed size or is just a flag

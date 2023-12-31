@@ -513,6 +513,9 @@ disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
     }
     saved_offset := ctx.offset
     for enc in decode_table {
+        if .N64 in enc.flags && ctx.cpu_bits == 64 {
+            continue
+        }
         ctx.offset    = saved_offset
         ctx.bits_offs = 8
         if match_bits(ctx, enc.opcode) or_continue {
