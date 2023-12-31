@@ -40,9 +40,9 @@
 # Implicit operands do not appear in the opcode but rather provide
 # information about what an opcode means.
 # 
-# rega - implicit AL/AX/EAX register.
 # _d0  - implicit d-bit with value 0.
 # _64  - implicit force 64-bit operand size.
+# _a   - implicit AL/AX/EAX register.
 # _c   - implicit CL/CX/ECX register.
 # _1   - implicit constant 1 operand.
 
@@ -66,14 +66,14 @@ aam     11010100 : 00001010
 aas     00111111
 
 add     000000 d w : mod rx rm
-add     0000010  w : rega imm
+add     0000010  w : _a imm
 add     100000 s w : mod 000 reg : imm
 
 adc     000100 d w : mod rx rm
-adc     0001010  w : rega imm
+adc     0001010  w : _a imm
 adc     100000 s w : mod 010 reg : imm
 
-and     1000000  w : rega imm
+and     1000000  w : _a imm
 and     001000 d w : mod rx rm
 and     100000 s w : mod 100 reg : imm
 
@@ -127,9 +127,9 @@ dec     01001 reg
 
 hlt     11110100
 
-idiv    1111011 w  : mod 111 rm : rega
+idiv    1111011 w  : mod 111 rm : _a
 
-imul    1111011 w  : mod 101 rm : rega
+imul    1111011 w  : mod 101 rm : _a
 imul    00001111   : 10101111 : mod rx rm
 imul    011010 s 1 : mod rx rm : imm
 
@@ -187,7 +187,7 @@ mov     100010 d w : mod rx rm
 mov     1100011  w : 11 000 rx imm
 mov     1011 w reg : imm
 mov     1100011  w : mod 000 rm
-mov     1010000  w : rega disp
+mov     1010000  w : _a disp
 
 mov     00001111 : 00100010 : -- eee reg : _64
 mov     00001111 : 00100000 : -- eee reg : _64 _d0
@@ -204,7 +204,7 @@ movsx   00001111 : 1011111 w : mod rx rm
 
 movzx   00001111 : 1011011 w : mod rx rm
 
-mul     1111011 w : mod 100 rm : rega
+mul     1111011 w : mod 100 rm : _a
 
 nop     1001000
 
@@ -214,7 +214,7 @@ not     1111011 w : mod 010 rm
 
 or      0000100 w  : mod rx rm
 or      100000 s w : mod 001 rm : imm
-or      0000110 w  : imm rega
+or      0000110 w  : imm _a
 
 out     1110011 w : imm8
 out     1110111 w
@@ -275,7 +275,7 @@ sar     1100000 w : mod 111 rm : imm8
 
 sbb     110100 d w : mod 111 rm
 sbb     100000 s w : mod 011 rm : imm
-sbb     0001110 w  : rega imm
+sbb     0001110 w  : _a imm
 
 scas    1010111 w
 
@@ -308,11 +308,11 @@ str     00001111 : 00000000 : mod 001 rm
 
 sub     001010 d w : mod rx rm
 sub     100000 s w : mod 101 rm : imm
-sub     0010110 w : rega imm
+sub     0010110 w : _a imm
 
 test    1000010 w : mod rx rm
 test    1000011 w : mod 000 rm : imm
-test    1010100 w : rega imm
+test    1010100 w : _a imm
 
 ud0     00001111 : 11111111 : mod rx rm
 ud1     00001111 : 10111001 : mod rx rm
@@ -328,7 +328,7 @@ wrmsr   00001111 : 00110000
 xadd    00001111 : 1100000 w : mod rx rm
 
 xchg    1000011 w : mod rx rm
-xchg    10010 reg : rega
+xchg    10010 reg : _a
 
 xlat    11010111
 

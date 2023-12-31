@@ -295,7 +295,7 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
             fields.sel = pop_u16(ctx) or_return
         case ._1:
         case ._c:
-        case .Rega:
+        case ._a:
             // No associated data
         case ._d0:
             fields.has[.D] = true
@@ -382,7 +382,7 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
             ctx.data_bits,
         ))
     }
-    if fields.has[.Rega] {
+    if fields.has[._a] {
         add_operand(&inst, make_reg(0, ctx.data_bits))
     }
     if fields.has[.Sel] {

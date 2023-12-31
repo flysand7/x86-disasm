@@ -35,7 +35,7 @@ Tab_Field :: enum {
     Disp,
     Disp8,
     // Implicit fields
-    Rega,
+    _a,
     _d0,
     _64,
     _c,
@@ -77,9 +77,9 @@ field_widths := [Tab_Field]u8 {
     .Imm16 = 0,
     .Disp  = 0,
     .Disp8 = 0,
-    .Rega  = 0,
     ._d0   = 0,
     ._64   = 0,
     ._1    = 0,
+    ._a    = 0,
     ._c    = 0,
 }
