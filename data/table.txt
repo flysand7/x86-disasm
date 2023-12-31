@@ -67,15 +67,15 @@ aas     00111111
 
 add     000000 d w : mod rx rm
 add     0000010  w : _a imm
-add     100000 s w : mod 000 reg : imm
+add     100000 s w : mod 000 rm : imm
 
 adc     000100 d w : mod rx rm
 adc     0001010  w : _a imm
-adc     100000 s w : mod 010 reg : imm
+adc     100000 s w : mod 010 rm : imm
 
 and     1000000  w : _a imm
 and     001000 d w : mod rx rm
-and     100000 s w : mod 100 reg : imm
+and     100000 s w : mod 100 rm : imm
 
 arpl    01100011 : mod rx rm
 bound   01100010 : moda rx rm
