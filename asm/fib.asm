@@ -6,15 +6,14 @@ section .text
 ; RETURN
 ;   rax: fib(n)
 fibonacci:
-    mov rax, 0
+    xor rax, rax
     cmp rdi, rdi
     jz .ret1
     cmp rdi, 1
     jz .ret1
     mov rcx, rdi
-    dec rcx
-    dec rcx
-    mov rsi, 0
+    sub rcx, 2
+    xor rsi, rsi
     mov rdi, 1
 .loop:
     mov rax, rsi
