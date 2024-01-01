@@ -18,6 +18,7 @@ Reg_Idx :: enum u8 {
     R13,
     R14,
     R15,
+    Ip,
 }
 
 Creg_Idx :: enum u8 {
@@ -111,6 +112,7 @@ Inst_Flags :: bit_set[enum{
 Inst :: struct {
     opcode:         string,
     bytes:          []u8,
+    data_size:      u8,
     seg_override:   Sreg,
     selector:       Maybe(u16),
     test:           Maybe(Test),

@@ -199,6 +199,7 @@ add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok:
     if mod == 0b00 && rm == 0b101 {
         add_operand(inst, Mem {
             disp = cast(i32) pop_u32(ctx) or_return,
+            base = ctx.addr_bits == 64? {idx = .Ip, bits = 64} : {}
         })
         return true
     }
@@ -341,6 +342,9 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
     inst := Inst {
         opcode = encoding.name,
         seg_override = ctx.seg_override,
+    }
+    if .Ds in encoding.flags {
+        inst.data_size = ctx.data_bits
     }
     if ctx.lock {
         inst.flags |= {.Lock}

@@ -45,6 +45,9 @@ print_inst :: proc(inst: Inst) {
     } else {
         fmt.printf("%s", inst.opcode)
     }
+    if inst.data_size != 0 {
+        fmt.printf("%s", data_size_suffix(inst.data_size))
+    }
     for i in 0 ..< inst.operands_count {
         fmt.printf(i != 0? ", " : " ")
         operand := inst.operands[i]
@@ -85,6 +88,16 @@ print_inst :: proc(inst: Inst) {
         }
     }
     fmt.printf("\n")
+}
+
+data_size_suffix :: proc(size: u8) -> string {
+    switch size {
+        case 8:  return "b"
+        case 16: return "w"
+        case 32: return "d"
+        case 64: return "q"
+        case: unreachable()
+    }
 }
 
 sreg_name :: proc(sreg: Sreg) -> string {
@@ -251,6 +264,13 @@ reg_name :: proc(reg: Reg) -> string {
                 case 16: return "r15w"
                 case 32: return "r15d"
                 case 64: return "r15"
+                case: unreachable()
+            }
+        case .Ip:
+            switch reg.bits {
+                case 16: return "ip"
+                case 32: return "eip"
+                case 64: return "rip"
                 case: unreachable()
             }
         case: unreachable()

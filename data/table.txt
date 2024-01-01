@@ -62,6 +62,7 @@
 # ------------------------------------------------------------------- #
 # +n64 - do not decode on 64-bit platforms
 # +ncs - do not decode if cr2 or cr3 field turned out to be cs
+# +ds  - data size is part of instruction name (movs -> movsb/movsw/movsl/movsq)
 
 
 # ------------------------------------------------------------------- #
@@ -131,11 +132,12 @@ popf    10011101
 sahf    10011110
 lahf    10011111
 mov     1010000w : _a disp
-cmps    1010011w
+movs    1010010w : +ds
+cmps    1010011w : +ds
 test    1010100w : _a imm
-stos    1010101w
-lods    1010110w
-scas    1010111w
+stos    1010101w : +ds
+lods    1010110w : +ds
+scas    1010111w : +ds
 mov     1011wrrr : imm
 rol     1100000w : mod 000 rm : imm8
 ror     1100000w : mod 001 rm : imm8
