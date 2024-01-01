@@ -14,6 +14,9 @@ disasm FILENAME: generate (prepare-disasm FILENAME)
 dump FILENAME: generate (prepare-disasm FILENAME)
     odin test disasm -test-name:test_dump {{ODIN_FLAGS}} -- temp/temp.out
 
+build-cli: generate
+    odin build .
+
 generate:
     ./disasm/table/generator.py
 
