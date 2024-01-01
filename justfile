@@ -1,7 +1,7 @@
 
 ODIN_FLAGS := "-o:none -debug -out:test.bin"
 
-@prepare-disasm FILENAME:
+prepare-disasm FILENAME:
     mkdir -p temp/
     nasm {{FILENAME}} -o temp/temp.out
 
