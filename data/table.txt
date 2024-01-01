@@ -16,14 +16,12 @@
 # ------------------------------------------------------------------- #
 # Some instructions don't have a complete opcode on them. The list
 # below specifies such instructions
-#   j    - Jcc
-#   cmov - CMOVcc
 #   c    - CWD, CDQ
+#   movs - movsb/movsw/movsd/movsq
+#   lods - lodsb/lodsw/lodsd/lodsq
 # The way they are meant to be interpreted is that the actual opcode
 # is constructed by appending suffixes to the opcode based on the
-# combination of opcode encoding and encoding flags.
-# If the instruction has `tttt` field, it gets condition code appended
-# to the opcode.
+# combination of encoding flags.
 # If the instruction encoding has `+ds` flag, it gets its data size
 # appended to its name. CWD/CDQ are special instructions that also
 # append double the data size to their name.
@@ -36,9 +34,6 @@
 # dashes specifies the number of bits to be ignored.
 # d - 1 bit direction bit.
 # w - 1 bitwidth bit.
-# tttt - 4-bit test bits field. Note that the test bits are supposed
-#        to be appended to the opcode of the instruction.
-#        i.e. `Jcc` is specified as `j`.
 # rrr - 3-bit opcode reg field.
 # eee - 3-bit control register field.
 # ddd - 3-bit debug register field.
@@ -125,7 +120,22 @@ push    011010s0 : imm
 imul    011010s1 : mod rx rm : imm
 ins     0110110w
 outs    0110111w
-j       0111tttt : disp8
+jo      01110000 : disp8
+jno     01110001 : disp8
+jb      01110010 : disp8
+jae     01110011 : disp8
+jz      01110100 : disp8
+jnz     01110101 : disp8
+jbe     01110110 : disp8
+ja      01110111 : disp8
+js      01111000 : disp8
+jns     01111001 : disp8
+jp      01111010 : disp8
+jnp     01111011 : disp8
+jl      01111100 : disp8
+jge     01111101 : disp8
+jle     01111110 : disp8
+jg      01111111 : disp8
 add     100000sw : mod 000 rm : imm
 or      100000sw : mod 001 rm : imm
 adc     100000sw : mod 010 rm : imm
@@ -259,7 +269,22 @@ rdpmc   00001111 : 00110011
 movbe   00001111 : 00111000 : 1111000 d : mod rx rm
 push    00001111 : 10sss000
 pop     00001111 : 10sss001 : +ncs
-set     00001111 : 1001tttt : mod 000 rm
+seto    00001111 : 10010000 : mod 000 rm
+setno   00001111 : 10010001 : mod 000 rm
+setb    00001111 : 10010010 : mod 000 rm
+setae   00001111 : 10010011 : mod 000 rm
+setz    00001111 : 10010100 : mod 000 rm
+setnz   00001111 : 10010101 : mod 000 rm
+setbe   00001111 : 10010110 : mod 000 rm
+seta    00001111 : 10010111 : mod 000 rm
+sets    00001111 : 10011000 : mod 000 rm
+setns   00001111 : 10011001 : mod 000 rm
+setp    00001111 : 10011010 : mod 000 rm
+setnp   00001111 : 10011011 : mod 000 rm
+setl    00001111 : 10011100 : mod 000 rm
+setge   00001111 : 10011101 : mod 000 rm
+setle   00001111 : 10011110 : mod 000 rm
+setg    00001111 : 10011111 : mod 000 rm
 cpuid   00001111 : 10100010
 bt      00001111 : 10100011 : mod rx rm
 bts     00001111 : 10101011 : mod rx rm
@@ -365,7 +390,22 @@ xsave    00001111 : 10101110 : moda 100 rm
 # P6 family instruction formats and encodings
 # ------------------------------------------------------------------- #
 
-cmov    00001111 : 0100tttt : mod rx rm
+cmovo   00001111 : 01000000 : mod rx rm
+cmovno  00001111 : 01000001 : mod rx rm
+cmovb   00001111 : 01000010 : mod rx rm
+cmovae  00001111 : 01000011 : mod rx rm
+cmovz   00001111 : 01000100 : mod rx rm
+cmovnz  00001111 : 01000101 : mod rx rm
+cmovbe  00001111 : 01000110 : mod rx rm
+cmova   00001111 : 01000111 : mod rx rm
+cmovs   00001111 : 01001000 : mod rx rm
+cmovns  00001111 : 01001001 : mod rx rm
+cmovp   00001111 : 01001010 : mod rx rm
+cmovnp  00001111 : 01001011 : mod rx rm
+cmovl   00001111 : 01001100 : mod rx rm
+cmovge  00001111 : 01001101 : mod rx rm
+cmovle  00001111 : 01001110 : mod rx rm
+cmovg   00001111 : 01001111 : mod rx rm
 
 # ------------------------------------------------------------------- #
 # SSE instruction formats and encodings

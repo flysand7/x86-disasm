@@ -405,9 +405,6 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
             ctx.data_bits = 8
         }
     }
-    if fields.has[.Tttt] {
-        inst.test = cast(Test) fields.bits[.Tttt]
-    }
 
     if fields.has[.Rx] {
         add_operand(&inst, make_reg(

@@ -40,11 +40,7 @@ print_inst :: proc(inst: Inst) {
     if .Repnz in inst.flags {
         fmt.printf("repnz ")
     }
-    if test, ok := inst.test.?; ok {
-        fmt.printf("%s%s", inst.opcode, test_name(test))
-    } else {
-        fmt.printf("%s", inst.opcode)
-    }
+    fmt.printf("%s", inst.opcode)
     if .Data_Size_Suffix in inst.flags {
         fmt.printf("%s", data_size_suffix(inst.data_size))
         if inst.opcode == "c" {

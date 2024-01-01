@@ -140,7 +140,6 @@ Inst :: struct {
     data_size:      u8,
     seg_override:   Sreg,
     selector:       Maybe(u16),
-    test:           Maybe(Test),
     operands:       [4]Operand,
     operands_count: int,
     flags:          Inst_Flags,
