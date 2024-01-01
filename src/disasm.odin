@@ -163,7 +163,20 @@ parse_modrm :: proc(ctx: ^Disasm_Ctx, modrm: u8) -> (op1: Operand, op2: Operand,
     return nil, nil, false
 }
 
-add_modrm_addr16 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok: bool) {
+Reg_Kind :: enum {
+    Gpr,
+    Mmx,
+}
+
+add_modrm_addr16 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind) -> (ok: bool) {
+    if mod == 0b11 {
+        if kind == .Gpr {
+            add_operand(inst, make_reg(rm, 16))
+        } else {
+            add_operand(inst, MMX_Reg(rm))
+        }
+        return true
+    }
     base_regs: [8]struct{base: Reg, index: Reg} = {
         {base = {.Bx, 16}, index = {.Si,  16}},
         {base = {.Bx, 16}, index = {.Di,  16}},
@@ -178,33 +191,33 @@ add_modrm_addr16 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok:
     base := pair.base
     index := pair.index
     disp := i32(0)
-    if mod == 0b11 {
-        add_operand(inst, make_reg(rm, 16))
-    } else {
-        if mod == 0b01 {
-            disp = cast(i32) pop_u8(ctx) or_return
-        } else if (mod == 0b00 && rm == 0b110) || mod == 0b10 {
-            disp = cast(i32) pop_u16(ctx) or_return
-            if mod == 0b00 && rm == 0b110 {
-                index = {}
-                base  = {}
-            }
+    if mod == 0b01 {
+        disp = cast(i32) pop_u8(ctx) or_return
+    } else if (mod == 0b00 && rm == 0b110) || mod == 0b10 {
+        disp = cast(i32) pop_u16(ctx) or_return
+        if mod == 0b00 && rm == 0b110 {
+            index = {}
+            base  = {}
         }
-        add_operand(inst, make_mem(base = base, index = index, disp = disp))
     }
+    add_operand(inst, make_mem(base = base, index = index, disp = disp))
     return true
 }
 
-add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8) -> (ok: bool) {
+add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind) -> (ok: bool) {
     if mod == 0b00 && rm == 0b101 {
         add_operand(inst, Mem {
             disp = cast(i32) pop_u32(ctx) or_return,
-            base = ctx.addr_bits == 64? {idx = .Ip, bits = 64} : {}
+            base = ctx.addr_bits == 64? {idx = .Ip, bits = 64} : {},
         })
         return true
     }
     if mod == 0b11 {
-        add_operand(inst, make_reg(rex_extend_b(ctx.rex, rm), ctx.data_bits))
+        if kind == .Gpr {
+            add_operand(inst, make_reg(rex_extend_b(ctx.rex, rm), ctx.data_bits))
+        } else {
+            add_operand(inst, MMX_Reg(rm))
+        }
         return true
     }
     disp := i32(0)
@@ -375,6 +388,8 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
             rex_extend_r(ctx.rex, fields.bits[.Rx]),
             ctx.data_bits,
         ))
+    } else if fields.has[.Mmxrx] {
+        add_operand(&inst, MMX_Reg(fields.bits[.Mmxrx]))
     } else if fields.has[.Eee] {
         assert(fields.bits[.Eee] < cast(u8) max(Creg_Idx))
         add_operand(&inst, cast(Creg_Idx) fields.bits[.Eee])
@@ -407,9 +422,17 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
         mod := fields.bits[.Mod]
         rm := fields.bits[.Rm]
         if ctx.addr_bits == 16 {
-            add_modrm_addr16(ctx, &inst, mod, rm)
+            if fields.has[.Mmxrx] {
+                add_modrm_addr16(ctx, &inst, mod, rm, .Mmx)
+            } else {
+                add_modrm_addr16(ctx, &inst, mod, rm, .Gpr)
+            }
         } else if ctx.addr_bits == 32 || ctx.addr_bits == 64 {
-            add_modrm_addr32(ctx, &inst, mod, rm)
+            if fields.has[.Mmxrx] {
+                add_modrm_addr32(ctx, &inst, mod, rm, .Mmx)
+            } else {
+                add_modrm_addr32(ctx, &inst, mod, rm, .Gpr)
+            }
         } else {
             panic("Bad addr bits")
         }

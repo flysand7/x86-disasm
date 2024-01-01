@@ -44,6 +44,8 @@
 # ddd - 3-bit debug register field.
 # sss - 3-bit segment register field (includes GS and FS)
 # ss  - 2-bit segment register field (doesn't include GS and FS)
+# gg  - 2-bit granularity field. Just like tttt it's appended to the
+#       opcode.
 
 # Mod/RM encoding
 # ------------------------------------------------------------------- #
@@ -53,6 +55,7 @@
 # modab - mod field that is expected to be 00.
 # rx  - 3-bit reg field of the mod/rm byte.
 # rm  - 3-bit rm field of the mod/rm byte.
+# mmxrx - 3-bit mmx register encoding in the reg field.
 
 # Implicit operands
 # ------------------------------------------------------------------- #
@@ -290,6 +293,40 @@ invpcid 01100110 : 00001111 : 00111000 : 10000010 : mod rx rm
 cmpxchg8b 00001111 : 11000111 : mod 001 rm
 
 
+# ------------------------------------------------------------------- #
+# MMX instruction formats and encodings
+# ------------------------------------------------------------------- #
+
+emms     00001111 : 01110111
+movd     00001111 : 011d1110 : 11 mmxrx rrr
+movd     00001111 : 011d1110 : moda mmxrx rm
+movq     00001111 : 011d1111 : 11 mmxrx rrr
+movq     00001111 : 011d1111 : moda mmxrx rm
+packsswb 00001111 : 01100011 : mod mmxrx rm
+packuswb 00001111 : 01100111 : mod mmxrx rm
+packssdw 00001111 : 01101011 : mod mmxrx rm
+padd     00001111 : 111111gg : mod mmxrx rm
+padds    00001111 : 111011gg : mod mmxrx rm
+paddus   00001111 : 110111gg : mod mmxrx rm
+pand     00001111 : 11011011 : mod mmxrx rm
+pandn    00001111 : 11011111 : mod mmxrx rm
+pcmpeq   00001111 : 011101gg : mod mmxrx rm
+pcmpgt   00001111 : 011001gg : mod mmxrx rm
+pmaddwd  00001111 : 11110101 : mod mmxrx rm
+pmulhuw  00001111 : 11100100 : mod mmxrx rm
+pmulhw   00001111 : 11100101 : mod mmxrx rm
+pmullw   00001111 : 11010101 : mod mmxrx rm
+por      00001111 : 11101011 : mod mmxrx rm
+psll     00001111 : 111100gg : mod mmxrx rm
+psll     00001111 : 011100gg : 11 110 mmxrx : imm8
+psra     00001111 : 111000gg : mod mmxrx rm
+psra     00001111 : 011100gg : 11 110 mmxrx : imm8
+psub     00001111 : 111110gg : mod mmxrx rm
+psubs    00001111 : 111110gg : mod mmxrx rm
+psubus   00001111 : 110110gg : mod mmxrx rm
+punpckh  00001111 : 011010gg : mod mmxrx rm
+punpckl  00001111 : 011000gg : mod mmxrx rm
+pxor     00001111 : 11101111 : mod mmxrx rm
 
 # ------------------------------------------------------------------- #
 # P6 family instruction formats and encodings

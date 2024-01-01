@@ -21,6 +21,17 @@ Reg_Idx :: enum u8 {
     Ip,
 }
 
+MMX_Reg :: enum u8 {
+    Mm0,
+    Mm1,
+    Mm2,
+    Mm3,
+    Mm4,
+    Mm5,
+    Mm6,
+    Mm7,
+}
+
 Creg_Idx :: enum u8 {
     Cr0,
     Cr1,
@@ -94,6 +105,7 @@ Mem_Short :: struct {
 
 Operand :: union {
     Reg,
+    MMX_Reg,
     Mem,
     Mem_Short,
     Imm,
