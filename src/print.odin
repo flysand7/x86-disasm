@@ -47,6 +47,9 @@ print_inst :: proc(inst: Inst) {
     }
     if inst.data_size != 0 {
         fmt.printf("%s", data_size_suffix(inst.data_size))
+        if inst.opcode == "c" {
+            fmt.printf("%s", data_size_suffix(2*inst.data_size))
+        }
     }
     for i in 0 ..< inst.operands_count {
         fmt.printf(i != 0? ", " : " ")

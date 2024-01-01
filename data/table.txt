@@ -12,6 +12,22 @@
 
 # Colons can be used to visually separate bytes of the instruction.
 
+# Instruction opcodes
+# ------------------------------------------------------------------- #
+# Some instructions don't have a complete opcode on them. The list
+# below specifies such instructions
+#   j    - Jcc
+#   cmov - CMOVcc
+#   c    - CWD, CDQ
+# The way they are meant to be interpreted is that the actual opcode
+# is constructed by appending suffixes to the opcode based on the
+# combination of opcode encoding and encoding flags.
+# If the instruction has `tttt` field, it gets condition code appended
+# to the opcode.
+# If the instruction encoding has `+ds` flag, it gets its data size
+# appended to its name. CWD/CDQ are special instructions that also
+# append double the data size to their name.
+
 # Opcode encoding
 # ------------------------------------------------------------------- #
 # <binary number> - specifies a string of bits that must be matched
@@ -63,7 +79,6 @@
 # +n64 - do not decode on 64-bit platforms
 # +ncs - do not decode if cr2 or cr3 field turned out to be cs
 # +ds  - data size is part of instruction name (movs -> movsb/movsw/movsl/movsq)
-
 
 # ------------------------------------------------------------------- #
 # General purpose instruction formats and encodings.
@@ -123,8 +138,7 @@ nop     10010000
 xchg    10010rrr : _a
 cbw     10011000
 cwde    10011000
-cdq     10011001
-cwd     10011001
+c       10011001 : +ds
 call    10011010 : disp sel
 wait    10011011
 pushf   10011100

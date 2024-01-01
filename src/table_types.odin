@@ -4,6 +4,7 @@ Enc_Flags :: bit_set[enum{
     N64,
     Ncs,
     Ds,
+    Ds1,
 }]
 
 Tab_Bits :: struct {
