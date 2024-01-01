@@ -107,6 +107,7 @@ Inst_Flags :: bit_set[enum{
     Repnz,
     Lock,
     Bnd,
+    Data_Size_Suffix,
 }]
 
 Inst :: struct {

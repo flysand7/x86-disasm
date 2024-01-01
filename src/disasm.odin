@@ -342,9 +342,10 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
     inst := Inst {
         opcode = encoding.name,
         seg_override = ctx.seg_override,
+        data_size = ctx.data_bits,
     }
     if .Ds in encoding.flags {
-        inst.data_size = ctx.data_bits
+        inst.flags += {.Data_Size_Suffix}
     }
     if ctx.lock {
         inst.flags |= {.Lock}

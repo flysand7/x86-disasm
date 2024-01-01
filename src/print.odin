@@ -45,7 +45,7 @@ print_inst :: proc(inst: Inst) {
     } else {
         fmt.printf("%s", inst.opcode)
     }
-    if inst.data_size != 0 {
+    if .Data_Size_Suffix in inst.flags {
         fmt.printf("%s", data_size_suffix(inst.data_size))
         if inst.opcode == "c" {
             fmt.printf("%s", data_size_suffix(2*inst.data_size))
@@ -59,6 +59,7 @@ print_inst :: proc(inst: Inst) {
                 fmt.printf("short ")
                 fmt_int(op.disp)
             case Mem:
+                fmt.printf("%s ", data_size_spec(inst.data_size))
                 if inst.seg_override != nil {
                     fmt.printf("%s:", sreg_name(inst.seg_override))
                 }
@@ -99,6 +100,16 @@ data_size_suffix :: proc(size: u8) -> string {
         case 16: return "w"
         case 32: return "d"
         case 64: return "q"
+        case: unreachable()
+    }
+}
+
+data_size_spec :: proc(size: u8) -> string {
+    switch size {
+        case 8:  return "byte"
+        case 16: return "word"
+        case 32: return "dword"
+        case 64: return "qword"
         case: unreachable()
     }
 }
