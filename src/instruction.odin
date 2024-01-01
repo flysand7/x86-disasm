@@ -116,7 +116,7 @@ Inst_Flags :: bit_set[enum{
 }]
 
 Inst :: struct {
-    opcode:         string,
+    mnemonic:       string,
     bytes:          []u8,
     data_size:      u8,
     seg_override:   Sreg,

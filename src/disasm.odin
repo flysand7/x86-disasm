@@ -379,7 +379,7 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
         }
     }
     inst := Inst {
-        opcode = encoding.name,
+        mnemonic = encoding.name,
         seg_override = ctx.seg_override,
         data_size = ctx.data_bits,
     }
@@ -393,7 +393,7 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
         inst.flags |= {.Repnz}
     }
     if ctx.rep_or_bnd {
-        switch inst.opcode {
+        switch inst.mnemonic {
             case "call": fallthrough
             case "ret":  fallthrough
             case "jmp":  inst.flags |= {.Bnd}

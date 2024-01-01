@@ -40,10 +40,10 @@ print_inst :: proc(inst: Inst) {
     if .Repnz in inst.flags {
         fmt.printf("repnz ")
     }
-    fmt.printf("%s", inst.opcode)
+    fmt.printf("%s", inst.mnemonic)
     if .Data_Size_Suffix in inst.flags {
         fmt.printf("%s", data_size_suffix(inst.data_size))
-        if inst.opcode == "c" {
+        if inst.mnemonic == "c" {
             fmt.printf("%s", data_size_suffix(2*inst.data_size))
         }
     }
