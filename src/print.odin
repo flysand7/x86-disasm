@@ -137,28 +137,6 @@ sreg_name :: proc(sreg: Sreg) -> string {
     }
 }
 
-test_name :: proc(test: Test) -> string {
-    switch test {
-        case .O:  return "o"
-        case .No: return "no"
-        case .B:  return "b"
-        case .Ae: return "ae"
-        case .Z:  return "z"
-        case .Nz: return "nz"
-        case .Be: return "be"
-        case .A:  return "a"
-        case .S:  return "s"
-        case .Ns: return "ns"
-        case .P:  return "p"
-        case .Np: return "np"
-        case .L:  return "l"
-        case .Ge: return "ge"
-        case .Le: return "le"
-        case .G:  return "g"
-        case: panic("Bad cc")
-    }
-}
-
 reg_name :: proc(reg: Reg) -> string {
     assert(reg.idx != nil)
     #partial switch reg.idx {

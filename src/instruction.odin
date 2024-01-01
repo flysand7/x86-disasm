@@ -65,25 +65,6 @@ Dreg_Idx :: enum u8 {
     Dr7,
 }
 
-Test :: enum u8 {
-    O,
-    No,
-    B,
-    Ae,
-    Z,
-    Nz,
-    Be,
-    A,
-    S,
-    Ns,
-    P,
-    Np,
-    L,
-    Ge,
-    Le,
-    G,
-}
-
 Sreg :: enum {
     None,
     Es,
