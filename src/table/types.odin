@@ -1,4 +1,4 @@
-package disasm
+package disasm_data
 
 Enc_Flags :: bit_set[enum{
     N64,

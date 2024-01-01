@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 TAB = '    '
-PACKAGE_NAME = 'disasm'
+PACKAGE_NAME = 'disasm_data'
 TABLE_IN_FILENAME  = 'data/table.txt'
-TABLE_OUT_FILENAME = 'src/table.odin'
+TABLE_OUT_FILENAME = 'src/table/table.odin'
 
 def read_lines(path: str) -> list[str]:
     with open(path, 'r') as f:

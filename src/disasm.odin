@@ -1,6 +1,7 @@
 package disasm
 
 import "core:fmt"
+import "table"
 
 Disasm_Ctx :: struct {
     bytes:      []u8,
@@ -21,8 +22,8 @@ Disasm_Ctx :: struct {
 }
 
 Inst_Fields :: struct {
-    bits: [Tab_Field]u8,
-    has:  [Tab_Field]bool,
+    bits: [table.Tab_Field]u8,
+    has:  [table.Tab_Field]bool,
     disp:  i32,
     disp8: i8,
     imm:   i64,
@@ -104,7 +105,7 @@ read_bits :: proc(ctx: ^Disasm_Ctx, count: u8) -> (bits: u8, ok: bool) {
     return bits, true
 }
 
-match_bits :: proc(ctx: ^Disasm_Ctx, bits: Tab_Bits) -> (matched: bool, ok: bool) {
+match_bits :: proc(ctx: ^Disasm_Ctx, bits: table.Tab_Bits) -> (matched: bool, ok: bool) {
     assert(bits.count <= 8)
     assert(ctx.bits_offs >= bits.count)
     count := bits.count
@@ -265,8 +266,8 @@ add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8, kind: R
     return true
 }
 
-read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> (matched, ok: bool) {
-    field_size := field_widths[field]
+read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: table.Tab_Field) -> (matched, ok: bool) {
+    field_size := table.field_widths[field]
     assert(!fields.has[field])
     fields.has[field] = true
     if field_size != 0 {
@@ -342,14 +343,14 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
     return true, true
 }
 
-match_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, mask: Tab_Mask) -> (matched, ok: bool) {
+match_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, mask: table.Tab_Mask) -> (matched, ok: bool) {
     switch m in mask {
-        case Tab_Bits:
+        case table.Tab_Bits:
             return match_bits(ctx, m)
-        case Ign_Bits:
+        case table.Ign_Bits:
             _, ok := read_bits(ctx, m.count)
             return true, ok
-        case Tab_Field:
+        case table.Tab_Field:
             return read_field(ctx, fields, m)
     }
     return true, true
@@ -370,7 +371,7 @@ reg_kind_from_fields :: proc(ctx: ^Disasm_Ctx, fields: Inst_Fields) -> Reg_Kind 
     return .Gpr
 }
 
-decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok: bool) {
+decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: table.Tab_Inst) -> (matched: bool, ok: bool) {
     fields := Inst_Fields {}
     for mask in encoding.masks {
         matched := match_field(ctx, &fields, mask) or_return
@@ -573,7 +574,7 @@ disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
         }
     }
     saved_offset := ctx.offset
-    for enc in decode_table {
+    for enc in table.decode_table {
         if .N64 in enc.flags && ctx.cpu_bits == 64 {
             continue
         }

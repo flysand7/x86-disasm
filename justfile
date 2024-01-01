@@ -15,5 +15,5 @@ dump FILENAME: generate (prepare-disasm FILENAME)
     odin test src -test-name:test_dump {{ODIN_FLAGS}} -- temp/temp.out
 
 generate:
-    ./src/generator.py
+    ./src/table/generator.py
 
