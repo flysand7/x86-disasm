@@ -371,7 +371,7 @@ reg_kind_from_fields :: proc(ctx: ^Ctx, fields: Inst_Fields) -> Reg_Kind {
     return .Gpr
 }
 
-decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding) -> (matched: bool, ok: bool) {
+decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matched: bool, ok: bool) {
     fields := Inst_Fields {}
     for mask in encoding.masks {
         matched := match_field(ctx, &fields, mask) or_return
@@ -379,7 +379,7 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding) -> (matched: bool, ok: 
             return false, true
         }
     }
-    inst := Inst {
+    inst^ = Inst {
         mnemonic = encoding.mnemonic,
         seg_override = ctx.seg_override,
         data_size = ctx.data_bits,
@@ -408,44 +408,44 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding) -> (matched: bool, ok: 
     }
 
     if fields.has[.Rx] {
-        add_operand(&inst, make_reg(
+        add_operand(inst, make_reg(
             rex_extend_r(ctx.rex, fields.bits[.Rx]),
             ctx.data_bits,
         ))
     } else if fields.has[.Mmxrx] {
-        add_operand(&inst, MMX_Reg(fields.bits[.Mmxrx]))
+        add_operand(inst, MMX_Reg(fields.bits[.Mmxrx]))
     } else if fields.has[.Xmmrx] {
-        add_operand(&inst, XMM_Reg(fields.bits[.Xmmrx]))
+        add_operand(inst, XMM_Reg(fields.bits[.Xmmrx]))
     } else if fields.has[.Mmrx] {
         // Data-size operand prefix used -- required for SSE interpretation.
         if ctx.data_bits == 16 {
-            add_operand(&inst, XMM_Reg(fields.bits[.Mmrx]))
+            add_operand(inst, XMM_Reg(fields.bits[.Mmrx]))
         } else {
-            add_operand(&inst, MMX_Reg(fields.bits[.Mmrx]))
+            add_operand(inst, MMX_Reg(fields.bits[.Mmrx]))
         }
     } else if fields.has[.Eee] {
         assert(fields.bits[.Eee] < cast(u8) max(Creg_Idx))
-        add_operand(&inst, cast(Creg_Idx) fields.bits[.Eee])
+        add_operand(inst, cast(Creg_Idx) fields.bits[.Eee])
     } else if fields.has[.Ddd] {
         assert(fields.bits[.Eee] < cast(u8) max(Dreg_Idx))
-        add_operand(&inst, cast(Dreg_Idx) fields.bits[.Ddd])
+        add_operand(inst, cast(Dreg_Idx) fields.bits[.Ddd])
     } else if fields.has[.Ss] {
         assert(fields.bits[.Ss] < cast(u8) max(Sreg))
-        add_operand(&inst, make_sreg(fields.bits[.Ss]))
+        add_operand(inst, make_sreg(fields.bits[.Ss]))
     } else if fields.has[.Sss] {
         assert(fields.bits[.Sss] < cast(u8) max(Sreg))
-        add_operand(&inst, make_sreg(fields.bits[.Sss]))
+        add_operand(inst, make_sreg(fields.bits[.Sss]))
     } else if fields.has[._c] {
-        add_operand(&inst, Reg{.Cx, 8})
+        add_operand(inst, Reg{.Cx, 8})
     }
     if fields.has[.Rrr] {
-        add_operand(&inst, make_reg(
+        add_operand(inst, make_reg(
             rex_extend_b(ctx.rex, fields.bits[.Rrr]),
             ctx.data_bits,
         ))
     }
     if fields.has[._a] {
-        add_operand(&inst, make_reg(0, ctx.data_bits))
+        add_operand(inst, make_reg(0, ctx.data_bits))
     }
     if fields.has[.Sel] {
         inst.selector = fields.sel
@@ -455,9 +455,9 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding) -> (matched: bool, ok: 
         mod := fields.bits[.Mod]
         rm := fields.bits[.Rm]
         if ctx.addr_bits == 16 {
-            add_modrm_addr16(ctx, &inst, mod, rm, reg_kind_from_fields(ctx, fields))
+            add_modrm_addr16(ctx, inst, mod, rm, reg_kind_from_fields(ctx, fields))
         } else if ctx.addr_bits == 32 || ctx.addr_bits == 64 {
-            add_modrm_addr32(ctx, &inst, mod, rm, reg_kind_from_fields(ctx, fields))
+            add_modrm_addr32(ctx, inst, mod, rm, reg_kind_from_fields(ctx, fields))
         } else {
             panic("Bad addr bits")
         }
@@ -473,25 +473,33 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding) -> (matched: bool, ok: 
     }
 
     if fields.has[.Disp] {
-        add_operand(&inst, make_mem(base = {}, index = {}, scale = 1, disp = fields.disp))
+        add_operand(inst, make_mem(base = {}, index = {}, scale = 1, disp = fields.disp))
     } else if fields.has[.Disp8] {
-        add_operand(&inst, Mem_Short { disp = fields.disp8 })
+        add_operand(inst, Mem_Short { disp = fields.disp8 })
     }
     if fields.has[.Imm] {
-        add_operand(&inst, Imm {
+        add_operand(inst, Imm {
             value = fields.imm,
         })
     } else if fields.has[._1] {
-        add_operand(&inst, Imm {
+        add_operand(inst, Imm {
             value = 1,
         })
     }
     inst.bytes = ctx.bytes[ctx.start_offs:ctx.offset]
-    print_inst(inst)
     return true, true
 }
 
-disasm_inst :: proc(ctx: ^Ctx) -> (ok: bool) {
+disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
+    inst = Inst {}
+    ctx.data_bits = ctx.cpu_bits == 64? 32 : ctx.cpu_bits
+    ctx.addr_bits = ctx.cpu_bits
+    ctx.seg_override = nil
+    ctx.lock = false
+    ctx.repnz = false
+    ctx.rep_or_bnd = false
+    ctx.rex = 0
+    ctx.start_offs = ctx.offset
     Prefix_Group :: bit_set[enum{
         Gr1,
         Gr2,
@@ -581,37 +589,19 @@ disasm_inst :: proc(ctx: ^Ctx) -> (ok: bool) {
         ctx.offset    = saved_offset
         ctx.bits_offs = 8
         if match_bits(ctx, enc.opcode) or_continue {
-            matched := decode_inst(ctx, enc) or_return
+            matched := decode_inst(ctx, enc, &inst) or_return
             if matched {
-                return true
+                return inst, true
             }
         }
     }
-    return false
+    return {}, false
 }
 
-disasm :: proc(bytes: []u8, default_bits := u8(64)) {
-    ctx := Ctx {
+create_ctx :: proc(bytes: []u8, cpu_bits := u8(64)) -> Ctx {
+    return Ctx {
         bytes = bytes,
         bits_offs = 8,
-        cpu_bits  = default_bits,
-    }
-    for {
-        ctx.data_bits = ctx.cpu_bits == 64? 32 : ctx.cpu_bits
-        ctx.addr_bits = ctx.cpu_bits
-        ctx.seg_override = nil
-        ctx.lock = false
-        ctx.repnz = false
-        ctx.rep_or_bnd = false
-        ctx.rex = 0
-        ctx.start_offs = ctx.offset
-        if !disasm_inst(&ctx) {
-            if len(ctx.bytes) - ctx.offset > 0 {
-                b, _ := peek_u8(&ctx)
-                fmt.printf("bad byte: %02x\n", b)
-            }
-            break
-        }
+        cpu_bits  = cpu_bits,
     }
 }
-

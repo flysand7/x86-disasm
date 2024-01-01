@@ -32,7 +32,10 @@ main :: proc() {
                 fmt.eprintf("File %s: not able to read\n", filename)
                 os.exit(1)
             }
-            disasm.disasm(bytes, bits)
+            ctx := disasm.create_ctx(bytes, bits)
+            for inst in disasm.disasm_inst(&ctx) {
+                disasm.print_inst(inst)
+            }
         }
     } else {
         fmt.eprintf("ELF disassembely not supported yet\n")

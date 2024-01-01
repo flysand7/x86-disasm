@@ -20,6 +20,9 @@ test_disasm :: proc(t: ^testing.T) {
         fmt.println("----------")
         file_bytes, file_bytes_ok := os.read_entire_file(arg)
         testing.expect_value(t, file_bytes_ok, true)
-        disasm(file_bytes)
+        ctx := create_ctx(file_bytes)
+        for inst in disasm_inst(&ctx) {
+            print_inst(inst)
+        }
     }
 }
