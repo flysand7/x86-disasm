@@ -51,9 +51,6 @@ print_inst :: proc(inst: Inst) {
             fmt.printf("%s", data_size_suffix(2*inst.data_size))
         }
     }
-    if .Granularity_Suffix in inst.flags {
-        fmt.printf("%s", granularity_suffix(inst.granularity))
-    }
     for i in 0 ..< inst.operands_count {
         fmt.printf(i != 0? ", " : " ")
         operand := inst.operands[i]

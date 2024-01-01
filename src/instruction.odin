@@ -132,7 +132,6 @@ Inst_Flags :: bit_set[enum{
     Lock,
     Bnd,
     Data_Size_Suffix,
-    Granularity_Suffix,
 }]
 
 Inst :: struct {
@@ -140,7 +139,6 @@ Inst :: struct {
     bytes:          []u8,
     data_size:      u8,
     seg_override:   Sreg,
-    granularity:    u8,
     selector:       Maybe(u16),
     test:           Maybe(Test),
     operands:       [4]Operand,

@@ -44,8 +44,6 @@
 # ddd - 3-bit debug register field.
 # sss - 3-bit segment register field (includes GS and FS)
 # ss  - 2-bit segment register field (doesn't include GS and FS)
-# gg  - 2-bit granularity field. Just like tttt it's appended to the
-#       opcode.
 
 # Mod/RM encoding
 # ------------------------------------------------------------------- #
@@ -300,50 +298,58 @@ cmpxchg8b 00001111 : 11000111 : mod 001 rm
 # MMX instruction formats and encodings
 # ------------------------------------------------------------------- #
 
-punpcklw 00001111 : 01100000 : mod mmxrx rm
-punpckld 00001111 : 01100001 : mod mmxrx rm
-punpcklq 00001111 : 01100010 : mod mmxrx rm
-packsswb 00001111 : 01100011 : mod mmxrx rm
-pcmpgtb  00001111 : 01100100 : mod mmxrx rm
-pcmpgtw  00001111 : 01100101 : mod mmxrx rm
-pcmpgtd  00001111 : 01100110 : mod mmxrx rm
-packuswb 00001111 : 01100111 : mod mmxrx rm
-movd     00001111 : 011d1110 : 11 mmxrx rrr
-movd     00001111 : 011d1110 : moda mmxrx rm
-movq     00001111 : 011d1111 : 11 mmxrx rrr
-movq     00001111 : 011d1111 : moda mmxrx rm
-psraw    00001111 : 01110001 : 11 100 mmxrx : imm8
-psllw    00001111 : 01110001 : 11 110 mmxrx : imm8
-psrad    00001111 : 01110010 : 11 100 mmxrx : imm8
-pslld    00001111 : 01110010 : 11 110 mmxrx : imm8
-psraq    00001111 : 01110011 : 11 100 mmxrx : imm8
-psllq    00001111 : 01110011 : 11 110 mmxrx : imm8
-punpckhw 00001111 : 01101000 : mod mmxrx rm
-punpckhd 00001111 : 01101001 : mod mmxrx rm
-punpckhq 00001111 : 01101010 : mod mmxrx rm
-packssdw 00001111 : 01101011 : mod mmxrx rm
-pcmpeqb  00001111 : 01110100 : mod mmxrx rm
-pcmpeqw  00001111 : 01110101 : mod mmxrx rm
-pcmpeqd  00001111 : 01110110 : mod mmxrx rm
+punpcklw 00001111 : 01100000 : mod mmrx rm
+punpckld 00001111 : 01100001 : mod mmrx rm
+punpcklq 00001111 : 01100010 : mod mmrx rm
+packsswb 00001111 : 01100011 : mod mmrx rm
+pcmpgtb  00001111 : 01100100 : mod mmrx rm
+pcmpgtw  00001111 : 01100101 : mod mmrx rm
+pcmpgtd  00001111 : 01100110 : mod mmrx rm
+packuswb 00001111 : 01100111 : mod mmrx rm
+movd     00001111 : 011d1110 : 11 mmrx rrr
+movd     00001111 : 011d1110 : moda mmrx rm
+movq     00001111 : 011d1111 : 11 mmrx rrr
+movq     00001111 : 011d1111 : moda mmrx rm
+psraw    00001111 : 01110001 : 11 100 mmrx : imm8
+psllw    00001111 : 01110001 : 11 110 mmrx : imm8
+psrad    00001111 : 01110010 : 11 100 mmrx : imm8
+pslld    00001111 : 01110010 : 11 110 mmrx : imm8
+psraq    00001111 : 01110011 : 11 100 mmrx : imm8
+psllq    00001111 : 01110011 : 11 110 mmrx : imm8
+punpckhw 00001111 : 01101000 : mod mmrx rm
+punpckhd 00001111 : 01101001 : mod mmrx rm
+punpckhq 00001111 : 01101010 : mod mmrx rm
+packssdw 00001111 : 01101011 : mod mmrx rm
+pcmpeqb  00001111 : 01110100 : mod mmrx rm
+pcmpeqw  00001111 : 01110101 : mod mmrx rm
+pcmpeqd  00001111 : 01110110 : mod mmrx rm
 emms     00001111 : 01110111
-pand     00001111 : 11011011 : mod mmxrx rm
-pmullw   00001111 : 11010101 : mod mmxrx rm
-psubus   00001111 : 110110gg : mod mmxrx rm
-paddusb  00001111 : 11011100 : mod mmxrx rm
-paddusw  00001111 : 11011101 : mod mmxrx rm
-pandn    00001111 : 11011111 : mod mmxrx rm
-psra     00001111 : 111000gg : mod mmxrx rm
-pmulhuw  00001111 : 11100100 : mod mmxrx rm
-pmulhw   00001111 : 11100101 : mod mmxrx rm
-por      00001111 : 11101011 : mod mmxrx rm
-paddsb   00001111 : 11101100 : mod mmxrx rm
-paddsw   00001111 : 11101101 : mod mmxrx rm
-psll     00001111 : 111100gg : mod mmxrx rm
-pmaddwd  00001111 : 11110101 : mod mmxrx rm
-psubs    00001111 : 111010gg : mod mmxrx rm
-pxor     00001111 : 11101111 : mod mmxrx rm
-psub     00001111 : 111110gg : mod mmxrx rm
-padd     00001111 : 111111gg : mod mmxrx rm
+pand     00001111 : 11011011 : mod mmrx rm
+pmullw   00001111 : 11010101 : mod mmrx rm
+psubusb  00001111 : 11011000 : mod mmrx rm
+psubusw  00001111 : 11011001 : mod mmrx rm
+paddusb  00001111 : 11011100 : mod mmrx rm
+paddusw  00001111 : 11011101 : mod mmrx rm
+pandn    00001111 : 11011111 : mod mmrx rm
+psrad    00001111 : 11100001 : mod mmrx rm
+psraw    00001111 : 11100010 : mod mmrx rm
+psrad    00001111 : 11100011 : mod mmrx rm
+pmulhuw  00001111 : 11100100 : mod mmrx rm
+pmulhw   00001111 : 11100101 : mod mmrx rm
+por      00001111 : 11101011 : mod mmrx rm
+paddsb   00001111 : 11101100 : mod mmrx rm
+paddsw   00001111 : 11101101 : mod mmrx rm
+psllw    00001111 : 11110001 : mod mmrx rm
+pslld    00001111 : 11110010 : mod mmrx rm
+psllq    00001111 : 11110011 : mod mmrx rm
+pmaddwd  00001111 : 11110101 : mod mmrx rm
+psubsb   00001111 : 11101000 : mod mmrx rm
+psubsw   00001111 : 11101001 : mod mmrx rm
+pxor     00001111 : 11101111 : mod mmrx rm
+psubb    00001111 : 11111000 : mod mmrx rm
+psubw    00001111 : 11111001 : mod mmrx rm
+paddb    00001111 : 11111100 : mod mmrx rm
+paddw    00001111 : 11111101 : mod mmrx rm
 
 
 # ------------------------------------------------------------------- #
