@@ -67,282 +67,205 @@
 # ------------------------------------------------------------------- #
 # General purpose instruction formats and encodings.
 # ------------------------------------------------------------------- #
-aaa     00110111
-aad     11010101 : 00001010
-aam     11010100 : 00001010
-aas     00111111
 
 add     000000dw : mod rx rm
 add     0000010w : _a imm
-add     100000sw : mod 000 rm : imm
-
+or      0000100w : mod rx rm
+or      0000110w : _a imm
+push    000ss110
+pop     000ss111
 adc     000100dw : mod rx rm
 adc     0001010w : _a imm
-adc     100000sw : mod 010 rm : imm
-
-and     0010010w : _a imm
-and     001000dw : mod rx rm
-and     100000sw : mod 100 rm : imm
-
-arpl    01100011 : mod rx rm
-bound   01100010 : moda rx rm
-
-bswap   00001111 : 11001rrr
-bsf     00001111 : 10111100 : mod rx rm
-bsr     00001111 : 10111101 : mod rx rm
-
-bt      00001111 : 10111010 : mod 100 rm : imm8
-bt      00001111 : 10100011 : mod rx rm
-
-btc     00001111 : 10111010 : mod 111 rm : imm8
-btc     00001111 : 10111011 : mod rx rm
-
-btr     00001111 : 10111010 : mod 110 rm : imm8
-btr     00001111 : 10110011 : mod rx rm
-
-bts     00001111 : 10111010 : mod 101 rm : imm8
-bts     00001111 : 10111010 : mod rx rm
-
-call    11101000 : disp
-call    11111111 : mod 010 rm
-call    10011010 : disp sel
-call    11111111 : mod 011 rm
-
-cbw     10011000
-cdq     10011001
-clc     11111000
-cld     11111100
-cli     11111010
-clts    00001111 : 00000110
-cmc     11110101
-
-cmp     001110dw : mod rx rm
-cmp     100000sw : mod 111 rm : imm
-cmp     0011110w : imm
-
-cmps    1010011w
-cmpxchg 00001111 : 1011000w : mod rx rm
-cpuid   00001111 : 10100010
-
-cwd     10011001
-cwde    10011000
-daa     00100111
-das     00101111
-
-dec     1111111w : mod 001 rm
-dec     01001rrr : +n64
-
-hlt     11110100
-
-idiv    1111011w : mod 111 rm : _a
-
-imul    1111011w : mod 101 rm : _a
-imul    00001111 : 10101111 : mod rx rm
-imul    011010s1 : mod rx rm : imm
-
-in      1110010w : imm8
-in      1110110w
-
-inc     1111111w : mod 000 rm
-inc     01000rrr : +n64
-
-ins     0110110w
-
-int     11001101 : imm8
-int3    11001100
-into    11001110
-invd    00001111 : 00001000
-invlpg  00001111 : 00000001 : mod 111 rm
-invpcid 01100110 : 00001111 : 00111000 : 10000010 : mod rx rm
-iret    11001111
-
-j       0111tttt : disp8
-jcxz    11100011 : disp8
-
-jmp     11101011 : disp8
-jmp     11101001 : disp
-jmp     11111111 : mod 100 rm
-
-lahf    10011111
-
-lar     00001111 : 00000010 : mod rx rm
-lds     11000101 : modab rx rm
-lea     10001101 : moda  rx rm
-leave   11001001
-
-les     11000100 : modab rx rm
-
-lfs     00001111 : 10110100 : moda rx rm
-lgs     00001111 : 10110101 : moda rx rm
-
-lgdt    00001111 : 00000001 : moda 010 rm
-lidt    00001111 : 00000001 : moda 011 rm
-lldt    00001111 : 00000000 : mod  010 rm
-lmsw    00001111 : 00000001 : mod  110 rm
-
-lods    1010110w
-
-loop    11100010 : disp8
-loopz   11100001 : disp8
-loopnz  11100000 : disp8
-
-lsl     00001111 : 00000011 : mod  rx rm
-lss     00001111 : 10110010 : moda rx rm
-ltr     00001111 : 00000000 : mod 011 rm
-
-mov     100010dw : mod rx rm
-mov     1100011w : mod 000 rm : imm
-mov     1011wrrr : imm
-mov     1010000w : _a disp
-
-mov     00001111 : 00100010 : -- eee rrr : _64
-mov     00001111 : 00100000 : -- eee rrr : _64 _d
-
-mov     00001111 : 00100011 : -- ddd rrr : _64
-mov     00001111 : 00100001 : -- ddd rrr : _64 _d
-
-mov     10001110 : mod sss rm
-mov     10001100 : mod sss rm : _d
-
-movbe   00001111 : 00111000 : 1111000 d : mod rx rm
-
-movsx   00001111 : 1011111w : mod rx rm
-
-movzx   00001111 : 1011011w : mod rx rm
-
-mul     1111011w : mod 100 rm : _a
-
-nop     1001000
-
-nop     00001111 : 00011111 : mod 000 rm
-
-not     1111011w : mod 010 rm
-
-or      0000100w : mod rx rm
-or      100000sw : mod 001 rm : imm
-or      0000110w : imm _a
-
-out     1110011w : imm8
-out     1110111w
-
-outs    0110111w
-
-pop     10001111 : mod 000 rm
-pop     01011rrr
-pop     000ss111
-pop     00001111 : 10 sss 001 +ncs
-popa    01100001
-popf    10011101
-
-push    11111111 : 11110rrr
-push    01010rrr
-push    11111111 : mod 110 rm
-push    011010s0 : imm
-push    000ss110
-push    00001111 : 10sss000
-pusha   01100000
-pushf   10011100
-
-rcl     1101000w : mod 010 rm : _1
-rcl     1101001w : mod 010 rm : _c _d
-rcl     1100000w : mod 010 rm : imm8
-
-rcr     1101000w : mod 011 rm : _1
-rcr     1101001w : mod 011 rm : _c _d
-rcr     1100000w : mod 011 rm : imm8
-
-rdmsr   00001111 : 00110010
-rdpmc   00001111 : 00110011
-rdtsc   00001111 : 00110001
-rdtscp  00001111 : 00000001 : 11111001
-
-# TODO: rep prefix ones
-
-ret     11000011
-ret     11000010 : imm16
-
-ret     11001011
-ret     11001010 : imm16
-
-rol     1101000w : mod 000 rm : _1
-rol     1101001w : mod 000 rm : _c _d
-rol     1100000w : mod 000 rm : imm8
-
-ror     1101000w : mod 001 rm : _1
-ror     1101001w : mod 001 rm : _c _d
-ror     1100000w : mod 001 rm : imm8
-
-rsm     00001111 : 10101010
-sahf    10011110
-
-sar     1101000w : mod 111 rm : _1
-sar     1101001w : mod 111 rm : _c _d
-sar     1100000w : mod 111 rm : imm8
-
-sbb     110100dw : mod 111 rm
-sbb     100000sw : mod 011 rm : imm
+sbb     000110dw : mod rx rm
 sbb     0001110w : _a imm
-
-scas    1010111w
-
-set     00001111 : 1001tttt : mod 000 rm
-
-sgdt    00001111 : 00000001 : moda 000 rm
-
-shl     1101000w : mod 100 rm : _1
-shl     1101001w : mod 100 rm : _c _d
-shl     1100000w : mod 100 rm : imm8
-
-shr     1101000w : mod 101 rm : _1
-shr     1101001w : mod 101 rm : _c _d
-shr     1100000w : mod 101 rm : imm8
-
-shrd    00001111 : 10101100 : mod rx rm : imm8
-shrd    00001111 : 10101101 : mod rx rm : _c
-
-sidt    00001111 : 00000001 : moda 001 rm
-sldt    00001111 : 00000000 : mod  000 rm
-smsw    00001111 : 00000001 : mod 100 rm
-
-stc     11111001
-std     11111101
-sti     11111011
-
-stos    1010101w
-
-str     00001111 : 00000000 : mod 001 rm
-
+and     001000dw : mod rx rm
+and     0010010w : _a imm
+daa     00100111
 sub     001010dw : mod rx rm
-sub     100000sw : mod 101 rm : imm
 sub     0010110w : _a imm
-
+das     00101111
+xor     001100dw : mod rx rm
+xor     0011010w : imm
+aaa     00110111
+cmp     001110dw : mod rx rm
+cmp     0011110w : imm
+aas     00111111
+inc     01000rrr : +n64
+dec     01001rrr : +n64
+push    01010rrr
+pop     01011rrr
+pusha   01100000
+popa    01100001
+bound   01100010 : moda rx rm
+arpl    01100011 : mod rx rm
+push    011010s0 : imm
+imul    011010s1 : mod rx rm : imm
+ins     0110110w
+outs    0110111w
+j       0111tttt : disp8
+add     100000sw : mod 000 rm : imm
+or      100000sw : mod 001 rm : imm
+adc     100000sw : mod 010 rm : imm
+sbb     100000sw : mod 011 rm : imm
+and     100000sw : mod 100 rm : imm
+sub     100000sw : mod 101 rm : imm
+xor     100000sw : mod 110 rm : imm
+cmp     100000sw : mod 111 rm : imm
 test    1000010w : mod rx rm
-test    1000011w : mod 000 rm : imm
+xchg    1000011w : mod rx rm
+mov     100010dw : mod rx rm
+mov     10001100 : mod sss rm : _d
+lea     10001101 : moda rx rm
+mov     10001110 : mod sss rm
+pop     10001111 : mod 000 rm
+nop     10010000
+xchg    10010rrr : _a
+cbw     10011000
+cwde    10011000
+cdq     10011001
+cwd     10011001
+call    10011010 : disp sel
+wait    10011011
+pushf   10011100
+popf    10011101
+sahf    10011110
+lahf    10011111
+mov     1010000w : _a disp
+cmps    1010011w
 test    1010100w : _a imm
+stos    1010101w
+lods    1010110w
+scas    1010111w
+mov     1011wrrr : imm
+rol     1100000w : mod 000 rm : imm8
+ror     1100000w : mod 001 rm : imm8
+rcl     1100000w : mod 010 rm : imm8
+rcr     1100000w : mod 011 rm : imm8
+shl     1100000w : mod 100 rm : imm8
+shr     1100000w : mod 101 rm : imm8
+sar     1100000w : mod 111 rm : imm8
+ret     11000010 : imm16
+ret     11000011
+les     11000100 : modab rx rm
+lds     11000101 : modab rx rm
+mov     1100011w : mod 000 rm : imm
+leave   11001001
+ret     11001010 : imm16
+ret     11001011
+int3    11001100
+int     11001101 : imm8
+into    11001110
+iret    11001111
+rol     1101000w : mod 000 rm : _1
+ror     1101000w : mod 001 rm : _1
+rcl     1101000w : mod 010 rm : _1
+rcr     1101000w : mod 011 rm : _1
+shl     1101000w : mod 100 rm : _1
+shr     1101000w : mod 101 rm : _1
+sar     1101000w : mod 111 rm : _1
+rol     1101001w : mod 000 rm : _c _d
+ror     1101001w : mod 001 rm : _c _d
+rcl     1101001w : mod 010 rm : _c _d
+rcr     1101001w : mod 011 rm : _c _d
+shl     1101001w : mod 100 rm : _c _d
+shr     1101001w : mod 101 rm : _c _d
+sar     1101001w : mod 111 rm : _c _d
+aam     11010100 : 00001010
+aad     11010101 : 00001010
+xlat    11010111
+loopnz  11100000 : disp8
+loopz   11100001 : disp8
+loop    11100010 : disp8
+jcxz    11100011 : disp8
+in      1110010w : imm8
+out     1110011w : imm8
+call    11101000 : disp
+jmp     11101001 : disp
+jmp     11101011 : disp8
+in      1110110w
+out     1110111w
+hlt     11110100
+cmc     11110101
+test    1111011w : mod 000 rm : imm
+not     1111011w : mod 010 rm
+imul    1111011w : mod 101 rm : _a
+idiv    1111011w : mod 111 rm : _a
+mul     1111011w : mod 100 rm : _a
+clc     11111000
+stc     11111001
+cli     11111010
+sti     11111011
+cld     11111100
+std     11111101
+inc     1111111w : mod 000 rm
+dec     1111111w : mod 001 rm
+call    11111111 : mod 010 rm
+call    11111111 : mod 011 rm
+jmp     11111111 : mod 100 rm
+push    11111111 : mod 110 rm
 
-ud0     00001111 : 11111111 : mod rx rm
-ud1     00001111 : 10111001 : mod rx rm
-ud2     00001111 : 00001011
-
+sldt    00001111 : 00000000 : mod 000 rm
+str     00001111 : 00000000 : mod 001 rm
+lldt    00001111 : 00000000 : mod 010 rm
+ltr     00001111 : 00000000 : mod 011 rm
 verr    00001111 : 00000000 : mod 100 rm
 verw    00001111 : 00000000 : mod 101 rm
-
-wait    10011011
-
+sgdt    00001111 : 00000001 : moda 000 rm
+sidt    00001111 : 00000001 : moda 001 rm
+lgdt    00001111 : 00000001 : moda 010 rm
+lidt    00001111 : 00000001 : moda 011 rm
+lmsw    00001111 : 00000001 : moda 110 rm
+smsw    00001111 : 00000001 : moda 100 rm
+invlpg  00001111 : 00000001 : moda 111 rm
+rdtscp  00001111 : 00000001 : 11   111 001
+lar     00001111 : 00000010 : mod rx rm
+lsl     00001111 : 00000011 : mod rx rm
+clts    00001111 : 00000110
 wbinvd  00001111 : 00001001
+ud2     00001111 : 00001011
+invd    00001111 : 00001000
+nop     00001111 : 00011111 : mod 000 rm
+mov     00001111 : 00100000 : -- eee rrr : _64 _d
+mov     00001111 : 00100001 : -- ddd rrr : _64 _d
+mov     00001111 : 00100010 : -- eee rrr : _64
+mov     00001111 : 00100011 : -- ddd rrr : _64
 wrmsr   00001111 : 00110000
+rdtsc   00001111 : 00110001
+rdmsr   00001111 : 00110010
+rdpmc   00001111 : 00110011
+movbe   00001111 : 00111000 : 1111000 d : mod rx rm
+push    00001111 : 10sss000
+pop     00001111 : 10sss001 : +ncs
+set     00001111 : 1001tttt : mod 000 rm
+cpuid   00001111 : 10100010
+bt      00001111 : 10100011 : mod rx rm
+bts     00001111 : 10101011 : mod rx rm
+imul    00001111 : 10101111 : mod rx rm
+lss     00001111 : 10110010 : moda rx rm
+btr     00001111 : 10110011 : mod rx rm
+bt      00001111 : 10111010 : mod 100 rm : imm8
+bts     00001111 : 10111010 : mod 101 rm : imm8
+btr     00001111 : 10111010 : mod 110 rm : imm8
+btc     00001111 : 10111010 : mod 111 rm : imm8
+btc     00001111 : 10111011 : mod rx rm
+bsf     00001111 : 10111100 : mod rx rm
+bsr     00001111 : 10111101 : mod rx rm
+movsx   00001111 : 1011111w : mod rx rm
 xadd    00001111 : 1100000w : mod rx rm
+bswap   00001111 : 11001rrr
+rsm     00001111 : 10101010
+shrd    00001111 : 10101100 : mod rx rm : imm8
+shrd    00001111 : 10101101 : mod rx rm : _c
+cmpxchg 00001111 : 1011000w : mod rx rm
+movzx   00001111 : 1011011w : mod rx rm
+lfs     00001111 : 10110100 : moda rx rm
+lgs     00001111 : 10110101 : moda rx rm
+ud1     00001111 : 10111001 : mod rx rm
+ud0     00001111 : 11111111 : mod rx rm
+invpcid 01100110 : 00001111 : 00111000 : 10000010 : mod rx rm
 
-xchg    1000011w : mod rx rm
-xchg    10010rrr : _a
 
-xlat    11010111
-
-xor     001100dw : mod rx rm
-xor     100000sw : mod 110 rm : imm
-xor     0011010w : imm
-
-
+# TODO: rep prefix instructions (movs, scas)
 
 # ------------------------------------------------------------------- #
 # Pentium processor family instructions
