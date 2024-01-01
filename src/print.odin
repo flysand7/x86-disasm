@@ -86,6 +86,8 @@ print_inst :: proc(inst: Inst) {
                 fmt.printf("%s", reg_name(op))
             case MMX_Reg:
                 fmt.printf("%s", mmxreg_name(op))
+            case XMM_Reg:
+                fmt.printf("%s", xmmreg_name(op))
             case Sreg:
                 fmt.printf("%s", sreg_name(op))
             case Creg_Idx:
@@ -316,6 +318,20 @@ mmxreg_name :: proc(mmxreg: MMX_Reg) -> string {
         case .Mm2: return "mm2"
         case .Mm1: return "mm1"
         case .Mm0: return "mm0"
+        case: unreachable()
+    }
+}
+
+xmmreg_name :: proc(xmmreg: XMM_Reg) -> string {
+    switch xmmreg {
+        case .Xmm0: return "xmm0"
+        case .Xmm1: return "xmm1"
+        case .Xmm2: return "xmm2"
+        case .Xmm3: return "xmm3"
+        case .Xmm4: return "xmm4"
+        case .Xmm5: return "xmm5"
+        case .Xmm6: return "xmm6"
+        case .Xmm7: return "xmm7"
         case: unreachable()
     }
 }

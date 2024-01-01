@@ -166,14 +166,17 @@ parse_modrm :: proc(ctx: ^Disasm_Ctx, modrm: u8) -> (op1: Operand, op2: Operand,
 Reg_Kind :: enum {
     Gpr,
     Mmx,
+    Xmm,
 }
 
 add_modrm_addr16 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind) -> (ok: bool) {
     if mod == 0b11 {
         if kind == .Gpr {
             add_operand(inst, make_reg(rm, 16))
-        } else {
+        } else if kind == .Mmx {
             add_operand(inst, MMX_Reg(rm))
+        } else if kind == .Xmm {
+            add_operand(inst, XMM_Reg(rm))
         }
         return true
     }
@@ -215,8 +218,10 @@ add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8, kind: R
     if mod == 0b11 {
         if kind == .Gpr {
             add_operand(inst, make_reg(rex_extend_b(ctx.rex, rm), ctx.data_bits))
-        } else {
+        } else if kind == .Mmx {
             add_operand(inst, MMX_Reg(rm))
+        } else if kind == .Xmm {
+            add_operand(inst, XMM_Reg(rm))
         }
         return true
     }
@@ -284,6 +289,12 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: Tab_Field) -> 
             if bits != 0b00 {
                 return false, true
             }
+        } else if field == .Mod11 {
+            fields.bits[.Mod] = bits
+            fields.has[.Mod]  = true
+            if bits != 0b11 {
+                return false, true
+            }
         } else if field == .Ss || field == .Sss {
             if bits == 1 {
                 return false, true
@@ -344,6 +355,21 @@ match_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, mask: Tab_Mask) -> (
     return true, true
 }
 
+reg_kind_from_fields :: proc(ctx: ^Disasm_Ctx, fields: Inst_Fields) -> Reg_Kind {
+    if fields.has[.Mmxrx] {
+        return .Mmx
+    } else if fields.has[.Xmmrx] {
+        return .Xmm
+    } else if fields.has[.Mmrx] {
+        if ctx.data_bits == 16 {
+            return .Xmm
+        } else {
+            return .Mmx
+        }
+    }
+    return .Gpr
+}
+
 decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok: bool) {
     fields := Inst_Fields {}
     for mask in encoding.masks {
@@ -394,6 +420,15 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
         ))
     } else if fields.has[.Mmxrx] {
         add_operand(&inst, MMX_Reg(fields.bits[.Mmxrx]))
+    } else if fields.has[.Xmmrx] {
+        add_operand(&inst, XMM_Reg(fields.bits[.Xmmrx]))
+    } else if fields.has[.Mmrx] {
+        // Data-size operand prefix used -- required for SSE interpretation.
+        if ctx.data_bits == 16 {
+            add_operand(&inst, XMM_Reg(fields.bits[.Mmrx]))
+        } else {
+            add_operand(&inst, MMX_Reg(fields.bits[.Mmrx]))
+        }
     } else if fields.has[.Eee] {
         assert(fields.bits[.Eee] < cast(u8) max(Creg_Idx))
         add_operand(&inst, cast(Creg_Idx) fields.bits[.Eee])
@@ -426,17 +461,9 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
         mod := fields.bits[.Mod]
         rm := fields.bits[.Rm]
         if ctx.addr_bits == 16 {
-            if fields.has[.Mmxrx] {
-                add_modrm_addr16(ctx, &inst, mod, rm, .Mmx)
-            } else {
-                add_modrm_addr16(ctx, &inst, mod, rm, .Gpr)
-            }
+            add_modrm_addr16(ctx, &inst, mod, rm, reg_kind_from_fields(ctx, fields))
         } else if ctx.addr_bits == 32 || ctx.addr_bits == 64 {
-            if fields.has[.Mmxrx] {
-                add_modrm_addr32(ctx, &inst, mod, rm, .Mmx)
-            } else {
-                add_modrm_addr32(ctx, &inst, mod, rm, .Gpr)
-            }
+            add_modrm_addr32(ctx, &inst, mod, rm, reg_kind_from_fields(ctx, fields))
         } else {
             panic("Bad addr bits")
         }

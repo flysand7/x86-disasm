@@ -50,12 +50,18 @@
 # Mod/RM encoding
 # ------------------------------------------------------------------- #
 # mod - 2-bit mod field of the mod/rm byte.
+# mod11 - mod field that is expected to be 11.
 # moda - mod field that is not 11.
 # modb - mod field that is not 10 nor 01.
 # modab - mod field that is expected to be 00.
 # rx  - 3-bit reg field of the mod/rm byte.
 # rm  - 3-bit rm field of the mod/rm byte.
 # mmxrx - 3-bit mmx register encoding in the reg field.
+# xmmrx - 3-bit xmm register encoding in the reg field.
+# mmrx  - 3-bit mmx or xmm register encoding in the reg field.
+#         The way the register is differentiated between mmx and xmm
+#         is by looking at the instruction, and if it has data override
+#         prefix it is an xmm register, otherwise mmx register.
 
 # Implicit operands
 # ------------------------------------------------------------------- #
@@ -283,9 +289,6 @@ ud1     00001111 : 10111001 : mod rx rm
 ud0     00001111 : 11111111 : mod rx rm
 invpcid 01100110 : 00001111 : 00111000 : 10000010 : mod rx rm
 
-
-# TODO: rep prefix instructions (movs, scas)
-
 # ------------------------------------------------------------------- #
 # Pentium processor family instructions
 # ------------------------------------------------------------------- #
@@ -333,7 +336,8 @@ psra     00001111 : 111000gg : mod mmxrx rm
 pmulhuw  00001111 : 11100100 : mod mmxrx rm
 pmulhw   00001111 : 11100101 : mod mmxrx rm
 por      00001111 : 11101011 : mod mmxrx rm
-padds    00001111 : 111011gg : mod mmxrx rm
+paddsb   00001111 : 11101100 : mod mmxrx rm
+paddsw   00001111 : 11101101 : mod mmxrx rm
 psll     00001111 : 111100gg : mod mmxrx rm
 pmaddwd  00001111 : 11110101 : mod mmxrx rm
 psubs    00001111 : 111010gg : mod mmxrx rm
@@ -356,3 +360,77 @@ xsave    00001111 : 10101110 : moda 100 rm
 # ------------------------------------------------------------------- #
 
 cmov    00001111 : 0100tttt : mod rx rm
+
+# ------------------------------------------------------------------- #
+# SSE instruction formats and encodings
+# ------------------------------------------------------------------- #
+
+movups    00001111 : 0001000d : mod xmmrx rm
+movhlps   00001111 : 00010010 : mod11 xmmrx rm
+movlps    00001111 : 00010010 : moda xmmrx rm
+unpcklps  00001111 : 00010100 : mod xmmrx rm
+unpckhps  00001111 : 00010101 : mod xmmrx rm
+movhps    00001111 : 00010110 : moda xmmrx rm
+movlhps   00001111 : 00010110 : mod11 xmmrx rm
+pfetcht3  00001111 : 00011000 : moda 000 rm
+pfetcht0  00001111 : 00011000 : moda 001 rm
+pfetcht1  00001111 : 00011000 : moda 010 rm
+pfetcht2  00001111 : 00011000 : moda 011 rm
+cvtpi2ps  00001111 : 00101010 : 11 xmmrx mmrx
+movntps   00001111 : 00101011 : mod xmmrx rm
+cvtpi2ps  00001111 : 00101010 : moda xmmrx rm
+cvttps2pi 00001111 : 00101100 : 11 mmrx xmmrx
+cvttps2pi 00001111 : 00101100 : moda mmrx rm
+cvtps2pi  00001111 : 00101101 : 11 mmrx xmmrx
+cvtps2pi  00001111 : 00101101 : moda mmrx rm
+ucomiss   00001111 : 00101110 : mod xmmrx rm
+comiss    00001111 : 00101111 : mod xmmrx rm
+movmskps  00001111 : 01010000 : 11 rrr xmmrx
+sqrtps    00001111 : 01010001 : mod xmmrx rm
+rsqrtps   00001111 : 01010010 : mod xmmrx rm
+rcpps     00001111 : 01010011 : mod xmmrx rm
+addps     00001111 : 01011000 : mod xmmrx rm
+mulps     00001111 : 01011001 : mod xmmrx rm
+andnps    00001111 : 01010101 : mod xmmrx rm
+orps      00001111 : 01010110 : mod xmmrx rm
+xorps     00001111 : 01010111 : mod xmmrx rm
+subps     00001111 : 01011100 : mod xmmrx rm
+minps     00001111 : 01011101 : mod xmmrx rm
+divps     00001111 : 01011110 : mod xmmrx rm
+maxps     00001111 : 01011111 : mod xmmrx rm
+pshufw    00001111 : 01110000 : mod mmrx rm : imm8
+movaps    00001111 : 0010100d : mod xmmrx rm
+ldmxcsr   00001111 : 10101110 : moda 010 rm
+stmxcsr   00001111 : 10101110 : moda 011 rm
+sfence    00001111 : 10101110 : 11   111 00
+cmpps     00001111 : 11000010 : mod xmmrx rm : imm8
+pinsrw    00001111 : 11000100 : mod mmrx rm : imm8
+pextrw    00001111 : 11000101 : 11 rrr mmrx : imm8
+shufps    00001111 : 11000110 : mod xmmrx rm : imm8
+pmovmskb  00001111 : 11010111 : 11 rrr mmrx
+pminub    00001111 : 11011010 : mod mmrx rm
+pmaxub    00001111 : 11011110 : mod mmrx rm
+pavgb     00001111 : 11100000 : mod mmrx rm
+pavgw     00001111 : 11100011 : mod mmrx rm
+pmulhuw   00001111 : 11100100 : mod mmrx rm
+movntq    00001111 : 11100111 : mod xmmrx rm
+pminsw    00001111 : 11101010 : mod mmrx rm
+pmaxsw    00001111 : 11101110 : mod mmrx rm
+psadbw    00001111 : 11110110 : mod mmrx rm
+maskmovq  00001111 : 11110111 : mod11 mmrx rm
+
+cvtsi2ss  11110011 : 00001111 : 00101010 : 11 rrr xmmrx
+cvtsi2ss  11110011 : 00001111 : 00101010 : moda rrr rm 
+cvtss2si  11110011 : 00001111 : 00101101 : 11 rrr xmmrx
+cvtss2si  11110011 : 00001111 : 00101101 : moda rx rm
+sqrtss    11110011 : 00001111 : 01010001 : mod xmmrx rm
+rsqrtss   11110011 : 00001111 : 01010010 : mod xmmrx rm
+rcpss     11110011 : 00001111 : 01010011 : mod xmmrx rm
+addss     11110011 : 00001111 : 01011000 : mod xmmrx rm
+mulss     11110011 : 00001111 : 01011001 : mod xmmrx rm
+subss     11110011 : 00001111 : 01011100 : mod xmmrx rm
+minss     11110011 : 00001111 : 01011101 : mod xmmrx rm
+divss     11110011 : 00001111 : 01011110 : mod xmmrx rm
+maxss     11110011 : 00001111 : 01011111 : mod xmmrx rm
+cmpss     11110011 : 00001111 : 11000010 : mod xmmrx rm : imm8
+

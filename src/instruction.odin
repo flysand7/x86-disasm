@@ -32,6 +32,17 @@ MMX_Reg :: enum u8 {
     Mm7,
 }
 
+XMM_Reg :: enum u8 {
+    Xmm0,
+    Xmm1,
+    Xmm2,
+    Xmm3,
+    Xmm4,
+    Xmm5,
+    Xmm6,
+    Xmm7,
+}
+
 Creg_Idx :: enum u8 {
     Cr0,
     Cr1,
@@ -106,6 +117,7 @@ Mem_Short :: struct {
 Operand :: union {
     Reg,
     MMX_Reg,
+    XMM_Reg,
     Mem,
     Mem_Short,
     Imm,
