@@ -360,6 +360,10 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: Tab_Inst) -> (matched: bool, ok:
     if .Ds in encoding.flags {
         inst.flags += {.Data_Size_Suffix}
     }
+    if fields.has[.Gg] {
+        inst.flags += {.Granularity_Suffix}
+        inst.granularity = fields.bits[.Gg]
+    }
     if ctx.lock {
         inst.flags |= {.Lock}
     }

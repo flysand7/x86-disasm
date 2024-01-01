@@ -51,6 +51,9 @@ print_inst :: proc(inst: Inst) {
             fmt.printf("%s", data_size_suffix(2*inst.data_size))
         }
     }
+    if .Granularity_Suffix in inst.flags {
+        fmt.printf("%s", granularity_suffix(inst.granularity))
+    }
     for i in 0 ..< inst.operands_count {
         fmt.printf(i != 0? ", " : " ")
         operand := inst.operands[i]
@@ -112,6 +115,16 @@ data_size_spec :: proc(size: u8) -> string {
         case 16: return "word"
         case 32: return "dword"
         case 64: return "qword"
+        case: unreachable()
+    }
+}
+
+granularity_suffix :: proc(gr: u8) -> string {
+    switch gr {
+        case 0b00: return "b"
+        case 0b01: return "w"
+        case 0b10: return "d"
+        case 0b11: return "q"
         case: unreachable()
     }
 }
