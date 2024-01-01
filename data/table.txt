@@ -297,36 +297,50 @@ cmpxchg8b 00001111 : 11000111 : mod 001 rm
 # MMX instruction formats and encodings
 # ------------------------------------------------------------------- #
 
-emms     00001111 : 01110111
+punpcklw 00001111 : 01100000 : mod mmxrx rm
+punpckld 00001111 : 01100001 : mod mmxrx rm
+punpcklq 00001111 : 01100010 : mod mmxrx rm
+packsswb 00001111 : 01100011 : mod mmxrx rm
+pcmpgtb  00001111 : 01100100 : mod mmxrx rm
+pcmpgtw  00001111 : 01100101 : mod mmxrx rm
+pcmpgtd  00001111 : 01100110 : mod mmxrx rm
+packuswb 00001111 : 01100111 : mod mmxrx rm
 movd     00001111 : 011d1110 : 11 mmxrx rrr
 movd     00001111 : 011d1110 : moda mmxrx rm
 movq     00001111 : 011d1111 : 11 mmxrx rrr
 movq     00001111 : 011d1111 : moda mmxrx rm
-packsswb 00001111 : 01100011 : mod mmxrx rm
-packuswb 00001111 : 01100111 : mod mmxrx rm
+psraw    00001111 : 01110001 : 11 100 mmxrx : imm8
+psllw    00001111 : 01110001 : 11 110 mmxrx : imm8
+psrad    00001111 : 01110010 : 11 100 mmxrx : imm8
+pslld    00001111 : 01110010 : 11 110 mmxrx : imm8
+psraq    00001111 : 01110011 : 11 100 mmxrx : imm8
+psllq    00001111 : 01110011 : 11 110 mmxrx : imm8
+punpckhw 00001111 : 01101000 : mod mmxrx rm
+punpckhd 00001111 : 01101001 : mod mmxrx rm
+punpckhq 00001111 : 01101010 : mod mmxrx rm
 packssdw 00001111 : 01101011 : mod mmxrx rm
-padd     00001111 : 111111gg : mod mmxrx rm
-padds    00001111 : 111011gg : mod mmxrx rm
-paddus   00001111 : 110111gg : mod mmxrx rm
+pcmpeqb  00001111 : 01110100 : mod mmxrx rm
+pcmpeqw  00001111 : 01110101 : mod mmxrx rm
+pcmpeqd  00001111 : 01110110 : mod mmxrx rm
+emms     00001111 : 01110111
 pand     00001111 : 11011011 : mod mmxrx rm
+pmullw   00001111 : 11010101 : mod mmxrx rm
+psubus   00001111 : 110110gg : mod mmxrx rm
+paddusb  00001111 : 11011100 : mod mmxrx rm
+paddusw  00001111 : 11011101 : mod mmxrx rm
 pandn    00001111 : 11011111 : mod mmxrx rm
-pcmpeq   00001111 : 011101gg : mod mmxrx rm
-pcmpgt   00001111 : 011001gg : mod mmxrx rm
-pmaddwd  00001111 : 11110101 : mod mmxrx rm
+psra     00001111 : 111000gg : mod mmxrx rm
 pmulhuw  00001111 : 11100100 : mod mmxrx rm
 pmulhw   00001111 : 11100101 : mod mmxrx rm
-pmullw   00001111 : 11010101 : mod mmxrx rm
 por      00001111 : 11101011 : mod mmxrx rm
+padds    00001111 : 111011gg : mod mmxrx rm
 psll     00001111 : 111100gg : mod mmxrx rm
-psll     00001111 : 011100gg : 11 110 mmxrx : imm8
-psra     00001111 : 111000gg : mod mmxrx rm
-psra     00001111 : 011100gg : 11 110 mmxrx : imm8
-psub     00001111 : 111110gg : mod mmxrx rm
-psubs    00001111 : 111110gg : mod mmxrx rm
-psubus   00001111 : 110110gg : mod mmxrx rm
-punpckh  00001111 : 011010gg : mod mmxrx rm
-punpckl  00001111 : 011000gg : mod mmxrx rm
+pmaddwd  00001111 : 11110101 : mod mmxrx rm
+psubs    00001111 : 111010gg : mod mmxrx rm
 pxor     00001111 : 11101111 : mod mmxrx rm
+psub     00001111 : 111110gg : mod mmxrx rm
+padd     00001111 : 111111gg : mod mmxrx rm
+
 
 # ------------------------------------------------------------------- #
 # Processor extended state instruction formats
