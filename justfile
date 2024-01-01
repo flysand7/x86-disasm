@@ -6,14 +6,14 @@ prepare-disasm FILENAME:
     nasm {{FILENAME}} -o temp/temp.out
 
 test TEST FILENAME: generate (prepare-disasm FILENAME)
-    odin test src -test-name:test_{{TEST}} {{ODIN_FLAGS}} -- temp/temp.out
+    odin test disasm -test-name:test_{{TEST}} {{ODIN_FLAGS}} -- temp/temp.out
 
 disasm FILENAME: generate (prepare-disasm FILENAME)
-    odin test src -test-name:test_disasm {{ODIN_FLAGS}} -- temp/temp.out
+    odin test disasm -test-name:test_disasm {{ODIN_FLAGS}} -- temp/temp.out
 
 dump FILENAME: generate (prepare-disasm FILENAME)
-    odin test src -test-name:test_dump {{ODIN_FLAGS}} -- temp/temp.out
+    odin test disasm -test-name:test_dump {{ODIN_FLAGS}} -- temp/temp.out
 
 generate:
-    ./src/table/generator.py
+    ./disasm/table/generator.py
 
