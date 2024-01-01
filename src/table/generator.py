@@ -13,13 +13,13 @@ def write_split(file, split: str):
     if split[0] == '0' or split[0] == '1':
         split_bits = split
         split_len  = len(split)
-        file.write(f'{3*TAB}Tab_Bits {{ 0b{split_bits}, {split_len} }},\n')
+        file.write(f'{3*TAB}Bits {{ 0b{split_bits}, {split_len} }},\n')
     elif split[0] == '-':
         ign_count = len(split)
-        file.write(f'{3*TAB}Ign_Bits {{ {ign_count} }},\n')
+        file.write(f'{3*TAB}Ign {{ {ign_count} }},\n')
     else:
         split_enum = split[0].upper() + split[1:]
-        file.write(f'{3*TAB}Tab_Field.{split_enum},\n')
+        file.write(f'{3*TAB}Field.{split_enum},\n')
 
 def write_line(file, splits: list[str]):
     # print(splits)
@@ -27,7 +27,7 @@ def write_line(file, splits: list[str]):
     op_bits = splits[1]
     op_len  = len(splits[1])
     file.write(f'{TAB}{{')
-    file.write(f'\n{2*TAB}name = "{inst}",')
+    file.write(f'\n{2*TAB}mnemonic = "{inst}",')
     file.write(f'\n{2*TAB}opcode = {{ 0b{op_bits}, {op_len} }},')
     mask_splits: list[str] = []
     flag_splits: list[str] = []
@@ -89,7 +89,7 @@ def tokenize_line(splits: list[str], line: str):
 out = open(TABLE_OUT_FILENAME, 'w')
 out.write(f'package {PACKAGE_NAME}\n\n')
 out.write(f'// THIS FILE IS AUTO-GENERATED FROM table.txt BY codegen.py\n\n')
-out.write('decode_table := []Tab_Inst {\n')
+out.write('encodings := []Encoding {\n')
 for line in read_lines(TABLE_IN_FILENAME):
     line = line[:len(line)-1]
     if len(line) != 0 and line[0] != '#':

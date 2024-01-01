@@ -7,16 +7,16 @@ Enc_Flags :: bit_set[enum{
     Ds1,
 }]
 
-Tab_Bits :: struct {
+Bits :: struct {
     value: u8,
     count: u8,
 }
 
-Ign_Bits :: struct {
+Ign :: struct {
     count: u8,
 }
 
-Tab_Field :: enum {
+Field :: enum {
     // Opcode fields
     D,
     W,
@@ -52,21 +52,21 @@ Tab_Field :: enum {
     _1,
 }
 
-Tab_Mask :: union {
-    Tab_Bits,
-    Ign_Bits,
-    Tab_Field,
+Bit_Mask :: union {
+    Bits,
+    Ign,
+    Field,
 }
 
-Tab_Inst :: struct {
-    name:   string,
-    flags:  Enc_Flags,
-    opcode: Tab_Bits,
-    masks:  []Tab_Mask,
+Encoding :: struct {
+    mnemonic: string,
+    flags:    Enc_Flags,
+    opcode:   Bits,
+    masks:    []Bit_Mask,
 }
 
 // 0 means it has dynamically-computed size or is just a flag
-field_widths := [Tab_Field]u8 {
+field_widths := [Field]u8 {
     .D     = 1,
     .W     = 1,
     .S     = 1,

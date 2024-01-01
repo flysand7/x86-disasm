@@ -3,7 +3,7 @@ package disasm
 import "core:fmt"
 import "table"
 
-Disasm_Ctx :: struct {
+Ctx :: struct {
     bytes:      []u8,
     offset:     int,
     // CPU settings
@@ -22,15 +22,15 @@ Disasm_Ctx :: struct {
 }
 
 Inst_Fields :: struct {
-    bits: [table.Tab_Field]u8,
-    has:  [table.Tab_Field]bool,
+    bits: [table.Field]u8,
+    has:  [table.Field]bool,
     disp:  i32,
     disp8: i8,
     imm:   i64,
     sel:   u16,
 }
 
-pop_u8 :: proc(ctx: ^Disasm_Ctx) -> (u8, bool) {
+pop_u8 :: proc(ctx: ^Ctx) -> (u8, bool) {
     assert(ctx.bits_offs % 8 == 0)
     if len(ctx.bytes) - ctx.offset >= 1 {
         b := ctx.bytes[ctx.offset]
@@ -41,7 +41,7 @@ pop_u8 :: proc(ctx: ^Disasm_Ctx) -> (u8, bool) {
     return 0, false
 }
 
-peek_u8 :: proc(ctx: ^Disasm_Ctx) -> (u8, bool) {
+peek_u8 :: proc(ctx: ^Ctx) -> (u8, bool) {
     assert(ctx.bits_offs % 8 == 0)
     if ctx.offset >= len(ctx.bytes) {
         return 0, false
@@ -49,7 +49,7 @@ peek_u8 :: proc(ctx: ^Disasm_Ctx) -> (u8, bool) {
     return ctx.bytes[ctx.offset], true
 }
 
-match_u8 :: proc(ctx: ^Disasm_Ctx, b: u8) -> (bool) {
+match_u8 :: proc(ctx: ^Ctx, b: u8) -> (bool) {
     assert(ctx.offset < len(ctx.bytes))
     if ctx.bytes[ctx.offset] == b {
         ctx.offset += 1
@@ -58,7 +58,7 @@ match_u8 :: proc(ctx: ^Disasm_Ctx, b: u8) -> (bool) {
     return false
 }
 
-pop_u16 :: proc(ctx: ^Disasm_Ctx) -> (u16, bool) {
+pop_u16 :: proc(ctx: ^Ctx) -> (u16, bool) {
     assert(ctx.bits_offs % 8 == 0)
     if len(ctx.bytes) - ctx.offset >= 2 {
         v := cast(u16) (cast(^u16le) &ctx.bytes[ctx.offset])^
@@ -69,7 +69,7 @@ pop_u16 :: proc(ctx: ^Disasm_Ctx) -> (u16, bool) {
     return 0, false
 }
 
-pop_u32 :: proc(ctx: ^Disasm_Ctx) -> (u32, bool) {
+pop_u32 :: proc(ctx: ^Ctx) -> (u32, bool) {
     assert(ctx.bits_offs % 8 == 0)
     if len(ctx.bytes) - ctx.offset >= 4 {
         v := cast(u32) (cast(^u32le) &ctx.bytes[ctx.offset])^
@@ -80,7 +80,7 @@ pop_u32 :: proc(ctx: ^Disasm_Ctx) -> (u32, bool) {
     return 0, false
 }
 
-pop_u64 :: proc(ctx: ^Disasm_Ctx) -> (u64, bool) {
+pop_u64 :: proc(ctx: ^Ctx) -> (u64, bool) {
     assert(ctx.bits_offs % 8 == 0)
     if len(ctx.bytes) - ctx.offset >= 8 {
         v := cast(u64) (cast(^u64le) &ctx.bytes[ctx.offset])^
@@ -91,7 +91,7 @@ pop_u64 :: proc(ctx: ^Disasm_Ctx) -> (u64, bool) {
     return 0, false
 }
 
-read_bits :: proc(ctx: ^Disasm_Ctx, count: u8) -> (bits: u8, ok: bool) {
+read_bits :: proc(ctx: ^Ctx, count: u8) -> (bits: u8, ok: bool) {
     assert(count <= 8)
     assert(ctx.bits_offs >= count)
     assert(ctx.offset < len(ctx.bytes))
@@ -105,7 +105,7 @@ read_bits :: proc(ctx: ^Disasm_Ctx, count: u8) -> (bits: u8, ok: bool) {
     return bits, true
 }
 
-match_bits :: proc(ctx: ^Disasm_Ctx, bits: table.Tab_Bits) -> (matched: bool, ok: bool) {
+match_bits :: proc(ctx: ^Ctx, bits: table.Bits) -> (matched: bool, ok: bool) {
     assert(bits.count <= 8)
     assert(ctx.bits_offs >= bits.count)
     count := bits.count
@@ -156,7 +156,7 @@ rex_extend_r :: #force_inline proc(rex: u8, value: u8) -> u8 {
     return (rex & 0b0100) << 1 | value
 }
 
-parse_modrm :: proc(ctx: ^Disasm_Ctx, modrm: u8) -> (op1: Operand, op2: Operand, ok: bool) {
+parse_modrm :: proc(ctx: ^Ctx, modrm: u8) -> (op1: Operand, op2: Operand, ok: bool) {
     mod := modrm >> 6
     rx := (modrm >> 3) & 0x7
     rm := (modrm) & 0x7
@@ -170,7 +170,7 @@ Reg_Kind :: enum {
     Xmm,
 }
 
-add_modrm_addr16 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind) -> (ok: bool) {
+add_modrm_addr16 :: proc(ctx: ^Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind) -> (ok: bool) {
     if mod == 0b11 {
         if kind == .Gpr {
             add_operand(inst, make_reg(rm, 16))
@@ -208,7 +208,7 @@ add_modrm_addr16 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8, kind: R
     return true
 }
 
-add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind) -> (ok: bool) {
+add_modrm_addr32 :: proc(ctx: ^Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind) -> (ok: bool) {
     if mod == 0b00 && rm == 0b101 {
         add_operand(inst, Mem {
             disp = cast(i32) pop_u32(ctx) or_return,
@@ -266,7 +266,7 @@ add_modrm_addr32 :: proc(ctx: ^Disasm_Ctx, inst: ^Inst, mod: u8, rm: u8, kind: R
     return true
 }
 
-read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: table.Tab_Field) -> (matched, ok: bool) {
+read_field :: proc(ctx: ^Ctx, fields: ^Inst_Fields, field: table.Field) -> (matched, ok: bool) {
     field_size := table.field_widths[field]
     assert(!fields.has[field])
     fields.has[field] = true
@@ -343,20 +343,20 @@ read_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, field: table.Tab_Fiel
     return true, true
 }
 
-match_field :: proc(ctx: ^Disasm_Ctx, fields: ^Inst_Fields, mask: table.Tab_Mask) -> (matched, ok: bool) {
+match_field :: proc(ctx: ^Ctx, fields: ^Inst_Fields, mask: table.Bit_Mask) -> (matched, ok: bool) {
     switch m in mask {
-        case table.Tab_Bits:
+        case table.Bits:
             return match_bits(ctx, m)
-        case table.Ign_Bits:
+        case table.Ign:
             _, ok := read_bits(ctx, m.count)
             return true, ok
-        case table.Tab_Field:
+        case table.Field:
             return read_field(ctx, fields, m)
     }
     return true, true
 }
 
-reg_kind_from_fields :: proc(ctx: ^Disasm_Ctx, fields: Inst_Fields) -> Reg_Kind {
+reg_kind_from_fields :: proc(ctx: ^Ctx, fields: Inst_Fields) -> Reg_Kind {
     if fields.has[.Mmxrx] {
         return .Mmx
     } else if fields.has[.Xmmrx] {
@@ -371,7 +371,7 @@ reg_kind_from_fields :: proc(ctx: ^Disasm_Ctx, fields: Inst_Fields) -> Reg_Kind 
     return .Gpr
 }
 
-decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: table.Tab_Inst) -> (matched: bool, ok: bool) {
+decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding) -> (matched: bool, ok: bool) {
     fields := Inst_Fields {}
     for mask in encoding.masks {
         matched := match_field(ctx, &fields, mask) or_return
@@ -380,7 +380,7 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: table.Tab_Inst) -> (matched: boo
         }
     }
     inst := Inst {
-        mnemonic = encoding.name,
+        mnemonic = encoding.mnemonic,
         seg_override = ctx.seg_override,
         data_size = ctx.data_bits,
     }
@@ -491,7 +491,7 @@ decode_inst :: proc(ctx: ^Disasm_Ctx, encoding: table.Tab_Inst) -> (matched: boo
     return true, true
 }
 
-disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
+disasm_inst :: proc(ctx: ^Ctx) -> (ok: bool) {
     Prefix_Group :: bit_set[enum{
         Gr1,
         Gr2,
@@ -574,7 +574,7 @@ disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
         }
     }
     saved_offset := ctx.offset
-    for enc in table.decode_table {
+    for enc in table.encodings {
         if .N64 in enc.flags && ctx.cpu_bits == 64 {
             continue
         }
@@ -591,7 +591,7 @@ disasm_inst :: proc(ctx: ^Disasm_Ctx) -> (ok: bool) {
 }
 
 disasm :: proc(bytes: []u8, default_bits := u8(64)) {
-    ctx := Disasm_Ctx {
+    ctx := Ctx {
         bytes = bytes,
         bits_offs = 8,
         cpu_bits  = default_bits,
