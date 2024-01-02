@@ -480,7 +480,7 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
     } else if fields.has[.Disp16] {
         add_operand(inst, make_mem(base = {}, index = {}, scale = 1, disp = auto_cast fields.disp16))
     }
-    if fields.has[.Imm] {
+    if fields.has[.Imm] || fields.has[.Imm8] || fields.has[.Imm16] {
         add_operand(inst, Imm {
             value = fields.imm,
         })
