@@ -320,10 +320,8 @@ read_field :: proc(ctx: ^Ctx, fields: ^Inst_Fields, field: table.Field) -> (matc
                 fields.imm = cast(i64) pop_u8(ctx) or_return
             } else if ctx.data_bits == 16 {
                 fields.imm = cast(i64) pop_u16(ctx) or_return
-            } else if ctx.data_bits == 32 {
+            } else if ctx.data_bits == 32 || ctx.data_bits == 64 {
                 fields.imm = cast(i64) pop_u32(ctx) or_return
-            } else if ctx.data_bits == 64 {
-                fields.imm = cast(i64) pop_u64(ctx) or_return
             }
         case .Imm8:
             fields.imm = cast(i64) pop_u8(ctx) or_return

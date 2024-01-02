@@ -30,7 +30,7 @@ fmt_int :: proc(#any_int hex: i64) {
 }
 
 print_inst :: proc(inst: Inst, colors := true) {
-    WIDTH :: 10
+    WIDTH :: 15
     if colors {
         fmt.print(COLOR_GREY, sep="")
     }
