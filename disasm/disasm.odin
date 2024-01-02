@@ -306,7 +306,11 @@ read_field :: proc(ctx: ^Ctx, fields: ^Inst_Fields, field: table.Field) -> (matc
     }
     #partial switch field {
         case .Disp:
-            fields.disp = cast(i32) pop_u16(ctx) or_return
+            if ctx.addr_bits == 16 {
+                fields.disp = cast(i32) pop_u16(ctx) or_return
+            } else if ctx.addr_bits == 32 || ctx.addr_bits == 64 {
+                fields.disp = cast(i32) pop_u32(ctx) or_return
+            }
         case .Disp8:
             fields.disp8 = cast(i8) pop_u8(ctx) or_return
         case .Disp16:
