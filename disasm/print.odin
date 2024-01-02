@@ -83,11 +83,24 @@ print_inst :: proc(inst: Inst, colors := true) {
                 fmt.printf("[")
                 has_before := false
                 if op.base.idx != nil {
+                    if colors {
+                        fmt.print(COLOR_G, sep="")
+                    }
                     fmt.printf("%s", reg_name(op.base))
+                    if colors {
+                        fmt.print(COLOR_RESET, sep="")
+                    }
                     has_before = true
                 }
                 if op.index.idx != nil {
-                    fmt.printf("%s%d*%s", has_before?"+":"", op.scale, reg_name(op.index))
+                    fmt.printf("%s%d*", has_before?"+":"", op.scale)
+                    if colors {
+                        fmt.print(COLOR_G, sep="")
+                    }
+                    fmt.printf("%s", reg_name(op.index))
+                    if colors {
+                        fmt.print(COLOR_RESET, sep="")
+                    }
                 }
                 if op.disp != 0 {
                     fmt_int(op.disp)
