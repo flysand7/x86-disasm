@@ -94,7 +94,7 @@
 
 add     000000dw : mod rx rm
 add     0000010w : _a imm
-or      0000100w : mod rx rm
+or      000010dw : mod rx rm
 or      0000110w : _a imm
 push    000ss110 : +f64
 pop     000ss111 : +f64
