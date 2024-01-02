@@ -503,62 +503,39 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
     ctx.rep_or_bnd = false
     ctx.rex = 0
     ctx.start_offs = ctx.offset
-    Prefix_Group :: bit_set[enum{
-        Gr1,
-        Gr2,
-        Gr3,
-        Gr4,
-    }]
-    groups := Prefix_Group {}
     addr_size_override := false
     data_size_override := false
-    for !(groups == ~{}) {
-        delta  := Prefix_Group {}
-        if .Gr1 not_in groups {
-            delta += {.Gr1}
-            switch peek_u8(ctx) or_return {
-                case 0xf0: ctx.lock = true
-                case 0xf2: ctx.repnz = true
-                case 0xf3: ctx.rep_or_bnd = true
-                case: delta -= {.Gr1}
-            }
+    for {
+        boob := 0b1111
+        switch peek_u8(ctx) or_return {
+            case 0xf0: ctx.lock = true
+            case 0xf2: ctx.repnz = true
+            case 0xf3: ctx.rep_or_bnd = true
+            case: boob ~= 0b0001
         }
-        if .Gr2 not_in groups {
-            switch peek_u8(ctx) or_return {
-                case 0x2e: ctx.seg_override = .Cs
-                case 0x36: ctx.seg_override = .Ss
-                case 0x3e: ctx.seg_override = .Ds
-                case 0x26: ctx.seg_override = .Es
-                case 0x64: ctx.seg_override = .Fs
-                case 0x65: ctx.seg_override = .Gs
-            }
-            if ctx.seg_override != nil {
-                delta += {.Gr2}
-            } else {
-                switch peek_u8(ctx) or_return {
-                    case 0x2e: fallthrough
-                    case 0x3e: delta += {.Gr2}
-                }
-            }
+        switch peek_u8(ctx) or_return {
+            case 0x2e: ctx.seg_override = .Cs
+            case 0x36: ctx.seg_override = .Ss
+            case 0x3e: ctx.seg_override = .Ds
+            case 0x26: ctx.seg_override = .Es
+            case 0x64: ctx.seg_override = .Fs
+            case 0x65: ctx.seg_override = .Gs
+            case: boob ~= 0b0010
         }
-        if .Gr3 not_in groups {
-            if (peek_u8(ctx) or_return) == 0x66 {
-                delta += {.Gr3}
-                data_size_override = true
-            }
-        }
-        if .Gr4 not_in groups {
-            if (peek_u8(ctx) or_return) == 0x67 {
-                delta += {.Gr4}
-                addr_size_override = true
-            }
-        }
-        if delta != nil {
-            pop_u8(ctx) or_return
-            groups |= delta
+        if (peek_u8(ctx) or_return) == 0x66 {
+            data_size_override = true
         } else {
+            boob ~= 0b0100
+        }
+        if (peek_u8(ctx) or_return) == 0x67 {
+            addr_size_override = true
+        } else {
+            boob ~= 0b1000
+        }
+        if boob == 0b0000 {
             break
         }
+        pop_u8(ctx) or_return
     }
     if (peek_u8(ctx) or_return) & 0xf0 == 0x40 {
         ctx.rex = pop_u8(ctx) or_return
