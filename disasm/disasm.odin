@@ -27,8 +27,6 @@ Inst_Fields :: struct {
     disp:  i32,
     disp8: i8,
     disp16: i16,
-    imm:   i64,
-    sel:   u16,
 }
 
 pop_u8 :: proc(ctx: ^Ctx) -> (u8, bool) {
@@ -314,21 +312,9 @@ read_field :: proc(ctx: ^Ctx, fields: ^Inst_Fields, field: table.Field) -> (matc
         case .Disp16:
             fields.disp16 = cast(i16) pop_u16(ctx) or_return
         case .Imm:
-            if fields.has[.S] && fields.bits[.S] != 0 && fields.has[.W] && fields.bits[.W] != 0 {
-                fields.imm = cast(i64) cast(i8) pop_u8(ctx) or_return
-            } else if fields.has[.W] && fields.bits[.W] == 0 {
-                fields.imm = cast(i64) pop_u8(ctx) or_return
-            } else if ctx.data_bits == 16 {
-                fields.imm = cast(i64) pop_u16(ctx) or_return
-            } else if ctx.data_bits == 32 || ctx.data_bits == 64 {
-                fields.imm = cast(i64) pop_u32(ctx) or_return
-            }
         case .Imm8:
-            fields.imm = cast(i64) pop_u8(ctx) or_return
         case .Imm16:
-            fields.imm = cast(i64) pop_u16(ctx) or_return
         case .Sel:
-            fields.sel = pop_u16(ctx) or_return
         case ._1:
         case ._c:
         case ._a:
@@ -449,7 +435,7 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
         add_operand(inst, make_reg(0, ctx.data_bits))
     }
     if fields.has[.Sel] {
-        inst.selector = fields.sel
+        inst.selector = pop_u16(ctx) or_return
     }
     if fields.has[.Rm] {
         assert(fields.has[.Mod])
@@ -480,9 +466,27 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
     } else if fields.has[.Disp16] {
         add_operand(inst, make_mem(base = {}, index = {}, scale = 1, disp = auto_cast fields.disp16))
     }
-    if fields.has[.Imm] || fields.has[.Imm8] || fields.has[.Imm16] {
+    if fields.has[.Imm] {
+        imm := i64(0)
+        if fields.has[.S] && fields.bits[.S] != 0 && fields.has[.W] && fields.bits[.W] != 0 {
+            imm = cast(i64) cast(i8) pop_u8(ctx) or_return
+        } else if fields.has[.W] && fields.bits[.W] == 0 {
+            imm = cast(i64) pop_u8(ctx) or_return
+        } else if ctx.data_bits == 16 {
+            imm = cast(i64) pop_u16(ctx) or_return
+        } else if ctx.data_bits == 32 || ctx.data_bits == 64 {
+            imm = cast(i64) pop_u32(ctx) or_return
+        }
         add_operand(inst, Imm {
-            value = fields.imm,
+            value = imm,
+        })
+    } else if fields.has[.Imm8] {
+        add_operand(inst, Imm {
+            value = cast(i64) pop_u8(ctx) or_return,
+        })
+    } else if fields.has[.Imm16] {
+        add_operand(inst, Imm {
+            value = cast(i64) pop_u16(ctx) or_return,
         })
     } else if fields.has[._1] {
         add_operand(inst, Imm {
