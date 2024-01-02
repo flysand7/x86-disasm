@@ -169,10 +169,11 @@ print_inst :: proc(inst: Inst, colors := true) {
 
 data_size_suffix :: proc(size: u8) -> string {
     switch size {
-        case 8:  return "b"
-        case 16: return "w"
-        case 32: return "d"
-        case 64: return "q"
+        case 8:   return "b"
+        case 16:  return "w"
+        case 32:  return "d"
+        case 64:  return "q"
+        case 128: return "o"
         case: unreachable()
     }
 }
