@@ -238,9 +238,9 @@ cld     11111100
 std     11111101
 inc     1111111w : mod 000 rm
 dec     1111111w : mod 001 rm
-call    11111111 : mod 010 rm
-call    11111111 : mod 011 rm
-jmp     11111111 : mod 100 rm
+call    11111111 : mod 010 rm : +f64
+call    11111111 : mod 011 rm : +f64
+jmp     11111111 : mod 100 rm : +f64
 push    11111111 : mod 110 rm : +f64
 
 sldt    00001111 : 00000000 : mod 000 rm
