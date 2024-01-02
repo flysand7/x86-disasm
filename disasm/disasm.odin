@@ -472,7 +472,7 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
     }
     if fields.has[.Imm] {
         imm := i64(0)
-        if fields.has[.S] && fields.bits[.S] != 0 && fields.has[.W] && fields.bits[.W] != 0 {
+        if fields.has[.S] && fields.bits[.S] != 0 {
             imm = cast(i64) cast(i8) pop_u8(ctx) or_return
         } else if fields.has[.W] && fields.bits[.W] == 0 {
             imm = cast(i64) pop_u8(ctx) or_return
