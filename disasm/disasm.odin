@@ -479,8 +479,7 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
         } else if ctx.data_bits == 16 {
             imm = cast(i64) pop_u16(ctx) or_return
         } else if ctx.data_bits == 32 || ctx.data_bits == 64 {
-            // One exception: FAT MOV (0xB8+rd)
-            if encoding.opcode.value == 0b1011 {
+            if ctx.cpu_bits == 64 && ctx.rex & 0b1000 == 0b1000 && encoding.opcode.value == 0b1011 {
                 imm = cast(i64) pop_u64(ctx) or_return
             } else {
                 imm = cast(i64) pop_u32(ctx) or_return
