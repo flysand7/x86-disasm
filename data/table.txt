@@ -568,7 +568,7 @@ cvtdq2ps   00001111 : +np : 01011011 : mod xmmrx rm
 paddq      00001111 : +np : 11010100 : mod mmrx rm
 
 # Packed doubles (prefix: 66 0F)
-unpckhpd   00001111 : +dp : 00001111 : 00010101 : mod xmmrx rm
+unpckhpd   00001111 : +dp : 00010101 : mod xmmrx rm
 movupd     00001111 : +dp : 0001000d : mod xmmrx rm
 movlpd     00001111 : +dp : 00010011 : mod xmmrx rm
 unpcklpd   00001111 : +dp : 00010100 : mod xmmrx rm
@@ -608,5 +608,3 @@ movq       00001111 : +dp : 11010110 : mod xmmrx rm
 cvttpd2dq  00001111 : +dp : 11100110 : mod xmmrx rm
 movntdq    00001111 : +dp : 11100111 : mod xmmrx rm
 maskmovdqu 00001111 : +dp : 11110111 : mod11 xmmrx rm
-
-
