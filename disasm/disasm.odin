@@ -620,11 +620,10 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
             if matched {
                 return inst, true
             }
-        } else {
-            ctx.offset    = saved_offset
-            ctx.data_bits = saved_bits
-            ctx.bits_offs = 8
         }
+        ctx.offset    = saved_offset
+        ctx.data_bits = saved_bits
+        ctx.bits_offs = 8
     }
     return {}, false
 }

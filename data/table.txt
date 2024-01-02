@@ -109,10 +109,10 @@ sub     001010dw : mod rx rm
 sub     0010110w : _a imm
 das     00101111
 xor     001100dw : mod rx rm
-xor     0011010w : imm
+xor     0011010w : _a imm
 aaa     00110111
 cmp     001110dw : mod rx rm
-cmp     0011110w : imm
+cmp     0011110w : _a imm
 aas     00111111
 inc     01000rrr : +n64
 dec     01001rrr : +n64
