@@ -543,13 +543,13 @@ minsd      00001111 : +rp : 01011101 : mod xmmrx rm
 divsd      00001111 : +rp : 01011110 : mod xmmrx rm
 maxsd      00001111 : +rp : 01011111 : mod xmmrx rm
 cmpsd      00001111 : +rp : 11000010 : mod xmmrx rm : imm8
+movdq2q    00001111 : +rp : 11010110 : 11 xmmrx mmrx
 
 
-cvtss2sd   00001111 : +bp : 11100110 : mod xmmrx rm
+cvtss2sd   00001111 : +bp : 01011010 : mod xmmrx rm
 cvttps2dq  00001111 : +bp : 01011011 : mod xmmrx rm
 movdqu     00001111 : +bp : 011d1111 : mod xmmrx rm
 movq       00001111 : +bp : 01111110 : mod xmmrx rm : _d
-movdq2q    00001111 : +rp : 11010110 : 11 xmmrx mmrx
 movq2dq    00001111 : +bp : 11010110 : 11 mmxrx xmmrx : _d
 cvtdq2pd   00001111 : +bp : 11100110 : mod xmmrx rm
 pause      10010000 : +bp
