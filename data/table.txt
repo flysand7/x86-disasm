@@ -611,3 +611,27 @@ movq       00001111 : +dp : 11010110 : mod xmmrx rm
 cvttpd2dq  00001111 : +dp : 11100110 : mod xmmrx rm
 movntdq    00001111 : +dp : 11100111 : mod xmmrx rm
 maskmovdqu 00001111 : +dp : 11110111 : mod11 xmmrx rm
+
+# ------------------------------------------------------------------- #
+# SSE3 instruction formats and encodings
+# ------------------------------------------------------------------- #
+
+fisttp     11011011 : moda 001 rm
+fisttp     11011101 : moda 001 rm
+fisttp     11011111 : moda 001 rm
+
+monitor    00001111 : 00000001 : 11001000 : _a
+mwait      00001111 : 00000001 : 11001001 : _c
+
+haddpd     00001111 : +dp : 01111100 : mod xmmrx rm
+hsubpd     00001111 : +dp : 01111101 : mod xmmrx rm
+addsubpd   00001111 : +dp : 11010000 : mod xmmrx rm
+
+lddqu      00001111 : +f2 : 00010010 : mod xmmrx rm
+haddps     00001111 : +f2 : 01111100 : mod xmmrx rm
+hsubps     00001111 : +f2 : 01111101 : mod xmmrx rm
+addsubps   00001111 : +f2 : 11010000 : mod xmmrx rm
+
+movshdup   00001111 : +f3 : 00010110 : mod xmmrx rm
+movsldup   00001111 : +f3 : 00010010 : mod xmmrx rm
+
