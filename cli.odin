@@ -64,15 +64,13 @@ main :: proc() {
             os.exit(1)
         }
         ctx := disasm.create_ctx(text_bytes, bits)
-        last_offset := 0
         for inst in disasm.disasm_inst(&ctx) {
-            last_offset += len(inst.bytes)
             disasm.print_inst(inst, true)
         }
         if ctx.offset < len(ctx.bytes) {
             fmt.printf("Error disassembling the byte: %02x (offset %016x)\n", ctx.bytes[ctx.offset], ctx.offset)
             fmt.printf("Context:")
-            disasm.dump_bytes(ctx.bytes[last_offset:ctx.offset])
+            disasm.dump_bytes(ctx.bytes[max(0,ctx.offset-8):ctx.offset])
             fmt.printf(" \e[38;5;210m%02x\e[0m ", ctx.bytes[ctx.offset])
             disasm.dump_bytes(ctx.bytes[ctx.offset+1:min(len(ctx.bytes), ctx.offset+8)])
             fmt.println()
