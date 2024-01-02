@@ -116,6 +116,7 @@ cmp     0011110w : _a imm
 aas     00111111
 inc     01000rrr : +n64
 dec     01001rrr : +n64
+div     1111011w : mod 110 rm : _a
 push    01010rrr : +f64
 pop     01011rrr : +f64
 pusha   01100000
