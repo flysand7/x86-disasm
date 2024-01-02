@@ -482,8 +482,6 @@ ldmxcsr    00001111 : +np : 10101110 : moda 010 rm
 stmxcsr    00001111 : +np : 10101110 : moda 011 rm
 sfence     00001111 : +np : 10101110 : 11   111 00
 cmpps      00001111 : +np : 11000010 : mod xmmrx rm : imm8
-pinsrw     00001111 : +np : 11000100 : mod mmrx rm : imm8
-pextrw     00001111 : +np : 11000101 : 11 rrr mmrx : imm8
 shufps     00001111 : +np : 11000110 : mod xmmrx rm : imm8
 pmovmskb   00001111 : +np : 11010111 : 11 rrr mmrx
 movntq     00001111 : +np : 11100111 : mod xmmrx rm
@@ -493,6 +491,8 @@ prefetcht0 00001111 : 00011000 : moda 001 rm
 prefetcht1 00001111 : 00011000 : moda 010 rm
 prefetcht2 00001111 : 00011000 : moda 011 rm
 pshufw     00001111 : 01110000 : mod mmrx rm : imm8
+pinsrw     00001111 : 11000100 : mod mmrx rm : imm8
+pextrw     00001111 : 11000101 : 11 rrr mmrx : imm8
 pminub     00001111 : 11011010 : mod mmrx rm
 pmaxub     00001111 : 11011110 : mod mmrx rm
 pavgb      00001111 : 11100000 : mod mmrx rm
