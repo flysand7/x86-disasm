@@ -116,7 +116,6 @@ cmp     0011110w : _a imm
 aas     00111111
 inc     01000rrr : +n64
 dec     01001rrr : +n64
-div     1111011w : mod 110 rm : _a
 push    01010rrr : +f64
 pop     01011rrr : +f64
 pusha   01100000
@@ -227,10 +226,13 @@ out     1110111w
 hlt     11110100
 cmc     11110101
 test    1111011w : mod 000 rm : imm
+test    1111011w : mod 001 rm : imm
 not     1111011w : mod 010 rm
+neg     1111011w : mod 011 rm
 imul    1111011w : mod 101 rm : _a
-idiv    1111011w : mod 111 rm : _a
+div     1111011w : mod 110 rm : _a
 mul     1111011w : mod 100 rm : _a
+idiv    1111011w : mod 111 rm : _a
 clc     11111000
 stc     11111001
 cli     11111010
