@@ -110,6 +110,7 @@ data_size_spec :: proc(size: u8) -> string {
         case 16: return "word"
         case 32: return "dword"
         case 64: return "qword"
+        case 128: return "xmmword"
         case: unreachable()
     }
 }

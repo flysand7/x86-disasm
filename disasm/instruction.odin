@@ -130,4 +130,7 @@ add_operand :: proc(inst: ^Inst, operand: Operand) {
     assert(inst.operands_count != len(inst.operands))
     inst.operands[inst.operands_count] = operand
     inst.operands_count += 1
+    if xmm, ok := operand.(XMM_Reg); ok {
+        inst.data_size = 128
+    }
 }
