@@ -315,7 +315,7 @@ read_field :: proc(ctx: ^Ctx, fields: ^Inst_Fields, field: table.Field) -> (matc
             fields.disp16 = cast(i16) pop_u16(ctx) or_return
         case .Imm:
             if fields.has[.S] && fields.bits[.S] != 0 && fields.has[.W] && fields.bits[.W] != 0 {
-                fields.imm = cast(i64) pop_u8(ctx) or_return
+                fields.imm = cast(i64) cast(i8) pop_u8(ctx) or_return
             } else if fields.has[.W] && fields.bits[.W] == 0 {
                 fields.imm = cast(i64) pop_u8(ctx) or_return
             } else if ctx.data_bits == 16 {
@@ -585,9 +585,13 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
         }
     }
     saved_offset := ctx.offset
+    saved_bits   := ctx.data_bits
     for enc in table.encodings {
         if .N64 in enc.flags && ctx.cpu_bits == 64 {
             continue
+        }
+        if .F64 in enc.flags && ctx.cpu_bits == 64 {
+            ctx.data_bits = 64
         }
         if .Np in enc.flags {
             if (data_size_override || ctx.rep_or_bnd || ctx.repnz) {
@@ -611,13 +615,15 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
             }
             ctx.rep_or_bnd = false
         }
-        ctx.offset    = saved_offset
-        ctx.bits_offs = 8
-        if match_bits(ctx, enc.opcode) or_continue {
+        if matched, ok := match_bits(ctx, enc.opcode); matched && ok {
             matched := decode_inst(ctx, enc, &inst) or_return
             if matched {
                 return inst, true
             }
+        } else {
+            ctx.offset    = saved_offset
+            ctx.data_bits = saved_bits
+            ctx.bits_offs = 8
         }
     }
     return {}, false

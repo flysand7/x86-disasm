@@ -80,6 +80,7 @@
 # Encoding flags
 # ------------------------------------------------------------------- #
 # +n64 - do not decode on 64-bit platforms
+# +f64 - force 64-bit data size in 64-bit mode even if REX.W is reset.
 # +ncs - do not decode if cr2 or cr3 field turned out to be cs
 # +ds  - data size is part of instruction name (movs -> movsb/movsw/movsl/movsq)
 # +np  - only decode if there was no prefix.
@@ -95,8 +96,8 @@ add     000000dw : mod rx rm
 add     0000010w : _a imm
 or      0000100w : mod rx rm
 or      0000110w : _a imm
-push    000ss110
-pop     000ss111
+push    000ss110 : +f64
+pop     000ss111 : +f64
 adc     000100dw : mod rx rm
 adc     0001010w : _a imm
 sbb     000110dw : mod rx rm
@@ -115,13 +116,13 @@ cmp     0011110w : imm
 aas     00111111
 inc     01000rrr : +n64
 dec     01001rrr : +n64
-push    01010rrr
-pop     01011rrr
+push    01010rrr : +f64
+pop     01011rrr : +f64
 pusha   01100000
 popa    01100001
 bound   01100010 : moda rx rm
 arpl    01100011 : mod rx rm
-push    011010s0 : imm
+push    011010s0 : imm : +f64
 imul    011010s1 : mod rx rm : imm
 ins     0110110w
 outs    0110111w
@@ -155,7 +156,7 @@ mov     100010dw : mod rx rm
 mov     10001100 : mod sss rm : _d
 lea     10001101 : moda rx rm
 mov     10001110 : mod sss rm
-pop     10001111 : mod 000 rm
+pop     10001111 : mod 000 rm : +f64
 nop     10010000
 xchg    10010rrr : _a
 cbw     10011000
@@ -164,7 +165,7 @@ c       10011001 : +ds
 call    10011010 : disp sel
 wait    10011011
 pushf   10011100
-popf    10011101
+popf    10011101 : +f64
 sahf    10011110
 lahf    10011111
 mov     1010000w : _a disp
@@ -240,7 +241,7 @@ dec     1111111w : mod 001 rm
 call    11111111 : mod 010 rm
 call    11111111 : mod 011 rm
 jmp     11111111 : mod 100 rm
-push    11111111 : mod 110 rm
+push    11111111 : mod 110 rm : +f64
 
 sldt    00001111 : 00000000 : mod 000 rm
 str     00001111 : 00000000 : mod 001 rm
