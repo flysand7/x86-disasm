@@ -588,9 +588,6 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
     }
     saved_offset := ctx.offset
     for enc in table.encodings {
-        if enc.mnemonic != "endbr64" {
-            continue
-        }
         if .N64 in enc.flags && ctx.cpu_bits == 64 {
             continue
         }
@@ -619,11 +616,7 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
         ctx.offset    = saved_offset
         ctx.bits_offs = 8
         if match_bits(ctx, enc.opcode) or_continue {
-            matched, ok := decode_inst(ctx, enc, &inst)
-            if !ok {
-                fmt.println("not ok")
-                return
-            }
+            matched := decode_inst(ctx, enc, &inst) or_return
             if matched {
                 return inst, true
             }
