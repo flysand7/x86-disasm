@@ -2,6 +2,12 @@ package disasm
 
 import "core:fmt"
 
+COLOR_RESET :: "\e[0m"
+COLOR_R :: "\e[38;5;210m"
+COLOR_G :: "\e[38;5;114m"
+COLOR_B :: "\e[38;5;105m"
+COLOR_GREY :: "\e[38;5;242m"
+
 @(private="file")
 fmt_int :: proc(#any_int hex: i64) {
     sign_ch := '+'
@@ -23,13 +29,22 @@ fmt_int :: proc(#any_int hex: i64) {
     }
 }
 
-print_inst :: proc(inst: Inst) {
+print_inst :: proc(inst: Inst, colors := true) {
     WIDTH :: 10
+    if colors {
+        fmt.print(COLOR_GREY, sep="")
+    }
     for i in 0 ..< len(inst.bytes) {
         fmt.printf("%02x", inst.bytes[i])
     }
+    if colors {
+        fmt.print(COLOR_RESET, sep="")
+    }
     for i in len(inst.bytes) ..< WIDTH {
         fmt.printf("  ")
+    }
+    if colors {
+        fmt.print(COLOR_R, sep="")
     }
     if .Lock in inst.flags {
         fmt.printf("lock ")
@@ -46,6 +61,9 @@ print_inst :: proc(inst: Inst) {
         if inst.mnemonic == "c" {
             fmt.printf("%s", data_size_suffix(2*inst.data_size))
         }
+    }
+    if colors {
+        fmt.print(COLOR_RESET, sep="")
     }
     for i in 0 ..< inst.operands_count {
         fmt.printf(i != 0? ", " : " ")
@@ -76,19 +94,61 @@ print_inst :: proc(inst: Inst) {
                 }
                 fmt.printf("]")
             case Reg:
+                if colors {
+                    fmt.print(COLOR_G, sep="")
+                }
                 fmt.printf("%s", reg_name(op))
+                if colors {
+                    fmt.print(COLOR_RESET, sep="")
+                }
             case MMX_Reg:
+                if colors {
+                    fmt.print(COLOR_G, sep="")
+                }
                 fmt.printf("%s", mmxreg_name(op))
+                if colors {
+                    fmt.print(COLOR_RESET, sep="")
+                }
             case XMM_Reg:
+                if colors {
+                    fmt.print(COLOR_G, sep="")
+                }
                 fmt.printf("%s", xmmreg_name(op))
+                if colors {
+                    fmt.print(COLOR_RESET, sep="")
+                }
             case Sreg:
+                if colors {
+                    fmt.print(COLOR_G, sep="")
+                }
                 fmt.printf("%s", sreg_name(op))
+                if colors {
+                    fmt.print(COLOR_RESET, sep="")
+                }
             case Creg_Idx:
+                if colors {
+                    fmt.print(COLOR_G, sep="")
+                }
                 fmt.printf("%s", creg_name(op))
+                if colors {
+                    fmt.print(COLOR_RESET, sep="")
+                }
             case Dreg_Idx:
+                if colors {
+                    fmt.print(COLOR_G, sep="")
+                }
                 fmt.printf("%s", dreg_name(op))
+                if colors {
+                    fmt.print(COLOR_RESET, sep="")
+                }
             case Imm:
+                if colors {
+                    fmt.print(COLOR_B, sep="")
+                }
                 fmt_int(op.value)
+                if colors {
+                    fmt.print(COLOR_RESET, sep="")
+                }
         }
     }
     fmt.printf("\n")
