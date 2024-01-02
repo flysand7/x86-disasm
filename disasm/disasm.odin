@@ -559,7 +559,10 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
         }
     }
     saved_offset := ctx.offset
-    saved_bits   := ctx.data_bits
+    saved_data   := ctx.data_bits
+    saved_addr   := ctx.addr_bits
+    saved_repnz  := ctx.repnz
+    saved_bnd    := ctx.rep_or_bnd
     for enc in table.encodings {
         if .N64 in enc.flags && ctx.cpu_bits == 64 {
             continue
@@ -589,6 +592,7 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
             }
             ctx.rep_or_bnd = false
         }
+        // fmt.println(enc.mnemonic)
         if matched, ok := match_bits(ctx, enc.opcode); matched && ok {
             matched := decode_inst(ctx, enc, &inst) or_return
             if matched {
@@ -596,8 +600,11 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
             }
         }
         ctx.offset    = saved_offset
-        ctx.data_bits = saved_bits
+        ctx.data_bits = saved_data
+        ctx.addr_bits = saved_addr
         ctx.bits_offs = 8
+        ctx.repnz = saved_repnz
+        ctx.rep_or_bnd = saved_bnd
     }
     return {}, false
 }
