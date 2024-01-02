@@ -546,6 +546,8 @@ cmpsd      00001111 : +rp : 11000010 : mod xmmrx rm : imm8
 movdq2q    00001111 : +rp : 11010110 : 11 xmmrx mmrx
 
 
+cvttss2si  00001111 : +bp : 00101100 : moda rx rm
+cvttss2si  00001111 : +bp : 00101100 : 11 rrr xmmrx
 cvtss2sd   00001111 : +bp : 01011010 : mod xmmrx rm
 cvttps2dq  00001111 : +bp : 01011011 : mod xmmrx rm
 movdqu     00001111 : +bp : 011d1111 : mod xmmrx rm
