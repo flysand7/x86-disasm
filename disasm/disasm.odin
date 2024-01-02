@@ -479,7 +479,12 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
         } else if ctx.data_bits == 16 {
             imm = cast(i64) pop_u16(ctx) or_return
         } else if ctx.data_bits == 32 || ctx.data_bits == 64 {
-            imm = cast(i64) pop_u32(ctx) or_return
+            // One exception: FAT MOV (0xB8+rd)
+            if encoding.opcode.value == 0b1011 {
+                imm = cast(i64) pop_u64(ctx) or_return
+            } else {
+                imm = cast(i64) pop_u32(ctx) or_return
+            }
         }
         add_operand(inst, Imm {
             value = imm,
@@ -513,35 +518,20 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
     ctx.start_offs = ctx.offset
     addr_size_override := false
     data_size_override := false
-    for {
-        boob := 0b1111
+    parse_prefixes: for {
         switch peek_u8(ctx) or_return {
             case 0xf0: ctx.lock = true
             case 0xf2: ctx.repnz = true
             case 0xf3: ctx.rep_or_bnd = true
-            case: boob ~= 0b0001
-        }
-        switch peek_u8(ctx) or_return {
             case 0x2e: ctx.seg_override = .Cs
             case 0x36: ctx.seg_override = .Ss
             case 0x3e: ctx.seg_override = .Ds
             case 0x26: ctx.seg_override = .Es
             case 0x64: ctx.seg_override = .Fs
             case 0x65: ctx.seg_override = .Gs
-            case: boob ~= 0b0010
-        }
-        if (peek_u8(ctx) or_return) == 0x66 {
-            data_size_override = true
-        } else {
-            boob ~= 0b0100
-        }
-        if (peek_u8(ctx) or_return) == 0x67 {
-            addr_size_override = true
-        } else {
-            boob ~= 0b1000
-        }
-        if boob == 0b0000 {
-            break
+            case 0x66: data_size_override = true
+            case 0x67: addr_size_override = true
+            case: break parse_prefixes
         }
         pop_u8(ctx) or_return
     }
