@@ -635,3 +635,41 @@ addsubps   00001111 : +f2 : 11010000 : mod xmmrx rm
 movshdup   00001111 : +f3 : 00010110 : mod xmmrx rm
 movsldup   00001111 : +f3 : 00010010 : mod xmmrx rm
 
+# ------------------------------------------------------------------- #
+# SSSE3 instruction formats and encodings
+# ------------------------------------------------------------------- #
+
+pshufb     00001111 : +dp : 00111000 : 00000000 : mod xmmrx rm
+phaddw     00001111 : +np : 00111000 : 00000001 : mod mmxrx rm
+phaddd     00001111 : +np : 00111000 : 00000010 : mod mmxrx rm
+phaddsw    00001111 : +np : 00111000 : 00000011 : mod mmxrx rm
+pmaddubsw  00001111 : +np : 00111000 : 00000100 : mod mmxrx rm
+phsubd     00001111 : +np : 00111000 : 00000110 : mod mmxrx rm
+phsubw     00001111 : +np : 00111000 : 00000101 : mod mmxrx rm
+phsubsw    00001111 : +np : 00111000 : 00000111 : mod mmxrx rm
+psignb     00001111 : +dp : 00111000 : 00001000 : mod xmmrx rm
+psignw     00001111 : +dp : 00111000 : 00001001 : mod xmmrx rm
+psignd     00001111 : +dp : 00111000 : 00001010 : mod xmmrx rm
+pmulhrsw   00001111 : +np : 00111000 : 00001011 : mod mmxrx rm
+pabsb      00001111 : +np : 00111000 : 00011100 : mod mmxrx rm
+pabsw      00001111 : +np : 00111000 : 00011101 : mod mmxrx rm
+pabsd      00001111 : +np : 00111000 : 00011110 : mod mmxrx rm
+palignr    00001111 : +np : 00111010 : 00001111 : mod mmxrx rm : imm8
+
+pshufb     00001111 : +np : 00111000 : 00000000 : mod mmxrx rm
+phaddw     00001111 : +dp : 00111000 : 00000001 : mod xmmrx rm
+phaddd     00001111 : +dp : 00111000 : 00000010 : mod xmmrx rm
+phaddsw    00001111 : +dp : 00111000 : 00000011 : mod xmmrx rm
+pmaddubsw  00001111 : +dp : 00111000 : 00000100 : mod xmmrx rm
+phsubw     00001111 : +dp : 00111000 : 00000101 : mod xmmrx rm
+phsubd     00001111 : +dp : 00111000 : 00000110 : mod xmmrx rm
+phsubsw    00001111 : +dp : 00111000 : 00000111 : mod xmmrx rm
+psignb     00001111 : +np : 00111000 : 00001000 : mod mmxrx rm
+psignw     00001111 : +np : 00111000 : 00001001 : mod mmxrx rm
+psignd     00001111 : +np : 00111000 : 00001010 : mod mmxrx rm
+pmulhrsw   00001111 : +dp : 00111000 : 00001011 : mod xmmrx rm
+pabsb      00001111 : +dp : 00111000 : 00011100 : mod xmmrx rm
+pabsw      00001111 : +dp : 00111000 : 00011101 : mod xmmrx rm
+pabsd      00001111 : +dp : 00111000 : 00011110 : mod xmmrx rm
+palignr    00001111 : +dp : 00111010 : 00001111 : mod xmmrx rm : imm8
+
