@@ -5,6 +5,8 @@ Enc_Flags :: bit_set[enum{
     Ncs,
     Ds,
     Ds1,
+    Dp,
+    Np,
 }]
 
 Bits :: struct {

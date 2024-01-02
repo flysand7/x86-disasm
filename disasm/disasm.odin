@@ -586,6 +586,12 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
         if .N64 in enc.flags && ctx.cpu_bits == 64 {
             continue
         }
+        if .Dp in enc.flags && !data_size_override {
+            continue
+        }
+        if .Np in enc.flags && data_size_override {
+            continue
+        }
         ctx.offset    = saved_offset
         ctx.bits_offs = 8
         if match_bits(ctx, enc.opcode) or_continue {

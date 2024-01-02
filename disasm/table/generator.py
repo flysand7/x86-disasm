@@ -59,7 +59,7 @@ def tokenize_line(splits: list[str], line: str):
             line = line[idx:]
         elif line[0].isalpha() or line[0] == '_' or line[0] == '+':
             idx = 0
-            while idx < len(line) and (line[idx].isdigit() or line[idx].isalpha() or line[idx] == '_' or line[0] == '+'):
+            while idx < len(line) and (line[idx].isdigit() or line[idx].isalpha() or line[idx] == '_' or line[idx] == '+'):
                 idx += 1
             splits.append(line[:idx])
             line = line[idx:]
