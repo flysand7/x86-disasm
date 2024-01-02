@@ -673,3 +673,15 @@ pabsw      00001111 : +dp : 00111000 : 00011101 : mod xmmrx rm
 pabsd      00001111 : +dp : 00111000 : 00011110 : mod xmmrx rm
 palignr    00001111 : +dp : 00111010 : 00001111 : mod xmmrx rm : imm8
 
+# ------------------------------------------------------------------- #
+# AESNI and PCLMULQDQ instruction formats and encodings
+# ------------------------------------------------------------------- #
+
+pclmulqdq       00001111 : +dp : 00111010 : 01000100 : mod xmmrx rm : imm8
+aesdec          00001111 : +dp : 00111000 : 11011110 : mod xmmrx rm
+aesdeclast      00001111 : +dp : 00111000 : 11011111 : mod xmmrx rm
+aesenc          00001111 : +dp : 00111000 : 11011100 : mod xmmrx rm
+aesenclast      00001111 : +dp : 00111000 : 11011101 : mod xmmrx rm
+aesimc          00001111 : +dp : 00111000 : 11011011 : mod xmmrx rm
+aeskeygenassist 00001111 : +dp : 00111010 : 11011111 : mod xmmrx rm : imm8
+
