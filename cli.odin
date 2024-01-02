@@ -1,13 +1,14 @@
 package disasm_cli
 
 import "disasm"
+import "formats/elf"
 
 import "core:fmt"
 import "core:os"
 
 main :: proc() {
     bits := u8(64)
-    elf  := true
+    is_elf  := true
     filenames := make([dynamic]string)
     for arg in os.args[1:] {
         if arg[0] == '-' {
@@ -15,8 +16,8 @@ main :: proc() {
                 case "16": bits = 16
                 case "32": bits = 32
                 case "64": bits = 64
-                case "e":  elf = true
-                case "r":  elf = false
+                case "e":  is_elf = true
+                case "r":  is_elf = false
                 case:
                     fmt.eprintf("Unknown option: %s\n", arg)
                     os.exit(2)
@@ -25,7 +26,7 @@ main :: proc() {
             append(&filenames, arg)
         }
     }
-    if !elf {
+    if !is_elf {
         for filename in filenames {
             bytes, ok := os.read_entire_file(filename)
             if !ok {
@@ -34,11 +35,40 @@ main :: proc() {
             }
             ctx := disasm.create_ctx(bytes, bits)
             for inst in disasm.disasm_inst(&ctx) {
-                disasm.print_inst(inst)
+                disasm.print_inst(inst, true)
             }
         }
     } else {
-        fmt.eprintf("ELF disassembely not supported yet\n")
-        os.exit(2)
+        if len(filenames) > 1 || len(filenames) == 0 {
+            fmt.eprintf("Please provide one file to disassemble\n")
+            os.exit(2)
+        }
+        bytes, bytes_ok := os.read_entire_file(filenames[0])
+        if !bytes_ok {
+            fmt.eprintf("Unable to read file: %s\n", filenames[0])
+            os.exit(1)
+        }
+        file, file_err := elf.file_from_bytes(bytes)
+        if file_err != nil {
+            fmt.eprintf("Elf reading error: %v\n", file_err)
+            os.exit(1)
+        }
+        text, text_idx, text_err := elf.section_by_name(file, ".text")
+        if text_err != nil {
+            fmt.eprintf("Error finding .text section: %v\n", text_err)
+            os.exit(1)
+        }
+        text_bytes, text_bytes_err := elf.section_data(file, text, u8)
+        if text_bytes_err != nil {
+            fmt.eprintf("Error reading .text section: %v\n", text_err)
+            os.exit(1)
+        }
+        ctx := disasm.create_ctx(text_bytes, bits)
+        for inst in disasm.disasm_inst(&ctx) {
+            disasm.print_inst(inst, true)
+        }
+        if ctx.offset < len(ctx.bytes) {
+            fmt.printf("Error disassembling the byte: %02x\n", ctx.bytes[ctx.offset])
+        }
     }
 }
