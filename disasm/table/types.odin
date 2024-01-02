@@ -8,8 +8,8 @@ Enc_Flags :: bit_set[enum{
     Ds1,
     Np,
     Dp,
-    Rp,
-    Bp,
+    F2,
+    F3,
 }]
 
 Bits :: struct {

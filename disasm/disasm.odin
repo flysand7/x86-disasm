@@ -580,19 +580,18 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
                 continue
             }
         }
-        if .Rp in enc.flags {
+        if .F2 in enc.flags {
             if !ctx.repnz {
                 continue
             }
             ctx.repnz = false
         }
-        if .Bp in enc.flags {
+        if .F3 in enc.flags {
             if !ctx.rep_or_bnd {
                 continue
             }
             ctx.rep_or_bnd = false
         }
-        // fmt.println(enc.mnemonic)
         if matched, ok := match_bits(ctx, enc.opcode); matched && ok {
             matched := decode_inst(ctx, enc, &inst) or_return
             if matched {
