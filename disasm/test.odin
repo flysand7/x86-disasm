@@ -24,5 +24,9 @@ test_disasm :: proc(t: ^testing.T) {
         for inst in disasm_inst(&ctx) {
             print_inst(inst)
         }
+        if ctx.offset < len(ctx.bytes) {
+            fmt.printf("Error disassembling the byte: %02x\n", ctx.bytes[ctx.offset])
+            testing.fail_now(t)
+        }
     }
 }

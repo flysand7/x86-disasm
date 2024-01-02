@@ -26,6 +26,7 @@ Inst_Fields :: struct {
     has:  [table.Field]bool,
     disp:  i32,
     disp8: i8,
+    disp16: i16,
     imm:   i64,
     sel:   u16,
 }
@@ -310,6 +311,8 @@ read_field :: proc(ctx: ^Ctx, fields: ^Inst_Fields, field: table.Field) -> (matc
             fields.disp = cast(i32) pop_u16(ctx) or_return
         case .Disp8:
             fields.disp8 = cast(i8) pop_u8(ctx) or_return
+        case .Disp16:
+            fields.disp16 = cast(i16) pop_u16(ctx) or_return
         case .Imm:
             if fields.has[.S] && fields.bits[.S] != 0 && fields.has[.W] && fields.bits[.W] != 0 {
                 fields.imm = cast(i64) pop_u8(ctx) or_return
@@ -476,6 +479,8 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
         add_operand(inst, make_mem(base = {}, index = {}, scale = 1, disp = fields.disp))
     } else if fields.has[.Disp8] {
         add_operand(inst, Mem_Short { disp = fields.disp8 })
+    } else if fields.has[.Disp16] {
+        add_operand(inst, make_mem(base = {}, index = {}, scale = 1, disp = auto_cast fields.disp16))
     }
     if fields.has[.Imm] {
         add_operand(inst, Imm {
@@ -583,19 +588,42 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
     }
     saved_offset := ctx.offset
     for enc in table.encodings {
+        if enc.mnemonic != "endbr64" {
+            continue
+        }
         if .N64 in enc.flags && ctx.cpu_bits == 64 {
             continue
         }
-        if .Dp in enc.flags && !data_size_override {
-            continue
+        if .Np in enc.flags {
+            if (data_size_override || ctx.rep_or_bnd || ctx.repnz) {
+                continue
+            }
         }
-        if .Np in enc.flags && data_size_override {
-            continue
+        if .Dp in enc.flags {
+            if !data_size_override {
+                continue
+            }
+        }
+        if .Rp in enc.flags {
+            if !ctx.repnz {
+                continue
+            }
+            ctx.repnz = false
+        }
+        if .Bp in enc.flags {
+            if !ctx.rep_or_bnd {
+                continue
+            }
+            ctx.rep_or_bnd = false
         }
         ctx.offset    = saved_offset
         ctx.bits_offs = 8
         if match_bits(ctx, enc.opcode) or_continue {
-            matched := decode_inst(ctx, enc, &inst) or_return
+            matched, ok := decode_inst(ctx, enc, &inst)
+            if !ok {
+                fmt.println("not ok")
+                return
+            }
             if matched {
                 return inst, true
             }
