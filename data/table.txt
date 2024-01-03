@@ -537,6 +537,8 @@ pause      +f3 : 10010000
 movsd      +f2 : +0f : 0001000d : mod xmmrx rm
 cvttsd2si  +f2 : +0f : 00101100 : 11 rrr xmmrx
 cvttsd2si  +f2 : +0f : 00101100 : moda rrr rm
+cvtsd2si   +f2 : +0f : 00101101 : 11 rrr xmmrx
+cvtsd2si   +f2 : +0f : 00101101 : moda rx rm
 cvtsi2sd   +f2 : +0f : 00101010 : 11 xmmrx rrr
 cvtsi2sd   +f2 : +0f : 00101010 : moda xmmrx rrr
 sqrtsd     +f2 : +0f : 01010001 : mod xmmrx rm
@@ -566,8 +568,6 @@ mfence     +0f : 10101110 : 111 100 00
 movnti     +0f : 11000011 : mod rx rm
 
 # Packed singles (prefix: <NP> 0F)
-cvtsd2si   +np : +0f : 00101101 : moda rx rm
-cvtsd2si   +np : +0f : 00101101 : 11 rrr xmmrx
 cvtps2pd   +np : +0f : 01011010 : mod xmmrx rm
 cvtdq2ps   +np : +0f : 01011011 : mod xmmrx rm
 paddq      +np : +0f : 11010100 : mod mmrx rm
