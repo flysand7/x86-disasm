@@ -579,13 +579,13 @@ movlpd     +dp : +0f : 00010011 : mod xmmrx rm
 unpcklpd   +dp : +0f : 00010100 : mod xmmrx rm
 movhpd     +dp : +0f : 0001011d : mod xmmrx rm
 movapd     +dp : +0f : 0010100d : mod xmmrx rm
+cvtpi2pd   +dp : +0f : 00101010 : 11 xmmrx mmxrx
+cvtpi2pd   +dp : +0f : 00101010 : moda xmmrx rm
 movntpd    +dp : +0f : 00101011 : mod xmmrx rm
-cvtpi2pd   +dp : +0f : 00101100 : 11 xmmrx mmxrx
-cvtpi2pd   +dp : +0f : 00101100 : moda xmmrx rm
-cvtpd2pi   +dp : +0f : 00101101 : 11 mmrx xmmrx
-cvtpd2pi   +dp : +0f : 00101101 : moda mmrx  rm
 cvttpd2pi  +dp : +0f : 00101100 : 11 mmxrx xmmrx
 cvttpd2pi  +dp : +0f : 00101100 : moda mmxrx xmmrx
+cvtpd2pi   +dp : +0f : 00101101 : 11 mmrx xmmrx
+cvtpd2pi   +dp : +0f : 00101101 : moda mmrx  rm
 ucomisd    +dp : +0f : 00101110 : mod xmmrx rm
 comisd     +dp : +0f : 00101111 : mod xmmrx rm
 movmskpd   +dp : +0f : 01010000 : 11 rrr xmmrx
