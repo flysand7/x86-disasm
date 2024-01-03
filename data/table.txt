@@ -467,10 +467,10 @@ cmovg   +0f : 01001111 : mod rx rm
 # Packed singles (prefix: <NP> 0F)
 movups     +np : +0f : 0001000d : mod xmmrx rm
 movhlps    +np : +0f : 00010010 : mod11 xmmrx rm
-movlps     +np : +0f : 00010010 : moda xmmrx rm
+movlps     +np : +0f : 0001001d : moda xmmrx rm
 unpcklps   +np : +0f : 00010100 : mod xmmrx rm
 unpckhps   +np : +0f : 00010101 : mod xmmrx rm
-movhps     +np : +0f : 00010110 : moda xmmrx rm
+movhps     +np : +0f : 0001011d : moda xmmrx rm
 movlhps    +np : +0f : 00010110 : mod11 xmmrx rm
 cvtpi2ps   +np : +0f : 00101010 : 11 xmmrx mmrx
 cvtpi2ps   +np : +0f : 00101010 : moda xmmrx rm
