@@ -559,8 +559,15 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
         }
     }
     opcode_0f := false
+    opcode_38 := false
+    opcode_3a := false
     if match_u8(ctx, 0x0f) {
         opcode_0f = true
+        if match_u8(ctx, 0x38) {
+            opcode_38 = true
+        } else if match_u8(ctx, 0x3a) {
+            opcode_3a = true
+        }
     }
     saved_offset := ctx.offset
     saved_data   := ctx.data_bits
@@ -569,6 +576,12 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
     saved_bnd    := ctx.rep_or_bnd
     for enc in table.encodings {
         if (.Flag_0f in enc.flags) != opcode_0f {
+            continue
+        }
+        if (.Flag_38 in enc.flags) != opcode_38 {
+            continue
+        }
+        if (.Flag_3a in enc.flags) != opcode_3a {
             continue
         }
         if .Flag_N64 in enc.flags && ctx.cpu_bits == 64 {

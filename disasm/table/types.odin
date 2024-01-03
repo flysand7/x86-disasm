@@ -11,6 +11,8 @@ Enc_Flags :: bit_set[enum{
     Flag_F2,
     Flag_F3,
     Flag_0f,
+    Flag_3a,
+    Flag_38,
 }]
 
 Bits :: struct {
