@@ -59,6 +59,8 @@ Field :: enum {
     _64,
     _c,
     _1,
+    _fs,
+    _gs,
 }
 
 Bit_Mask :: union {
@@ -106,4 +108,6 @@ field_widths := [Field]u8 {
     ._1    = 0,
     ._a    = 0,
     ._c    = 0,
+    ._fs   = 0,
+    ._gs   = 0,
 }

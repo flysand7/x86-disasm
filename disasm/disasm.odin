@@ -322,6 +322,8 @@ read_field :: proc(ctx: ^Ctx, fields: ^Inst_Fields, field: table.Field) -> (matc
         case ._1:
         case ._c:
         case ._a:
+        case ._fs:
+        case ._gs:
             // No associated data
         case ._d:
             fields.has[.D] = true
@@ -426,6 +428,10 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
     } else if fields.has[.Sss] {
         assert(fields.bits[.Sss] < cast(u8) max(Sreg))
         add_operand(inst, make_sreg(fields.bits[.Sss]))
+    } else if fields.has[._gs] {
+        add_operand(inst, Sreg.Gs)
+    } else if fields.has[._fs] {
+        add_operand(inst, Sreg.Fs)
     } else if fields.has[._c] {
         add_operand(inst, Reg{.Cx, 8})
     }

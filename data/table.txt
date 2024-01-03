@@ -66,6 +66,8 @@
 # _a   - implicit AL/AX/EAX register.
 # _c   - implicit CL/CX/ECX register.
 # _1   - implicit constant 1 operand.
+# _fs  - implicit FS operand.
+# _gs  - implicit GS operand.
 
 # "Immediate" Bytes
 # ------------------------------------------------------------------- #
@@ -293,8 +295,10 @@ jl      +0f : 10001100 : disp
 jge     +0f : 10001101 : disp
 jle     +0f : 10001110 : disp
 jg      +0f : 10001111 : disp
-push    +0f : 10sss000
-pop     +0f : 10sss001 : +ncs
+push    +0f : 10100000 : _fs
+push    +0f : 10101000 : _gs
+pop     +0f : 10100001 : _fs
+pop     +0f : 10101001 : _gs
 seto    +0f : 10010000 : mod 000 rm
 setno   +0f : 10010001 : mod 000 rm
 setb    +0f : 10010010 : mod 000 rm
