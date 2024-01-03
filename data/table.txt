@@ -379,10 +379,13 @@ movd     +0f : 011d1110 : 11 mmrx rrr
 movd     +0f : 011d1110 : moda mmrx rm
 movq     +0f : 011d1111 : 11 mmrx rrr
 movq     +0f : 011d1111 : moda mmrx rm
+psrlw    +0f : 01110001 : 11 010 mmrx : imm8
 psraw    +0f : 01110001 : 11 100 mmrx : imm8
 psllw    +0f : 01110001 : 11 110 mmrx : imm8
+psrld    +0f : 01110010 : 11 010 mmrx : imm8
 psrad    +0f : 01110010 : 11 100 mmrx : imm8
 pslld    +0f : 01110010 : 11 110 mmrx : imm8
+pslrq    +0f : 01110011 : 11 010 mmrx : imm8
 psraq    +0f : 01110011 : 11 100 mmrx : imm8
 psllq    +0f : 01110011 : 11 110 mmrx : imm8
 punpckhw +0f : 01101000 : mod mmrx rm
@@ -393,6 +396,9 @@ pcmpeqb  +0f : 01110100 : mod mmrx rm
 pcmpeqw  +0f : 01110101 : mod mmrx rm
 pcmpeqd  +0f : 01110110 : mod mmrx rm
 emms     +0f : 01110111
+psrlw    +0f : 11010001 : mod mmrx rm
+psrld    +0f : 11010010 : mod mmrx rm
+psrlq    +0f : 11010011 : mod mmrx rm
 pand     +0f : 11011011 : mod mmrx rm
 paddq    +0f : 11010100 : mod mmrx rm
 pmullw   +0f : 11010101 : mod mmrx rm
