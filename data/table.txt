@@ -336,8 +336,6 @@ movsx   +0f : 1011111w : mod rx rm
 xadd    +0f : 1100000w : mod rx rm
 bswap   +0f : 11001rrr
 rsm     +0f : 10101010
-shrd    +0f : 10101100 : mod rx rm : imm8
-shrd    +0f : 10101101 : mod rx rm : _c
 cmpxchg +0f : 1011000w : mod rx rm
 movzx   +0f : 1011011w : mod rx rm
 lfs     +0f : 10110100 : moda rx rm
