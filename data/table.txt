@@ -685,3 +685,67 @@ aesenclast      00001111 : +dp : 00111000 : 11011101 : mod xmmrx rm
 aesimc          00001111 : +dp : 00111000 : 11011011 : mod xmmrx rm
 aeskeygenassist 00001111 : +dp : 00111010 : 11011111 : mod xmmrx rm : imm8
 
+# ------------------------------------------------------------------- #
+# SSE 4.1 instruction formats and encodings
+# ------------------------------------------------------------------- #
+
+pblendvb    00001111 : +dp : 00111000 : 00010000 : mod xmmrx rm
+blendvps    00001111 : +dp : 00111000 : 00010100 : mod xmmrx rm
+blendvpd    00001111 : +dp : 00111000 : 00010101 : mod xmmrx rm
+ptest       00001111 : +dp : 00111000 : 00010111 : mod xmmrx rm
+pmovsxbw    00001111 : +dp : 00111000 : 00100000 : mod xmmrx rm
+pmovsxbd    00001111 : +dp : 00111000 : 00100001 : mod xmmrx rm
+pmovsxbq    00001111 : +dp : 00111000 : 00100010 : mod xmmrx rm
+pmovsxwd    00001111 : +dp : 00111000 : 00100011 : mod xmmrx rm
+pmovsxwq    00001111 : +dp : 00111000 : 00100100 : mod xmmrx rm
+pmovsxdq    00001111 : +dp : 00111000 : 00100101 : mod xmmrx rm
+pmuldq      00001111 : +dp : 00111000 : 00101000 : mod xmmrx rm
+pcmpeqq     00001111 : +dp : 00111000 : 00101001 : mod xmmrx rm
+movntdqa    00001111 : +dp : 00111000 : 00101010 : 11 rrr xmmrx
+packusdw    00001111 : +dp : 00111000 : 00101011 : mod xmmrx rm
+pmovzxbw    00001111 : +dp : 00111000 : 00110000 : mod xmmrx rm
+pmovzxbq    00001111 : +dp : 00111000 : 00110010 : mod xmmrx rm
+pmovzxwd    00001111 : +dp : 00111000 : 00110011 : mod xmmrx rm
+pmovzxwq    00001111 : +dp : 00111000 : 00110100 : mod xmmrx rm
+pmovzxdq    00001111 : +dp : 00111000 : 00110100 : mod xmmrx rm
+pminsb      00001111 : +dp : 00111000 : 00111000 : mod xmmrx rm
+pminsd      00001111 : +dp : 00111000 : 00111001 : mod xmmrx rm
+pminuw      00001111 : +dp : 00111000 : 00111010 : mod xmmrx rm
+pminud      00001111 : +dp : 00111000 : 00111011 : mod xmmrx rm
+pmaxsb      00001111 : +dp : 00111000 : 00111100 : mod xmmrx rm
+pmaxsd      00001111 : +dp : 00111000 : 00111101 : mod xmmrx rm
+pmaxuw      00001111 : +dp : 00111000 : 00111110 : mod xmmrx rm
+pmaxud      00001111 : +dp : 00111000 : 00111111 : mod xmmrx rm
+pinsrb      00001111 : +dp : 00111000 : 01000000 : mod xmmrx rm
+phminposuw  00001111 : +dp : 00111000 : 01000001 : mod xmmrx rm
+pmovzxbd    00001111 : +dp : 00111000 : 10000011 : mod xmmrx rm
+pmulld      00001111 : +dp : 00111000 : 01000000 : mod xmmrx rm
+
+roundpd     00001111 : +dp : 00111010 : 00001001 : mod xmmrx rm : imm8
+blendps     00001111 : +dp : 00111010 : 00001100 : mod xmmrx rm
+blendpd     00001111 : +dp : 00111010 : 00001101 : mod xmmrx rm
+pextrb      00001111 : +dp : 00111010 : 00010100 : mod xmmrx rm : imm8
+pextr       00001111 : +dp : 00111010 : 00010110 : mod xmmrx rm : imm8 : +ds
+extractps   00001111 : +dp : 00111010 : 00010111 : mod xmmrx rm : imm8
+pblendw     00001111 : +dp : 00111010 : 00011110 : mod xmmrx rm : imm8
+insertps    00001111 : +dp : 00111010 : 00100001 : mod xmmrx rm : imm8
+pinsr       00001111 : +dp : 00111010 : 00100010 : mod xmmrx rm : imm8 : +ds
+dpps        00001111 : +dp : 00111010 : 01000000 : mod xmmrx rm : imm8
+dppd        00001111 : +dp : 00111010 : 01000001 : mod xmmrx rm : imm8
+mpsadbw     00001111 : +dp : 00111010 : 01000010 : mod xmmrx rm : imm8
+
+# ------------------------------------------------------------------- #
+# SSE 4.2 instruction formats and encodings
+# ------------------------------------------------------------------- #
+
+pcmpgtq     00001111 : +dp : 00111000 : 00110111 : mod xmmrx rm
+pcmpestrm   00001111 : +dp : 00111010 : 01100000 : mod xmmrx rm : imm8
+pcmpestri   00001111 : +dp : 00111010 : 01100001 : mod xmmrx rm : imm8
+pcmpistri   00001111 : +dp : 00111010 : 01100011 : mod xmmrx rm : imm8
+pcmpistrm   00001111 : +dp : 00111010 : 01100010 : mod xmmrx rm : imm8
+
+crc32       00001111 : +f2 : 00111000 : 1111000w : mod rx rm
+
+popcnt      00001111 : +f3 : 10111000 : mod rx rm
+
+
