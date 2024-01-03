@@ -463,8 +463,8 @@ unpckhps   +np : +0f : 00010101 : mod xmmrx rm
 movhps     +np : +0f : 00010110 : moda xmmrx rm
 movlhps    +np : +0f : 00010110 : mod11 xmmrx rm
 cvtpi2ps   +np : +0f : 00101010 : 11 xmmrx mmrx
-movntps    +np : +0f : 00101011 : mod xmmrx rm
 cvtpi2ps   +np : +0f : 00101010 : moda xmmrx rm
+movntps    +np : +0f : 00101011 : mod xmmrx rm
 cvttps2pi  +np : +0f : 00101100 : 11 mmrx xmmrx
 cvttps2pi  +np : +0f : 00101100 : moda mmrx rm
 cvtps2pi   +np : +0f : 00101101 : 11 mmrx xmmrx
@@ -537,6 +537,8 @@ pause      +f3 : 10010000
 movsd      +f2 : +0f : 0001000d : mod xmmrx rm
 cvttsd2si  +f2 : +0f : 00101100 : 11 rrr xmmrx
 cvttsd2si  +f2 : +0f : 00101100 : moda rrr rm
+cvtsi2sd   +f2 : +0f : 00101010 : 11 xmmrx rrr
+cvtsi2sd   +f2 : +0f : 00101010 : moda xmmrx rrr
 sqrtsd     +f2 : +0f : 01010001 : mod xmmrx rm
 addsd      +f2 : +0f : 01011000 : mod xmmrx rm
 mulsd      +f2 : +0f : 01011001 : mod xmmrx rm
@@ -558,8 +560,6 @@ movq       +f3 : +0f : 01111110 : mod xmmrx rm : _d
 movq2dq    +f3 : +0f : 11010110 : 11 mmxrx xmmrx : _d
 cvtdq2pd   +f3 : +0f : 11100110 : mod xmmrx rm
 
-cvtsi2sd   +0f : 00101010 : 11 xmmrx rrr
-cvtsi2sd   +0f : 00101010 : moda xmmrx rrr
 clflush    +0f : 10101110 : mod 111 rm
 lfence     +0f : 10101110 : 111 010 00
 mfence     +0f : 10101110 : 111 100 00
