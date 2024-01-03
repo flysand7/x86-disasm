@@ -20,6 +20,9 @@ build-cli: generate
 time-cli: generate build-cli
     time ./x86-disasm x86-disasm > /dev/null
 
+test-table: generate
+    odin test disasm -test-name:test_verify_tables
+
 generate:
     ./disasm/table/generator.py
 

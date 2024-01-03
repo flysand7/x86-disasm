@@ -160,7 +160,6 @@ mov     10001100 : mod sss rm : _d
 lea     10001101 : moda rx rm
 mov     10001110 : mod sss rm
 pop     10001111 : mod 000 rm : +f64
-nop     10010000
 xchg    10010rrr : _a
 cbw     10011000
 cwde    10011000
