@@ -116,20 +116,20 @@ Inst_Flags :: bit_set[enum{
 }]
 
 Inst :: struct {
-    mnemonic:       string,
-    bytes:          []u8,
-    data_size:      u8,
-    seg_override:   Sreg,
-    selector:       Maybe(u16),
-    operands:       [4]Operand,
-    operands_count: int,
-    flags:          Inst_Flags,
+    mnemonic:  string,
+    bytes:     []u8,
+    data_size: u8,
+    seg:       Sreg,
+    selector:  Maybe(u16),
+    op:        [4]Operand,
+    op_count:  int,
+    flags:     Inst_Flags,
 }
 
 add_operand :: proc(inst: ^Inst, operand: Operand) {
-    assert(inst.operands_count != len(inst.operands))
-    inst.operands[inst.operands_count] = operand
-    inst.operands_count += 1
+    assert(inst.op_count != len(inst.op))
+    inst.op[inst.op_count] = operand
+    inst.op_count += 1
     if xmm, ok := operand.(XMM_Reg); ok {
         inst.data_size = 128
     }

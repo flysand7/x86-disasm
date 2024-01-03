@@ -10,13 +10,15 @@ Ctx :: struct {
     cpu_bits:   u8,
     // Instruction ctx
     start_offs: int,
-    rex:        u8,
     data_bits:  u8,
     addr_bits:  u8,
-    seg_override: Sreg,
-    lock:       bool,
-    repnz:      bool,
-    rep_or_bnd: bool,
+    using _zeroctx: struct {
+        rex:        u8,
+        seg:        Sreg,
+        lock:       bool,
+        repnz:      bool,
+        rep_or_bnd: bool,
+    },
     // Bit reading
     bits_offs:  u8,
 }
@@ -374,7 +376,7 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
     }
     inst^ = Inst {
         mnemonic = encoding.mnemonic,
-        seg_override = ctx.seg_override,
+        seg = ctx.seg,
         data_size = ctx.data_bits,
     }
     if .Flag_Ds in encoding.flags {
@@ -465,8 +467,8 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
         So we can just swap the operands if d bit is reset.
     */
     if fields.has[.D] && fields.bits[.D] == 0 {
-        assert(inst.operands_count == 2)
-        inst.operands[0], inst.operands[1] = inst.operands[1], inst.operands[0]
+        assert(inst.op_count == 2)
+        inst.op[0], inst.op[1] = inst.op[1], inst.op[0]
     }
 
     if fields.has[.Disp] {
@@ -515,12 +517,8 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
     inst = Inst {}
     ctx.data_bits = ctx.cpu_bits == 64? 32 : ctx.cpu_bits
     ctx.addr_bits = ctx.cpu_bits
-    ctx.seg_override = nil
-    ctx.lock = false
-    ctx.repnz = false
-    ctx.rep_or_bnd = false
-    ctx.rex = 0
     ctx.start_offs = ctx.offset
+    ctx._zeroctx = {}
     addr_size_override := false
     data_size_override := false
     parse_prefixes: for {
@@ -528,12 +526,12 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
             case 0xf0: ctx.lock = true
             case 0xf2: ctx.repnz = true
             case 0xf3: ctx.rep_or_bnd = true
-            case 0x2e: ctx.seg_override = .Cs
-            case 0x36: ctx.seg_override = .Ss
-            case 0x3e: ctx.seg_override = .Ds
-            case 0x26: ctx.seg_override = .Es
-            case 0x64: ctx.seg_override = .Fs
-            case 0x65: ctx.seg_override = .Gs
+            case 0x2e: ctx.seg = .Cs
+            case 0x36: ctx.seg = .Ss
+            case 0x3e: ctx.seg = .Ds
+            case 0x26: ctx.seg = .Es
+            case 0x64: ctx.seg = .Fs
+            case 0x65: ctx.seg = .Gs
             case 0x66: data_size_override = true
             case 0x67: addr_size_override = true
             case: break parse_prefixes

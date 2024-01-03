@@ -69,17 +69,17 @@ print_inst :: proc(inst: Inst, w: io.Writer, colors := true) {
     if colors {
         fmt.wprint(w, COLOR_RESET, sep="")
     }
-    for i in 0 ..< inst.operands_count {
+    for i in 0 ..< inst.op_count {
         fmt.wprintf(w, i != 0? ", " : " ")
-        operand := inst.operands[i]
+        operand := inst.op[i]
         switch op in operand {
             case Mem_Short:
                 fmt.wprintf(w, "short ")
                 fmt_int(w, op.disp)
             case Mem:
                 fmt.wprintf(w, "%s ", data_size_spec(inst.data_size))
-                if inst.seg_override != nil {
-                    fmt.wprintf(w, "%s:", sreg_name(inst.seg_override))
+                if inst.seg != nil {
+                    fmt.wprintf(w, "%s:", sreg_name(inst.seg))
                 }
                 if selector, ok := inst.selector.?; ok {
                     fmt.wprintf(w, "%02x:", selector)
