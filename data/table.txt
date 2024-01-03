@@ -574,7 +574,6 @@ movnti     +0f : 11000011 : mod rx rm
 # Packed singles (prefix: <NP> 0F)
 cvtps2pd   +np : +0f : 01011010 : mod xmmrx rm
 cvtdq2ps   +np : +0f : 01011011 : mod xmmrx rm
-paddq      +np : +0f : 11010100 : mod mmrx rm
 
 # Packed doubles (prefix: 66 0F)
 unpckhpd   +dp : +0f : 00010101 : mod xmmrx rm
@@ -612,7 +611,6 @@ movd       +dp : +0f : 011d1110 : mod xmmrx rm
 movdqa     +dp : +0f : 011d1111 : mod xmmrx rm
 cmppd      +dp : +0f : 11000010 : mod xmmrx rm : imm8
 shufpd     +dp : +0f : 11000110 : mod xmmrx rm : imm8
-paddq      +dp : +0f : 11010100 : mod xmmrx rm
 movq       +dp : +0f : 11010110 : mod xmmrx rm
 cvttpd2dq  +dp : +0f : 11100110 : mod xmmrx rm
 movntdq    +dp : +0f : 11100111 : mod xmmrx rm
