@@ -61,11 +61,24 @@ test_verify_tables :: proc(t: ^testing.T) {
 
 @(private)
 encodings_intersect :: proc(enc1, enc2: table.Encoding) -> bool {
-    // Filter out opcodes with different prefixes, those don't intersect.
+    // Filter out opcodes with prefixes that don't intersect.
+    if (.Flag_Np in enc1.flags) {
+        if .Flag_F2 in enc2.flags || .Flag_F3 in enc2.flags || .Flag_Dp in enc2.flags {
+            return false
+        }
+    }
+    if (.Flag_Np in enc2.flags) {
+        if .Flag_F2 in enc1.flags || .Flag_F3 in enc1.flags || .Flag_Dp in enc1.flags {
+            return false
+        }
+    }
     if (.Flag_0f in enc1.flags) != (.Flag_0f in enc2.flags) {
         return false
     }
     if (.Flag_F2 in enc1.flags) != (.Flag_F2 in enc2.flags) {
+        return false
+    }
+    if (.Flag_F3 in enc1.flags) != (.Flag_F3 in enc2.flags) {
         return false
     }
     if (.Flag_38 in enc1.flags) != (.Flag_38 in enc2.flags) {
