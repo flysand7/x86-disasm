@@ -63,14 +63,64 @@ main :: proc() {
             fmt.eprintf("Error reading .text section: %v\n", text_err)
             os.exit(1)
         }
+        symtab := []elf.Sym {}
+        strtab := []u8 {}
+        do_syms := false
+        {
+            ok := true
+            sym_sec, _, sym_err := elf.section_by_name(file, ".symtab")
+            str_sec, _, str_err := elf.section_by_name(file, ".strtab")
+            if sym_err == nil {
+                sym_data, symtab_err := elf.section_data(file, sym_sec, elf.Sym)
+                assert(symtab_err == nil)
+                #partial switch symtab_err {
+                    case nil:
+                        symtab = sym_data
+                        fmt.println("Loaded the symbol table")
+                    case: ok = false
+                }
+            } else {
+                ok = false
+            }
+            if str_err == nil {
+                str_data, strtab_err := elf.section_data(file, str_sec, u8)
+                assert(strtab_err == nil)
+                #partial switch strtab_err {
+                    case nil:
+                        strtab = str_data
+                        fmt.println("Loaded the string table")
+                    case: ok = false
+                }
+            } else {
+                ok = false
+            }
+            if !ok {
+                do_syms = false
+            }
+        }
         addr := text.addr
         ctx := disasm.create_ctx(text_bytes, bits)
         for inst in disasm.disasm_inst(&ctx) {
-            fmt.printf("%012x ", addr)
+            if do_syms {
+                found_sym := Maybe(elf.Sym) {}
+                for sym in symtab {
+                    type, bind := elf.symbol_info(sym)
+                    if type == .Func {
+                        // fmt.println(sym.value)
+                        if addr == sym.value {
+                            found_sym = sym
+                        }
+                    }
+                }
+                if sym, ok := found_sym.?; ok {
+                    sym_name := cast(cstring) cast([^]u8) &strtab[sym.name]
+                    fmt.printf("\e[38;5;33m<%s>:\e[0m\n", sym_name)
+                }
+            }
+            fmt.printf("  %012x ", addr)
             disasm.print_inst(inst, true)
             addr += cast(uintptr) len(inst.bytes)
         }
-        
         if ctx.offset < len(ctx.bytes) {
             fmt.printf("Error disassembling the byte: %02x (offset %016x)\n", ctx.bytes[ctx.offset], ctx.offset)
             fmt.printf("Context:\n")
