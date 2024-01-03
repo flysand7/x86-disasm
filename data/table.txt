@@ -394,6 +394,7 @@ pcmpeqw  +0f : 01110101 : mod mmrx rm
 pcmpeqd  +0f : 01110110 : mod mmrx rm
 emms     +0f : 01110111
 pand     +0f : 11011011 : mod mmrx rm
+paddq    +0f : 11010100 : mod mmrx rm
 pmullw   +0f : 11010101 : mod mmrx rm
 psubusb  +0f : 11011000 : mod mmrx rm
 psubusw  +0f : 11011001 : mod mmrx rm
@@ -416,8 +417,11 @@ psubsw   +0f : 11101001 : mod mmrx rm
 pxor     +0f : 11101111 : mod mmrx rm
 psubb    +0f : 11111000 : mod mmrx rm
 psubw    +0f : 11111001 : mod mmrx rm
+psubd    +0f : 11111010 : mod mmrx rm
+psubq    +0f : 11111011 : mod mmrx rm
 paddb    +0f : 11111100 : mod mmrx rm
 paddw    +0f : 11111101 : mod mmrx rm
+paddd    +0f : 11111110 : mod mmrx rm
 
 
 # ------------------------------------------------------------------- #
