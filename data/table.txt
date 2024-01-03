@@ -715,7 +715,7 @@ pmovzxbw    +dp : +0f : +38 : 00110000 : mod xmmrx rm
 pmovzxbq    +dp : +0f : +38 : 00110010 : mod xmmrx rm
 pmovzxwd    +dp : +0f : +38 : 00110011 : mod xmmrx rm
 pmovzxwq    +dp : +0f : +38 : 00110100 : mod xmmrx rm
-pmovzxdq    +dp : +0f : +38 : 00110100 : mod xmmrx rm
+pmovzxdq    +dp : +0f : +38 : 00110101 : mod xmmrx rm
 pminsb      +dp : +0f : +38 : 00111000 : mod xmmrx rm
 pminsd      +dp : +0f : +38 : 00111001 : mod xmmrx rm
 pminuw      +dp : +0f : +38 : 00111010 : mod xmmrx rm
