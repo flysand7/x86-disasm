@@ -17,6 +17,9 @@ dump FILENAME: generate (prepare-disasm FILENAME)
 build-cli: generate
     odin build .
 
+time-cli: generate build-cli
+    time ./x86-disasm x86-disasm > /dev/null
+
 generate:
     ./disasm/table/generator.py
 
