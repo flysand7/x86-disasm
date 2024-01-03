@@ -1,6 +1,7 @@
 package disasm
 
 import "core:fmt"
+import "core:io"
 
 COLOR_RESET :: "\e[0m"
 COLOR_R :: "\e[38;5;210m"
@@ -9,7 +10,7 @@ COLOR_B :: "\e[38;5;105m"
 COLOR_GREY :: "\e[38;5;242m"
 
 @(private="file")
-fmt_int :: proc(#any_int hex: i64) {
+fmt_int :: proc(w: io.Writer, #any_int hex: i64) {
     sign_ch := '+'
     hex_abs := hex
     if hex < 0 {
@@ -17,154 +18,114 @@ fmt_int :: proc(#any_int hex: i64) {
         hex_abs = -hex
     }
     if hex_abs < 10 {
-        fmt.printf("%c%d", sign_ch, hex_abs)
+        fmt.wprintf(w, "%c%d", sign_ch, hex_abs)
     } else if hex_abs <= auto_cast max(u8) {
-        fmt.printf("%c0x%02x", sign_ch, hex_abs)
+        fmt.wprintf(w, "%c0x%02x", sign_ch, hex_abs)
     } else if hex_abs <= auto_cast max(u16) {
-        fmt.printf("%c0x%04x", sign_ch, hex_abs)
+        fmt.wprintf(w, "%c0x%04x", sign_ch, hex_abs)
     } else if hex_abs <= auto_cast max(u32) {
-        fmt.printf("%c0x%08x", sign_ch, hex_abs)
+        fmt.wprintf(w, "%c0x%08x", sign_ch, hex_abs)
     } else {
-        fmt.printf("%c0x%016x", sign_ch, hex_abs)
+        fmt.wprintf(w, "%c0x%016x", sign_ch, hex_abs)
     }
 }
 
-print_inst :: proc(inst: Inst, colors := true) {
+print_inst :: proc(inst: Inst, w: io.Writer, colors := true) {
     WIDTH :: 15
     if colors {
-        fmt.print(COLOR_GREY, sep="")
+        fmt.wprint(w, COLOR_GREY, sep="")
     }
     for i in 0 ..< len(inst.bytes) {
-        fmt.printf("%02x", inst.bytes[i])
+        fmt.wprintf(w, "%02x", inst.bytes[i])
     }
     if colors {
-        fmt.print(COLOR_RESET, sep="")
+        fmt.wprint(w, COLOR_RESET, sep="")
     }
     for i in len(inst.bytes) ..< WIDTH {
-        fmt.printf("  ")
+        fmt.wprintf(w, "  ")
     }
     if colors {
-        fmt.print(COLOR_R, sep="")
+        fmt.wprint(w, COLOR_R, sep="")
     }
     if .Lock in inst.flags {
-        fmt.printf("lock ")
+        fmt.wprintf(w, "lock ")
     }
     if .Rep in inst.flags {
-        fmt.printf("rep ")
+        fmt.wprintf(w, "rep ")
     }
     if .Repnz in inst.flags {
-        fmt.printf("repnz ")
+        fmt.wprintf(w, "repnz ")
     }
-    fmt.printf("%s", inst.mnemonic)
+    fmt.wprintf(w, "%s", inst.mnemonic)
     if .Data_Size_Suffix in inst.flags {
-        fmt.printf("%s", data_size_suffix(inst.data_size))
+        fmt.wprintf(w, "%s", data_size_suffix(inst.data_size))
         if inst.mnemonic == "c" {
-            fmt.printf("%s", data_size_suffix(2*inst.data_size))
+            fmt.wprintf(w, "%s", data_size_suffix(2*inst.data_size))
         }
     }
     if colors {
-        fmt.print(COLOR_RESET, sep="")
+        fmt.wprint(w, COLOR_RESET, sep="")
     }
     for i in 0 ..< inst.operands_count {
-        fmt.printf(i != 0? ", " : " ")
+        fmt.wprintf(w, i != 0? ", " : " ")
         operand := inst.operands[i]
         switch op in operand {
             case Mem_Short:
-                fmt.printf("short ")
-                fmt_int(op.disp)
+                fmt.wprintf(w, "short ")
+                fmt_int(w, op.disp)
             case Mem:
-                fmt.printf("%s ", data_size_spec(inst.data_size))
+                fmt.wprintf(w, "%s ", data_size_spec(inst.data_size))
                 if inst.seg_override != nil {
-                    fmt.printf("%s:", sreg_name(inst.seg_override))
+                    fmt.wprintf(w, "%s:", sreg_name(inst.seg_override))
                 }
                 if selector, ok := inst.selector.?; ok {
-                    fmt.printf("%02x:", selector)
+                    fmt.wprintf(w, "%02x:", selector)
                 }
-                fmt.printf("[")
+                fmt.wprintf(w, "[")
                 has_before := false
                 if op.base.idx != nil {
-                    if colors {
-                        fmt.print(COLOR_G, sep="")
-                    }
-                    fmt.printf("%s", reg_name(op.base))
-                    if colors {
-                        fmt.print(COLOR_RESET, sep="")
-                    }
+                    print_color_string(w, COLOR_G, reg_name(op.base), colors)
                     has_before = true
                 }
                 if op.index.idx != nil {
-                    fmt.printf("%s%d*", has_before?"+":"", op.scale)
-                    if colors {
-                        fmt.print(COLOR_G, sep="")
-                    }
-                    fmt.printf("%s", reg_name(op.index))
-                    if colors {
-                        fmt.print(COLOR_RESET, sep="")
-                    }
+                    fmt.wprintf(w, "%s%d*", has_before?"+":"", op.scale)
+                    print_color_string(w, COLOR_G, reg_name(op.index), colors)
                 }
                 if op.disp != 0 {
-                    fmt_int(op.disp)
+                    fmt_int(w, op.disp)
                 }
-                fmt.printf("]")
-            case Reg:
-                if colors {
-                    fmt.print(COLOR_G, sep="")
-                }
-                fmt.printf("%s", reg_name(op))
-                if colors {
-                    fmt.print(COLOR_RESET, sep="")
-                }
-            case MMX_Reg:
-                if colors {
-                    fmt.print(COLOR_G, sep="")
-                }
-                fmt.printf("%s", mmxreg_name(op))
-                if colors {
-                    fmt.print(COLOR_RESET, sep="")
-                }
-            case XMM_Reg:
-                if colors {
-                    fmt.print(COLOR_G, sep="")
-                }
-                fmt.printf("%s", xmmreg_name(op))
-                if colors {
-                    fmt.print(COLOR_RESET, sep="")
-                }
-            case Sreg:
-                if colors {
-                    fmt.print(COLOR_G, sep="")
-                }
-                fmt.printf("%s", sreg_name(op))
-                if colors {
-                    fmt.print(COLOR_RESET, sep="")
-                }
-            case Creg_Idx:
-                if colors {
-                    fmt.print(COLOR_G, sep="")
-                }
-                fmt.printf("%s", creg_name(op))
-                if colors {
-                    fmt.print(COLOR_RESET, sep="")
-                }
-            case Dreg_Idx:
-                if colors {
-                    fmt.print(COLOR_G, sep="")
-                }
-                fmt.printf("%s", dreg_name(op))
-                if colors {
-                    fmt.print(COLOR_RESET, sep="")
-                }
-            case Imm:
-                if colors {
-                    fmt.print(COLOR_B, sep="")
-                }
-                fmt_int(op.value)
-                if colors {
-                    fmt.print(COLOR_RESET, sep="")
-                }
+                fmt.wprintf(w, "]")
+            case Reg:      print_color_string(w, COLOR_G, reg_name(op), colors)
+            case MMX_Reg:  print_color_string(w, COLOR_G, mmxreg_name(op), colors)
+            case XMM_Reg:  print_color_string(w, COLOR_G, xmmreg_name(op), colors)
+            case Sreg:     print_color_string(w, COLOR_G, sreg_name(op), colors)
+            case Creg_Idx: print_color_string(w, COLOR_G, creg_name(op), colors)
+            case Dreg_Idx: print_color_string(w, COLOR_G, dreg_name(op), colors)
+            case Imm:      print_color_int(w, COLOR_B, op.value, colors)
+                
         }
     }
-    fmt.printf("\n")
+    fmt.wprintf(w, "\n")
+}
+
+print_color_string :: proc(w: io.Writer, color: string, str: string, colors: bool) {
+    if colors {
+        fmt.wprint(w, color, sep="")
+    }
+    fmt.wprintf(w, "%s", str)
+    if colors {
+        fmt.wprint(w, COLOR_RESET, sep="")
+    }
+}
+
+print_color_int :: proc(w: io.Writer, color: string, str: i64, colors: bool) {
+    if colors {
+        fmt.wprint(w, color, sep="")
+    }
+    fmt_int(w, str)
+    if colors {
+        fmt.wprint(w, COLOR_RESET, sep="")
+    }
 }
 
 data_size_suffix :: proc(size: u8) -> string {

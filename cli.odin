@@ -5,6 +5,7 @@ import "formats/elf"
 
 import "core:fmt"
 import "core:os"
+import "core:strings"
 
 main :: proc() {
     bits := u8(64)
@@ -34,9 +35,12 @@ main :: proc() {
                 os.exit(1)
             }
             ctx := disasm.create_ctx(bytes, bits)
+            builder := strings.builder_make()
+            writer := strings.to_writer(&builder)
             for inst in disasm.disasm_inst(&ctx) {
-                disasm.print_inst(inst, true)
+                disasm.print_inst(inst, writer, true)
             }
+            fmt.println(strings.to_string(builder))
         }
     } else {
         if len(filenames) > 1 || len(filenames) == 0 {
@@ -100,13 +104,14 @@ main :: proc() {
         }
         addr := text.addr
         ctx := disasm.create_ctx(text_bytes, bits)
+        builder := strings.builder_make()
+        writer := strings.to_writer(&builder)
         for inst in disasm.disasm_inst(&ctx) {
             if do_syms {
                 found_sym := Maybe(elf.Sym) {}
                 for sym in symtab {
                     type, bind := elf.symbol_info(sym)
                     if type == .Func {
-                        // fmt.println(sym.value)
                         if addr == sym.value {
                             found_sym = sym
                         }
@@ -118,9 +123,10 @@ main :: proc() {
                 }
             }
             fmt.printf("  %012x ", addr)
-            disasm.print_inst(inst, true)
+            disasm.print_inst(inst, writer, true)
             addr += cast(uintptr) len(inst.bytes)
         }
+        fmt.println(strings.to_string(builder))
         if ctx.offset < len(ctx.bytes) {
             fmt.printf("Error disassembling the byte: %02x (offset %016x)\n", ctx.bytes[ctx.offset], ctx.offset)
             fmt.printf("Context:\n")
