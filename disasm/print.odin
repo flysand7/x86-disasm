@@ -58,8 +58,11 @@ print_inst :: proc(inst: Inst, w: io.Writer, colors := true) {
     }
     fmt.wprintf(w, "%s", inst.mnemonic)
     if .Data_Size_Suffix in inst.flags {
-        fmt.wprintf(w, "%s", data_size_suffix(inst.data_size))
         if inst.mnemonic == "c" {
+            fmt.wprintf(w, "%s", data_size_suffix(inst.data_size/2))
+        }
+        fmt.wprintf(w, "%s", data_size_suffix(inst.data_size))
+        if inst.mnemonic == "C" {
             fmt.wprintf(w, "%s", data_size_suffix(2*inst.data_size))
         }
     }
