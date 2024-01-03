@@ -723,7 +723,6 @@ pmaxsb      +dp : +0f : +38 : 00111100 : mod xmmrx rm
 pmaxsd      +dp : +0f : +38 : 00111101 : mod xmmrx rm
 pmaxuw      +dp : +0f : +38 : 00111110 : mod xmmrx rm
 pmaxud      +dp : +0f : +38 : 00111111 : mod xmmrx rm
-pinsrb      +dp : +0f : +38 : 01000000 : mod xmmrx rm
 phminposuw  +dp : +0f : +38 : 01000001 : mod xmmrx rm
 pmovzxbd    +dp : +0f : +38 : 10000011 : mod xmmrx rm
 pmulld      +dp : +0f : +38 : 01000000 : mod xmmrx rm
@@ -736,6 +735,7 @@ pextrw      +dp : +0f : +3a : 00010101 : mod xmmrx rm : imm8
 pextr       +dp : +0f : +3a : 00010110 : mod xmmrx rm : imm8 : +ds
 extractps   +dp : +0f : +3a : 00010111 : mod xmmrx rm : imm8
 pblendw     +dp : +0f : +3a : 00011110 : mod xmmrx rm : imm8
+pinsrb      +dp : +0f : +3a : 00100000 : mod xmmrx rm : imm8
 insertps    +dp : +0f : +3a : 00100001 : mod xmmrx rm : imm8
 pinsr       +dp : +0f : +3a : 00100010 : mod xmmrx rm : imm8 : +ds
 dpps        +dp : +0f : +3a : 01000000 : mod xmmrx rm : imm8
