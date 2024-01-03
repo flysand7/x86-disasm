@@ -400,9 +400,8 @@ psubusw  +0f : 11011001 : mod mmrx rm
 paddusb  +0f : 11011100 : mod mmrx rm
 paddusw  +0f : 11011101 : mod mmrx rm
 pandn    +0f : 11011111 : mod mmrx rm
-psrad    +0f : 11100001 : mod mmrx rm
-psraw    +0f : 11100010 : mod mmrx rm
-psrad    +0f : 11100011 : mod mmrx rm
+psraw    +0f : 11100001 : mod mmrx rm
+psrad    +0f : 11100010 : mod mmrx rm
 pmulhuw  +0f : 11100100 : mod mmrx rm
 pmulhw   +0f : 11100101 : mod mmrx rm
 por      +0f : 11101011 : mod mmrx rm
