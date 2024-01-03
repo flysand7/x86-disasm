@@ -99,6 +99,10 @@ encodings_intersect :: proc(enc1, enc2: table.Encoding) -> bool {
             case table.Field:
                 width := table.field_widths[m]
                 cur_o -= width
+                if m == .Mod11 {
+                    cur_b |= 0b11000000
+                    cur_m |= 0b11000000
+                }
             case table.Ign:
                 cur_o -= m.count
             case: unreachable()
@@ -124,6 +128,10 @@ encodings_intersect :: proc(enc1, enc2: table.Encoding) -> bool {
             case table.Field:
                 width := table.field_widths[m]
                 cur_o -= width
+                if m == .Mod11 {
+                    cur_b |= 0b11000000
+                    cur_m |= 0b11000000
+                }
             case table.Ign:
                 cur_o -= m.count
             case: unreachable()
