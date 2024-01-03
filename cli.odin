@@ -12,19 +12,40 @@ import "core:time"
 main :: proc() {
     bits := u8(64)
     is_elf  := true
+    find_function := Maybe(string) {}
     filenames := make([dynamic]string)
     for arg in os.args[1:] {
-        if arg[0] == '-' {
-            switch arg[1:] {
-                case "16": bits = 16
-                case "32": bits = 32
-                case "64": bits = 64
-                case "e":  is_elf = true
-                case "r":  is_elf = false
-                case:
-                    fmt.eprintf("Unknown option: %s\n", arg)
-                    os.exit(2)
+        if strings.has_prefix(arg, "-format:") {
+            format := arg[8:]
+            if format == "?" {
+                fmt.println("Available formats:")
+                fmt.println("    -format:elf    ELF file (Executables, .so, .o)")
+                // TODO: fmt.println("    -format:ar     Archive file (.a)")
+                // TODO: fmt.println("    -format:pe     Windows portable executble (.exe or .dll) file")
+                // TODO: fmt.println("    -format:coff   Windows object (.obj) file")
+                // TODO: fmt.println("    -format:lib    Windows archive (.lib) file")
+                fmt.println("    -format:raw16  16-bit raw binary file")
+                fmt.println("    -format:raw32  32-bit raw binary file")
+                fmt.println("    -format:raw64  64-bit raw binary file")
             }
+            switch format {
+                case "elf":
+                    is_elf = true
+                case "raw16":
+                    is_elf = false
+                    bits = 16
+                case "raw32":
+                    is_elf = false
+                    bits = 32
+                case "raw64":
+                    is_elf = false
+                    bits = 64
+            }
+        } else if strings.has_prefix(arg, "-function:") {
+            find_function = arg[10:]
+        } else if arg[0] == '-' {
+            fmt.eprintf("Unknown option: %s\n", arg)
+            os.exit(2)
         } else {
             append(&filenames, arg)
         }
@@ -111,6 +132,10 @@ main :: proc() {
                 do_syms = false
             }
         }
+        if find_function != nil && do_syms == false {
+            fmt.eprintln("Unable to do symbol lookups.")
+            os.exit(1)
+        }
         builder := strings.builder_make(0x1000, context.temp_allocator)
         writer := strings.to_writer(&builder)
         if !do_syms {
@@ -144,6 +169,11 @@ main :: proc() {
                 }
                 type, bind := elf.symbol_info(sym)
                 sym_name := cast(string) cast(cstring) &strtab[sym.name]
+                if func_name, ok := find_function.?; ok {
+                    if sym_name != func_name {
+                        continue
+                    }
+                }
                 sym_addr := cast(int) sym.value
                 sym_size := cast(int) sym.size
                 sym_offs_lo := sym_addr - start_addr
