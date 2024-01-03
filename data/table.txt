@@ -505,7 +505,6 @@ pminub     +0f : 11011010 : mod mmrx rm
 pmaxub     +0f : 11011110 : mod mmrx rm
 pavgb      +0f : 11100000 : mod mmrx rm
 pavgw      +0f : 11100011 : mod mmrx rm
-pmulhuw    +0f : 11100100 : mod mmrx rm
 pminsw     +0f : 11101010 : mod mmrx rm
 pmaxsw     +0f : 11101110 : mod mmrx rm
 psadbw     +0f : 11110110 : mod mmrx rm
