@@ -7,8 +7,6 @@ Elf_File :: struct {
     using header: ^Ehdr,
     base:   [^]u8,
     size:   uint,
-    strtab: []u8,
-    symtab: []Sym,
 }
 
 file_from_bytes :: proc(bytes: []u8) -> (elf: Elf_File, err: Read_Error) {
@@ -19,10 +17,6 @@ file_from_bytes :: proc(bytes: []u8) -> (elf: Elf_File, err: Read_Error) {
         size   = len(bytes),
     }
     verify_elf_header(elf) or_return
-    symtab, _ := section_by_name(elf, ".symtab") or_return
-    strtab, _ := section_by_name(elf, ".strtab") or_return
-    elf.symtab = section_data(elf, symtab, Sym) or_return
-    elf.strtab = section_data(elf, strtab, u8) or_return
     return elf, nil
 }
 
@@ -69,17 +63,6 @@ section_by_name :: proc(elf: Elf_File, name: string) -> (section: Shdr, idx: int
         }
     }
     return {}, 0, .Not_Found
-}
-
-symbol_list :: proc(elf: Elf_File) -> (syms: []Sym) {
-    return elf.symtab
-}
-
-symbol_name :: proc(elf: Elf_File, sym: Sym) -> (name: string, err: Read_Error) {
-    if cast(int) sym.name >= len(elf.strtab) {
-        return {}, .Bad_Elf
-    }
-    return cast(string) transmute(cstring) raw_data(elf.strtab[sym.name:]), nil
 }
 
 symbol_info :: proc(sym: Sym) -> (Sym_Type, Sym_Bind) {
