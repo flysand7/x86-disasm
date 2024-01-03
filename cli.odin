@@ -119,21 +119,21 @@ main :: proc() {
                 }
                 if sym, ok := found_sym.?; ok {
                     sym_name := cast(cstring) cast([^]u8) &strtab[sym.name]
-                    fmt.printf("\e[38;5;33m<%s>:\e[0m\n", sym_name)
+                    fmt.wprintf(writer, "\e[38;5;33m<%s>:\e[0m\n", sym_name)
                 }
             }
-            fmt.printf("  %012x ", addr)
+            fmt.wprintf(writer, "  %012x ", addr)
             disasm.print_inst(inst, writer, true)
             addr += cast(uintptr) len(inst.bytes)
         }
         fmt.println(strings.to_string(builder))
         if ctx.offset < len(ctx.bytes) {
-            fmt.printf("Error disassembling the byte: %02x (offset %016x)\n", ctx.bytes[ctx.offset], ctx.offset)
-            fmt.printf("Context:\n")
+            fmt.eprintf("Error disassembling the byte: %02x (offset %016x)\n", ctx.bytes[ctx.offset], ctx.offset)
+            fmt.eprintf("Context:\n")
             disasm.dump_bytes(ctx.bytes[max(0,ctx.offset-32):ctx.offset])
-            fmt.printf("\e[38;5;210m%02x\e[0m ", ctx.bytes[ctx.offset])
+            fmt.eprintf("\e[38;5;210m%02x\e[0m ", ctx.bytes[ctx.offset])
             disasm.dump_bytes(ctx.bytes[ctx.offset+1:min(len(ctx.bytes), ctx.offset+32)])
-            fmt.println()
+            fmt.eprintln()
             os.exit(1)
         }
     }

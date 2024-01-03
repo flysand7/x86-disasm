@@ -350,8 +350,8 @@ swapgs  00001111 : 00000001 : 11111000
 syscall 00001111 : 00000101
 sysret  00001111 : 00000111
 
-endbr64 00001111 : +f3 : 00011110 : 11111010
-endbr32 00001111 : +f3 : 00011110 : 11111011
+endbr64 +f3 : 00001111 : 00011110 : 11111010
+endbr32 +f3 : 00001111 : 00011110 : 11111011
 
 # ------------------------------------------------------------------- #
 # Pentium processor family instructions
@@ -453,43 +453,43 @@ cmovg   00001111 : 01001111 : mod rx rm
 # ------------------------------------------------------------------- #
 
 # Packed singles (prefix: <NP> 0F)
-movups     00001111 : +np : 0001000d : mod xmmrx rm
-movhlps    00001111 : +np : 00010010 : mod11 xmmrx rm
-movlps     00001111 : +np : 00010010 : moda xmmrx rm
-unpcklps   00001111 : +np : 00010100 : mod xmmrx rm
-unpckhps   00001111 : +np : 00010101 : mod xmmrx rm
-movhps     00001111 : +np : 00010110 : moda xmmrx rm
-movlhps    00001111 : +np : 00010110 : mod11 xmmrx rm
-cvtpi2ps   00001111 : +np : 00101010 : 11 xmmrx mmrx
-movntps    00001111 : +np : 00101011 : mod xmmrx rm
-cvtpi2ps   00001111 : +np : 00101010 : moda xmmrx rm
-cvttps2pi  00001111 : +np : 00101100 : 11 mmrx xmmrx
-cvttps2pi  00001111 : +np : 00101100 : moda mmrx rm
-cvtps2pi   00001111 : +np : 00101101 : 11 mmrx xmmrx
-cvtps2pi   00001111 : +np : 00101101 : moda mmrx rm
-ucomiss    00001111 : +np : 00101110 : mod xmmrx rm
-comiss     00001111 : +np : 00101111 : mod xmmrx rm
-movmskps   00001111 : +np : 01010000 : 11 rrr xmmrx
-sqrtps     00001111 : +np : 01010001 : mod xmmrx rm
-rsqrtps    00001111 : +np : 01010010 : mod xmmrx rm
-rcpps      00001111 : +np : 01010011 : mod xmmrx rm
-addps      00001111 : +np : 01011000 : mod xmmrx rm
-mulps      00001111 : +np : 01011001 : mod xmmrx rm
-andnps     00001111 : +np : 01010101 : mod xmmrx rm
-orps       00001111 : +np : 01010110 : mod xmmrx rm
-xorps      00001111 : +np : 01010111 : mod xmmrx rm
-suf3s      00001111 : +np : 01011100 : mod xmmrx rm
-minps      00001111 : +np : 01011101 : mod xmmrx rm
-divps      00001111 : +np : 01011110 : mod xmmrx rm
-maxps      00001111 : +np : 01011111 : mod xmmrx rm
-movaps     00001111 : +np : 00101000 : mod xmmrx rm
-movaps     00001111 : +np : 00101001 : mod xmmrx rm : _d
-ldmxcsr    00001111 : +np : 10101110 : moda 010 rm
-stmxcsr    00001111 : +np : 10101110 : moda 011 rm
-sfence     00001111 : +np : 10101110 : 11   111 00
-cmpps      00001111 : +np : 11000010 : mod xmmrx rm : imm8
-shufps     00001111 : +np : 11000110 : mod xmmrx rm : imm8
-movntq     00001111 : +np : 11100111 : mod xmmrx rm
+movups     +np : 00001111 : 0001000d : mod xmmrx rm
+movhlps    +np : 00001111 : 00010010 : mod11 xmmrx rm
+movlps     +np : 00001111 : 00010010 : moda xmmrx rm
+unpcklps   +np : 00001111 : 00010100 : mod xmmrx rm
+unpckhps   +np : 00001111 : 00010101 : mod xmmrx rm
+movhps     +np : 00001111 : 00010110 : moda xmmrx rm
+movlhps    +np : 00001111 : 00010110 : mod11 xmmrx rm
+cvtpi2ps   +np : 00001111 : 00101010 : 11 xmmrx mmrx
+movntps    +np : 00001111 : 00101011 : mod xmmrx rm
+cvtpi2ps   +np : 00001111 : 00101010 : moda xmmrx rm
+cvttps2pi  +np : 00001111 : 00101100 : 11 mmrx xmmrx
+cvttps2pi  +np : 00001111 : 00101100 : moda mmrx rm
+cvtps2pi   +np : 00001111 : 00101101 : 11 mmrx xmmrx
+cvtps2pi   +np : 00001111 : 00101101 : moda mmrx rm
+ucomiss    +np : 00001111 : 00101110 : mod xmmrx rm
+comiss     +np : 00001111 : 00101111 : mod xmmrx rm
+movmskps   +np : 00001111 : 01010000 : 11 rrr xmmrx
+sqrtps     +np : 00001111 : 01010001 : mod xmmrx rm
+rsqrtps    +np : 00001111 : 01010010 : mod xmmrx rm
+rcpps      +np : 00001111 : 01010011 : mod xmmrx rm
+addps      +np : 00001111 : 01011000 : mod xmmrx rm
+mulps      +np : 00001111 : 01011001 : mod xmmrx rm
+andnps     +np : 00001111 : 01010101 : mod xmmrx rm
+orps       +np : 00001111 : 01010110 : mod xmmrx rm
+xorps      +np : 00001111 : 01010111 : mod xmmrx rm
+suf3s      +np : 00001111 : 01011100 : mod xmmrx rm
+minps      +np : 00001111 : 01011101 : mod xmmrx rm
+divps      +np : 00001111 : 01011110 : mod xmmrx rm
+maxps      +np : 00001111 : 01011111 : mod xmmrx rm
+movaps     +np : 00001111 : 00101000 : mod xmmrx rm
+movaps     +np : 00001111 : 00101001 : mod xmmrx rm : _d
+ldmxcsr    +np : 00001111 : 10101110 : moda 010 rm
+stmxcsr    +np : 00001111 : 10101110 : moda 011 rm
+sfence     +np : 00001111 : 10101110 : 11   111 00
+cmpps      +np : 00001111 : 11000010 : mod xmmrx rm : imm8
+shufps     +np : 00001111 : 11000110 : mod xmmrx rm : imm8
+movntq     +np : 00001111 : 11100111 : mod xmmrx rm
 
 prefetcht3 00001111 : 00011000 : moda 000 rm
 prefetcht0 00001111 : 00011000 : moda 001 rm
@@ -510,51 +510,51 @@ psadbw     00001111 : 11110110 : mod mmrx rm
 maskmovq   00001111 : 11110111 : mod11 mmrx rm
 
 # Scalar floats (prefix: F3 0F)
-movss      00001111 : +f3 : 0001000d : mod xmmrx rm
-cvtsi2ss   00001111 : +f3 : 00101010 : 11 rrr xmmrx
-cvtsi2ss   00001111 : +f3 : 00101010 : moda rrr rm 
-cvtss2si   00001111 : +f3 : 00101101 : 11 rrr xmmrx
-cvtss2si   00001111 : +f3 : 00101101 : moda rx rm
-sqrtss     00001111 : +f3 : 01010001 : mod xmmrx rm
-rsqrtss    00001111 : +f3 : 01010010 : mod xmmrx rm
-rcpss      00001111 : +f3 : 01010011 : mod xmmrx rm
-addss      00001111 : +f3 : 01011000 : mod xmmrx rm
-mulss      00001111 : +f3 : 01011001 : mod xmmrx rm
-subss      00001111 : +f3 : 01011100 : mod xmmrx rm
-minss      00001111 : +f3 : 01011101 : mod xmmrx rm
-divss      00001111 : +f3 : 01011110 : mod xmmrx rm
-maxss      00001111 : +f3 : 01011111 : mod xmmrx rm
-cmpss      00001111 : +f3 : 11000010 : mod xmmrx rm : imm8
+movss      +f3 : 00001111 : 0001000d : mod xmmrx rm
+cvtsi2ss   +f3 : 00001111 : 00101010 : 11 rrr xmmrx
+cvtsi2ss   +f3 : 00001111 : 00101010 : moda rrr rm 
+cvtss2si   +f3 : 00001111 : 00101101 : 11 rrr xmmrx
+cvtss2si   +f3 : 00001111 : 00101101 : moda rx rm
+sqrtss     +f3 : 00001111 : 01010001 : mod xmmrx rm
+rsqrtss    +f3 : 00001111 : 01010010 : mod xmmrx rm
+rcpss      +f3 : 00001111 : 01010011 : mod xmmrx rm
+addss      +f3 : 00001111 : 01011000 : mod xmmrx rm
+mulss      +f3 : 00001111 : 01011001 : mod xmmrx rm
+subss      +f3 : 00001111 : 01011100 : mod xmmrx rm
+minss      +f3 : 00001111 : 01011101 : mod xmmrx rm
+divss      +f3 : 00001111 : 01011110 : mod xmmrx rm
+maxss      +f3 : 00001111 : 01011111 : mod xmmrx rm
+cmpss      +f3 : 00001111 : 11000010 : mod xmmrx rm : imm8
 
 # ------------------------------------------------------------------- #
 # SSE2 instruction formats and encodings
 # ------------------------------------------------------------------- #
 
 # Scalar doubles (prefix: F2 0F)
-movsd      00001111 : +f2 : 0001000d : mod xmmrx rm
-cvttsd2si  00001111 : +f2 : 00101100 : 11 rrr xmmrx
-cvttsd2si  00001111 : +f2 : 00101100 : moda rrr rm
-sqrtsd     00001111 : +f2 : 01010001 : mod xmmrx rm
-addsd      00001111 : +f2 : 01011000 : mod xmmrx rm
-mulsd      00001111 : +f2 : 01011001 : mod xmmrx rm
-cvtsd2ss   00001111 : +f2 : 01011010 : mod xmmrx rm
-subsd      00001111 : +f2 : 01011100 : mod xmmrx rm
-minsd      00001111 : +f2 : 01011101 : mod xmmrx rm
-divsd      00001111 : +f2 : 01011110 : mod xmmrx rm
-maxsd      00001111 : +f2 : 01011111 : mod xmmrx rm
-cmpsd      00001111 : +f2 : 11000010 : mod xmmrx rm : imm8
-movdq2q    00001111 : +f2 : 11010110 : 11 xmmrx mmrx
+movsd      +f2 : 00001111 : 0001000d : mod xmmrx rm
+cvttsd2si  +f2 : 00001111 : 00101100 : 11 rrr xmmrx
+cvttsd2si  +f2 : 00001111 : 00101100 : moda rrr rm
+sqrtsd     +f2 : 00001111 : 01010001 : mod xmmrx rm
+addsd      +f2 : 00001111 : 01011000 : mod xmmrx rm
+mulsd      +f2 : 00001111 : 01011001 : mod xmmrx rm
+cvtsd2ss   +f2 : 00001111 : 01011010 : mod xmmrx rm
+subsd      +f2 : 00001111 : 01011100 : mod xmmrx rm
+minsd      +f2 : 00001111 : 01011101 : mod xmmrx rm
+divsd      +f2 : 00001111 : 01011110 : mod xmmrx rm
+maxsd      +f2 : 00001111 : 01011111 : mod xmmrx rm
+cmpsd      +f2 : 00001111 : 11000010 : mod xmmrx rm : imm8
+movdq2q    +f2 : 00001111 : 11010110 : 11 xmmrx mmrx
 
 
-cvttss2si  00001111 : +f3 : 00101100 : moda rx rm
-cvttss2si  00001111 : +f3 : 00101100 : 11 rrr xmmrx
-cvtss2sd   00001111 : +f3 : 01011010 : mod xmmrx rm
-cvttps2dq  00001111 : +f3 : 01011011 : mod xmmrx rm
-movdqu     00001111 : +f3 : 011d1111 : mod xmmrx rm
-movq       00001111 : +f3 : 01111110 : mod xmmrx rm : _d
-movq2dq    00001111 : +f3 : 11010110 : 11 mmxrx xmmrx : _d
-cvtdq2pd   00001111 : +f3 : 11100110 : mod xmmrx rm
-pause      10010000 : +f3
+cvttss2si  +f3 : 00001111 : 00101100 : moda rx rm
+cvttss2si  +f3 : 00001111 : 00101100 : 11 rrr xmmrx
+cvtss2sd   +f3 : 00001111 : 01011010 : mod xmmrx rm
+cvttps2dq  +f3 : 00001111 : 01011011 : mod xmmrx rm
+movdqu     +f3 : 00001111 : 011d1111 : mod xmmrx rm
+movq       +f3 : 00001111 : 01111110 : mod xmmrx rm : _d
+movq2dq    +f3 : 00001111 : 11010110 : 11 mmxrx xmmrx : _d
+cvtdq2pd   +f3 : 00001111 : 11100110 : mod xmmrx rm
+pause      +f3 : 10010000
 
 cvtsi2sd   00001111 : 00101010 : 11 xmmrx rrr
 cvtsi2sd   00001111 : 00101010 : moda xmmrx rrr
@@ -564,53 +564,53 @@ mfence     00001111 : 10101110 : 111 100 00
 movnti     00001111 : 11000011 : mod rx rm
 
 # Packed singles (prefix: <NP> 0F)
-cvtsd2si   00001111 : +np : 00101101 : moda rx rm
-cvtsd2si   00001111 : +np : 00101101 : 11 rrr xmmrx
-cvtps2pd   00001111 : +np : 01011010 : mod xmmrx rm
-cvtdq2ps   00001111 : +np : 01011011 : mod xmmrx rm
-paddq      00001111 : +np : 11010100 : mod mmrx rm
+cvtsd2si   +np : 00001111 : 00101101 : moda rx rm
+cvtsd2si   +np : 00001111 : 00101101 : 11 rrr xmmrx
+cvtps2pd   +np : 00001111 : 01011010 : mod xmmrx rm
+cvtdq2ps   +np : 00001111 : 01011011 : mod xmmrx rm
+paddq      +np : 00001111 : 11010100 : mod mmrx rm
 
 # Packed doubles (prefix: 66 0F)
-unpckhpd   00001111 : +dp : 00010101 : mod xmmrx rm
-movupd     00001111 : +dp : 0001000d : mod xmmrx rm
-movlpd     00001111 : +dp : 00010011 : mod xmmrx rm
-unpcklpd   00001111 : +dp : 00010100 : mod xmmrx rm
-movhpd     00001111 : +dp : 0001011d : mod xmmrx rm
-movapd     00001111 : +dp : 0010100d : mod xmmrx rm
-movntpd    00001111 : +dp : 00101011 : mod xmmrx rm
-cvtpi2pd   00001111 : +dp : 00101100 : 11 xmmrx mmxrx
-cvtpi2pd   00001111 : +dp : 00101100 : moda xmmrx rm
-cvtpd2pi   00001111 : +dp : 00101101 : 11 mmrx xmmrx
-cvtpd2pi   00001111 : +dp : 00101101 : moda mmrx  rm
-cvttpd2pi  00001111 : +dp : 00101100 : 11 mmxrx xmmrx
-cvttpd2pi  00001111 : +dp : 00101100 : moda mmxrx xmmrx
-ucomisd    00001111 : +dp : 00101110 : mod xmmrx rm
-comisd     00001111 : +dp : 00101111 : mod xmmrx rm
-movmskpd   00001111 : +dp : 01010000 : 11 rrr xmmrx
-sqrtpd     00001111 : +dp : 01010001 : mod xmmrx rm
-addpd      00001111 : +dp : 01011000 : mod xmmrx rm
-andpd      00001111 : +dp : 01010100 : mod xmmrx rm
-andnpd     00001111 : +dp : 01010101 : mod xmmrx rm
-orpd       00001111 : +dp : 01010110 : mod xmmrx rm
-xorpd      00001111 : +dp : 01010111 : mod xmmrx rm
-mulpd      00001111 : +dp : 01011001 : mod xmmrx rm
-cvtpd2ps   00001111 : +dp : 01011010 : mod xmmrx rm
-suf3d      00001111 : +dp : 01011100 : mod xmmrx rm
-minpd      00001111 : +dp : 01011101 : mod xmmrx rm
-divpd      00001111 : +dp : 01011110 : mod xmmrx rm
-maxpd      00001111 : +dp : 01011111 : mod xmmrx rm
-packsswb   00001111 : +dp : 01100011 : mod xmmrx rm
-packuswb   00001111 : +dp : 01100111 : mod xmmrx rm
-packssdw   00001111 : +dp : 01101011 : mod xmmrx rm
-movd       00001111 : +dp : 011d1110 : mod xmmrx rm
-movdqa     00001111 : +dp : 011d1111 : mod xmmrx rm
-cmppd      00001111 : +dp : 11000010 : mod xmmrx rm : imm8
-shufpd     00001111 : +dp : 11000110 : mod xmmrx rm : imm8
-paddq      00001111 : +dp : 11010100 : mod xmmrx rm
-movq       00001111 : +dp : 11010110 : mod xmmrx rm
-cvttpd2dq  00001111 : +dp : 11100110 : mod xmmrx rm
-movntdq    00001111 : +dp : 11100111 : mod xmmrx rm
-maskmovdqu 00001111 : +dp : 11110111 : mod11 xmmrx rm
+unpckhpd   +dp : 00001111 : 00010101 : mod xmmrx rm
+movupd     +dp : 00001111 : 0001000d : mod xmmrx rm
+movlpd     +dp : 00001111 : 00010011 : mod xmmrx rm
+unpcklpd   +dp : 00001111 : 00010100 : mod xmmrx rm
+movhpd     +dp : 00001111 : 0001011d : mod xmmrx rm
+movapd     +dp : 00001111 : 0010100d : mod xmmrx rm
+movntpd    +dp : 00001111 : 00101011 : mod xmmrx rm
+cvtpi2pd   +dp : 00001111 : 00101100 : 11 xmmrx mmxrx
+cvtpi2pd   +dp : 00001111 : 00101100 : moda xmmrx rm
+cvtpd2pi   +dp : 00001111 : 00101101 : 11 mmrx xmmrx
+cvtpd2pi   +dp : 00001111 : 00101101 : moda mmrx  rm
+cvttpd2pi  +dp : 00001111 : 00101100 : 11 mmxrx xmmrx
+cvttpd2pi  +dp : 00001111 : 00101100 : moda mmxrx xmmrx
+ucomisd    +dp : 00001111 : 00101110 : mod xmmrx rm
+comisd     +dp : 00001111 : 00101111 : mod xmmrx rm
+movmskpd   +dp : 00001111 : 01010000 : 11 rrr xmmrx
+sqrtpd     +dp : 00001111 : 01010001 : mod xmmrx rm
+addpd      +dp : 00001111 : 01011000 : mod xmmrx rm
+andpd      +dp : 00001111 : 01010100 : mod xmmrx rm
+andnpd     +dp : 00001111 : 01010101 : mod xmmrx rm
+orpd       +dp : 00001111 : 01010110 : mod xmmrx rm
+xorpd      +dp : 00001111 : 01010111 : mod xmmrx rm
+mulpd      +dp : 00001111 : 01011001 : mod xmmrx rm
+cvtpd2ps   +dp : 00001111 : 01011010 : mod xmmrx rm
+suf3d      +dp : 00001111 : 01011100 : mod xmmrx rm
+minpd      +dp : 00001111 : 01011101 : mod xmmrx rm
+divpd      +dp : 00001111 : 01011110 : mod xmmrx rm
+maxpd      +dp : 00001111 : 01011111 : mod xmmrx rm
+packsswb   +dp : 00001111 : 01100011 : mod xmmrx rm
+packuswb   +dp : 00001111 : 01100111 : mod xmmrx rm
+packssdw   +dp : 00001111 : 01101011 : mod xmmrx rm
+movd       +dp : 00001111 : 011d1110 : mod xmmrx rm
+movdqa     +dp : 00001111 : 011d1111 : mod xmmrx rm
+cmppd      +dp : 00001111 : 11000010 : mod xmmrx rm : imm8
+shufpd     +dp : 00001111 : 11000110 : mod xmmrx rm : imm8
+paddq      +dp : 00001111 : 11010100 : mod xmmrx rm
+movq       +dp : 00001111 : 11010110 : mod xmmrx rm
+cvttpd2dq  +dp : 00001111 : 11100110 : mod xmmrx rm
+movntdq    +dp : 00001111 : 11100111 : mod xmmrx rm
+maskmovdqu +dp : 00001111 : 11110111 : mod11 xmmrx rm
 
 # ------------------------------------------------------------------- #
 # SSE3 instruction formats and encodings
@@ -623,130 +623,130 @@ fisttp     11011111 : moda 001 rm
 monitor    00001111 : 00000001 : 11001000 : _a
 mwait      00001111 : 00000001 : 11001001 : _c
 
-haddpd     00001111 : +dp : 01111100 : mod xmmrx rm
-hsubpd     00001111 : +dp : 01111101 : mod xmmrx rm
-addsubpd   00001111 : +dp : 11010000 : mod xmmrx rm
+haddpd     +dp : 00001111 : 01111100 : mod xmmrx rm
+hsubpd     +dp : 00001111 : 01111101 : mod xmmrx rm
+addsubpd   +dp : 00001111 : 11010000 : mod xmmrx rm
 
-lddqu      00001111 : +f2 : 00010010 : mod xmmrx rm
-haddps     00001111 : +f2 : 01111100 : mod xmmrx rm
-hsubps     00001111 : +f2 : 01111101 : mod xmmrx rm
-addsubps   00001111 : +f2 : 11010000 : mod xmmrx rm
+lddqu      +f2 : 00001111 : 00010010 : mod xmmrx rm
+haddps     +f2 : 00001111 : 01111100 : mod xmmrx rm
+hsubps     +f2 : 00001111 : 01111101 : mod xmmrx rm
+addsubps   +f2 : 00001111 : 11010000 : mod xmmrx rm
 
-movshdup   00001111 : +f3 : 00010110 : mod xmmrx rm
-movsldup   00001111 : +f3 : 00010010 : mod xmmrx rm
+movshdup   +f3 : 00001111 : 00010110 : mod xmmrx rm
+movsldup   +f3 : 00001111 : 00010010 : mod xmmrx rm
 
 # ------------------------------------------------------------------- #
 # SSSE3 instruction formats and encodings
 # ------------------------------------------------------------------- #
 
-pshufb     00001111 : +dp : 00111000 : 00000000 : mod xmmrx rm
-phaddw     00001111 : +np : 00111000 : 00000001 : mod mmxrx rm
-phaddd     00001111 : +np : 00111000 : 00000010 : mod mmxrx rm
-phaddsw    00001111 : +np : 00111000 : 00000011 : mod mmxrx rm
-pmaddubsw  00001111 : +np : 00111000 : 00000100 : mod mmxrx rm
-phsubd     00001111 : +np : 00111000 : 00000110 : mod mmxrx rm
-phsubw     00001111 : +np : 00111000 : 00000101 : mod mmxrx rm
-phsubsw    00001111 : +np : 00111000 : 00000111 : mod mmxrx rm
-psignb     00001111 : +dp : 00111000 : 00001000 : mod xmmrx rm
-psignw     00001111 : +dp : 00111000 : 00001001 : mod xmmrx rm
-psignd     00001111 : +dp : 00111000 : 00001010 : mod xmmrx rm
-pmulhrsw   00001111 : +np : 00111000 : 00001011 : mod mmxrx rm
-pabsb      00001111 : +np : 00111000 : 00011100 : mod mmxrx rm
-pabsw      00001111 : +np : 00111000 : 00011101 : mod mmxrx rm
-pabsd      00001111 : +np : 00111000 : 00011110 : mod mmxrx rm
-palignr    00001111 : +np : 00111010 : 00001111 : mod mmxrx rm : imm8
+pshufb     +np : 00001111 : 00111000 : 00000000 : mod mmxrx rm
+phaddw     +np : 00001111 : 00111000 : 00000001 : mod mmxrx rm
+phaddd     +np : 00001111 : 00111000 : 00000010 : mod mmxrx rm
+phaddsw    +np : 00001111 : 00111000 : 00000011 : mod mmxrx rm
+pmaddubsw  +np : 00001111 : 00111000 : 00000100 : mod mmxrx rm
+phsubd     +np : 00001111 : 00111000 : 00000110 : mod mmxrx rm
+phsubw     +np : 00001111 : 00111000 : 00000101 : mod mmxrx rm
+phsubsw    +np : 00001111 : 00111000 : 00000111 : mod mmxrx rm
+psignb     +np : 00001111 : 00111000 : 00001000 : mod mmxrx rm
+psignw     +np : 00001111 : 00111000 : 00001001 : mod mmxrx rm
+psignd     +np : 00001111 : 00111000 : 00001010 : mod mmxrx rm
+pmulhrsw   +np : 00001111 : 00111000 : 00001011 : mod mmxrx rm
+pabsb      +np : 00001111 : 00111000 : 00011100 : mod mmxrx rm
+pabsw      +np : 00001111 : 00111000 : 00011101 : mod mmxrx rm
+pabsd      +np : 00001111 : 00111000 : 00011110 : mod mmxrx rm
+palignr    +np : 00001111 : 00111010 : 00001111 : mod mmxrx rm : imm8
 
-pshufb     00001111 : +np : 00111000 : 00000000 : mod mmxrx rm
-phaddw     00001111 : +dp : 00111000 : 00000001 : mod xmmrx rm
-phaddd     00001111 : +dp : 00111000 : 00000010 : mod xmmrx rm
-phaddsw    00001111 : +dp : 00111000 : 00000011 : mod xmmrx rm
-pmaddubsw  00001111 : +dp : 00111000 : 00000100 : mod xmmrx rm
-phsubw     00001111 : +dp : 00111000 : 00000101 : mod xmmrx rm
-phsubd     00001111 : +dp : 00111000 : 00000110 : mod xmmrx rm
-phsubsw    00001111 : +dp : 00111000 : 00000111 : mod xmmrx rm
-psignb     00001111 : +np : 00111000 : 00001000 : mod mmxrx rm
-psignw     00001111 : +np : 00111000 : 00001001 : mod mmxrx rm
-psignd     00001111 : +np : 00111000 : 00001010 : mod mmxrx rm
-pmulhrsw   00001111 : +dp : 00111000 : 00001011 : mod xmmrx rm
-pabsb      00001111 : +dp : 00111000 : 00011100 : mod xmmrx rm
-pabsw      00001111 : +dp : 00111000 : 00011101 : mod xmmrx rm
-pabsd      00001111 : +dp : 00111000 : 00011110 : mod xmmrx rm
-palignr    00001111 : +dp : 00111010 : 00001111 : mod xmmrx rm : imm8
+pshufb     +dp : 00001111 : 00111000 : 00000000 : mod xmmrx rm
+phaddw     +dp : 00001111 : 00111000 : 00000001 : mod xmmrx rm
+phaddd     +dp : 00001111 : 00111000 : 00000010 : mod xmmrx rm
+phaddsw    +dp : 00001111 : 00111000 : 00000011 : mod xmmrx rm
+pmaddubsw  +dp : 00001111 : 00111000 : 00000100 : mod xmmrx rm
+phsubw     +dp : 00001111 : 00111000 : 00000101 : mod xmmrx rm
+phsubd     +dp : 00001111 : 00111000 : 00000110 : mod xmmrx rm
+phsubsw    +dp : 00001111 : 00111000 : 00000111 : mod xmmrx rm
+psignb     +dp : 00001111 : 00111000 : 00001000 : mod xmmrx rm
+psignw     +dp : 00001111 : 00111000 : 00001001 : mod xmmrx rm
+psignd     +dp : 00001111 : 00111000 : 00001010 : mod xmmrx rm
+pmulhrsw   +dp : 00001111 : 00111000 : 00001011 : mod xmmrx rm
+pabsb      +dp : 00001111 : 00111000 : 00011100 : mod xmmrx rm
+pabsw      +dp : 00001111 : 00111000 : 00011101 : mod xmmrx rm
+pabsd      +dp : 00001111 : 00111000 : 00011110 : mod xmmrx rm
+palignr    +dp : 00001111 : 00111010 : 00001111 : mod xmmrx rm : imm8
 
 # ------------------------------------------------------------------- #
 # AESNI and PCLMULQDQ instruction formats and encodings
 # ------------------------------------------------------------------- #
 
-pclmulqdq       00001111 : +dp : 00111010 : 01000100 : mod xmmrx rm : imm8
-aesdec          00001111 : +dp : 00111000 : 11011110 : mod xmmrx rm
-aesdeclast      00001111 : +dp : 00111000 : 11011111 : mod xmmrx rm
-aesenc          00001111 : +dp : 00111000 : 11011100 : mod xmmrx rm
-aesenclast      00001111 : +dp : 00111000 : 11011101 : mod xmmrx rm
-aesimc          00001111 : +dp : 00111000 : 11011011 : mod xmmrx rm
-aeskeygenassist 00001111 : +dp : 00111010 : 11011111 : mod xmmrx rm : imm8
+pclmulqdq       +dp : 00001111 : 00111010 : 01000100 : mod xmmrx rm : imm8
+aesdec          +dp : 00001111 : 00111000 : 11011110 : mod xmmrx rm
+aesdeclast      +dp : 00001111 : 00111000 : 11011111 : mod xmmrx rm
+aesenc          +dp : 00001111 : 00111000 : 11011100 : mod xmmrx rm
+aesenclast      +dp : 00001111 : 00111000 : 11011101 : mod xmmrx rm
+aesimc          +dp : 00001111 : 00111000 : 11011011 : mod xmmrx rm
+aeskeygenassist +dp : 00001111 : 00111010 : 11011111 : mod xmmrx rm : imm8
 
 # ------------------------------------------------------------------- #
 # SSE 4.1 instruction formats and encodings
 # ------------------------------------------------------------------- #
 
-pblendvb    00001111 : +dp : 00111000 : 00010000 : mod xmmrx rm
-blendvps    00001111 : +dp : 00111000 : 00010100 : mod xmmrx rm
-blendvpd    00001111 : +dp : 00111000 : 00010101 : mod xmmrx rm
-ptest       00001111 : +dp : 00111000 : 00010111 : mod xmmrx rm
-pmovsxbw    00001111 : +dp : 00111000 : 00100000 : mod xmmrx rm
-pmovsxbd    00001111 : +dp : 00111000 : 00100001 : mod xmmrx rm
-pmovsxbq    00001111 : +dp : 00111000 : 00100010 : mod xmmrx rm
-pmovsxwd    00001111 : +dp : 00111000 : 00100011 : mod xmmrx rm
-pmovsxwq    00001111 : +dp : 00111000 : 00100100 : mod xmmrx rm
-pmovsxdq    00001111 : +dp : 00111000 : 00100101 : mod xmmrx rm
-pmuldq      00001111 : +dp : 00111000 : 00101000 : mod xmmrx rm
-pcmpeqq     00001111 : +dp : 00111000 : 00101001 : mod xmmrx rm
-movntdqa    00001111 : +dp : 00111000 : 00101010 : 11 rrr xmmrx
-packusdw    00001111 : +dp : 00111000 : 00101011 : mod xmmrx rm
-pmovzxbw    00001111 : +dp : 00111000 : 00110000 : mod xmmrx rm
-pmovzxbq    00001111 : +dp : 00111000 : 00110010 : mod xmmrx rm
-pmovzxwd    00001111 : +dp : 00111000 : 00110011 : mod xmmrx rm
-pmovzxwq    00001111 : +dp : 00111000 : 00110100 : mod xmmrx rm
-pmovzxdq    00001111 : +dp : 00111000 : 00110100 : mod xmmrx rm
-pminsb      00001111 : +dp : 00111000 : 00111000 : mod xmmrx rm
-pminsd      00001111 : +dp : 00111000 : 00111001 : mod xmmrx rm
-pminuw      00001111 : +dp : 00111000 : 00111010 : mod xmmrx rm
-pminud      00001111 : +dp : 00111000 : 00111011 : mod xmmrx rm
-pmaxsb      00001111 : +dp : 00111000 : 00111100 : mod xmmrx rm
-pmaxsd      00001111 : +dp : 00111000 : 00111101 : mod xmmrx rm
-pmaxuw      00001111 : +dp : 00111000 : 00111110 : mod xmmrx rm
-pmaxud      00001111 : +dp : 00111000 : 00111111 : mod xmmrx rm
-pinsrb      00001111 : +dp : 00111000 : 01000000 : mod xmmrx rm
-phminposuw  00001111 : +dp : 00111000 : 01000001 : mod xmmrx rm
-pmovzxbd    00001111 : +dp : 00111000 : 10000011 : mod xmmrx rm
-pmulld      00001111 : +dp : 00111000 : 01000000 : mod xmmrx rm
+pblendvb    +dp : 00001111 : 00111000 : 00010000 : mod xmmrx rm
+blendvps    +dp : 00001111 : 00111000 : 00010100 : mod xmmrx rm
+blendvpd    +dp : 00001111 : 00111000 : 00010101 : mod xmmrx rm
+ptest       +dp : 00001111 : 00111000 : 00010111 : mod xmmrx rm
+pmovsxbw    +dp : 00001111 : 00111000 : 00100000 : mod xmmrx rm
+pmovsxbd    +dp : 00001111 : 00111000 : 00100001 : mod xmmrx rm
+pmovsxbq    +dp : 00001111 : 00111000 : 00100010 : mod xmmrx rm
+pmovsxwd    +dp : 00001111 : 00111000 : 00100011 : mod xmmrx rm
+pmovsxwq    +dp : 00001111 : 00111000 : 00100100 : mod xmmrx rm
+pmovsxdq    +dp : 00001111 : 00111000 : 00100101 : mod xmmrx rm
+pmuldq      +dp : 00001111 : 00111000 : 00101000 : mod xmmrx rm
+pcmpeqq     +dp : 00001111 : 00111000 : 00101001 : mod xmmrx rm
+movntdqa    +dp : 00001111 : 00111000 : 00101010 : 11 rrr xmmrx
+packusdw    +dp : 00001111 : 00111000 : 00101011 : mod xmmrx rm
+pmovzxbw    +dp : 00001111 : 00111000 : 00110000 : mod xmmrx rm
+pmovzxbq    +dp : 00001111 : 00111000 : 00110010 : mod xmmrx rm
+pmovzxwd    +dp : 00001111 : 00111000 : 00110011 : mod xmmrx rm
+pmovzxwq    +dp : 00001111 : 00111000 : 00110100 : mod xmmrx rm
+pmovzxdq    +dp : 00001111 : 00111000 : 00110100 : mod xmmrx rm
+pminsb      +dp : 00001111 : 00111000 : 00111000 : mod xmmrx rm
+pminsd      +dp : 00001111 : 00111000 : 00111001 : mod xmmrx rm
+pminuw      +dp : 00001111 : 00111000 : 00111010 : mod xmmrx rm
+pminud      +dp : 00001111 : 00111000 : 00111011 : mod xmmrx rm
+pmaxsb      +dp : 00001111 : 00111000 : 00111100 : mod xmmrx rm
+pmaxsd      +dp : 00001111 : 00111000 : 00111101 : mod xmmrx rm
+pmaxuw      +dp : 00001111 : 00111000 : 00111110 : mod xmmrx rm
+pmaxud      +dp : 00001111 : 00111000 : 00111111 : mod xmmrx rm
+pinsrb      +dp : 00001111 : 00111000 : 01000000 : mod xmmrx rm
+phminposuw  +dp : 00001111 : 00111000 : 01000001 : mod xmmrx rm
+pmovzxbd    +dp : 00001111 : 00111000 : 10000011 : mod xmmrx rm
+pmulld      +dp : 00001111 : 00111000 : 01000000 : mod xmmrx rm
 
-roundpd     00001111 : +dp : 00111010 : 00001001 : mod xmmrx rm : imm8
-blendps     00001111 : +dp : 00111010 : 00001100 : mod xmmrx rm
-blendpd     00001111 : +dp : 00111010 : 00001101 : mod xmmrx rm
-pextrb      00001111 : +dp : 00111010 : 00010100 : mod xmmrx rm : imm8
-pextrw      00001111 : +dp : 00111010 : 00010101 : mod xmmrx rm : imm8
-pextr       00001111 : +dp : 00111010 : 00010110 : mod xmmrx rm : imm8 : +ds
-extractps   00001111 : +dp : 00111010 : 00010111 : mod xmmrx rm : imm8
-pblendw     00001111 : +dp : 00111010 : 00011110 : mod xmmrx rm : imm8
-insertps    00001111 : +dp : 00111010 : 00100001 : mod xmmrx rm : imm8
-pinsr       00001111 : +dp : 00111010 : 00100010 : mod xmmrx rm : imm8 : +ds
-dpps        00001111 : +dp : 00111010 : 01000000 : mod xmmrx rm : imm8
-dppd        00001111 : +dp : 00111010 : 01000001 : mod xmmrx rm : imm8
-mpsadbw     00001111 : +dp : 00111010 : 01000010 : mod xmmrx rm : imm8
+roundpd     +dp : 00001111 : 00111010 : 00001001 : mod xmmrx rm : imm8
+blendps     +dp : 00001111 : 00111010 : 00001100 : mod xmmrx rm
+blendpd     +dp : 00001111 : 00111010 : 00001101 : mod xmmrx rm
+pextrb      +dp : 00001111 : 00111010 : 00010100 : mod xmmrx rm : imm8
+pextrw      +dp : 00001111 : 00111010 : 00010101 : mod xmmrx rm : imm8
+pextr       +dp : 00001111 : 00111010 : 00010110 : mod xmmrx rm : imm8 : +ds
+extractps   +dp : 00001111 : 00111010 : 00010111 : mod xmmrx rm : imm8
+pblendw     +dp : 00001111 : 00111010 : 00011110 : mod xmmrx rm : imm8
+insertps    +dp : 00001111 : 00111010 : 00100001 : mod xmmrx rm : imm8
+pinsr       +dp : 00001111 : 00111010 : 00100010 : mod xmmrx rm : imm8 : +ds
+dpps        +dp : 00001111 : 00111010 : 01000000 : mod xmmrx rm : imm8
+dppd        +dp : 00001111 : 00111010 : 01000001 : mod xmmrx rm : imm8
+mpsadbw     +dp : 00001111 : 00111010 : 01000010 : mod xmmrx rm : imm8
 
 # ------------------------------------------------------------------- #
 # SSE 4.2 instruction formats and encodings
 # ------------------------------------------------------------------- #
 
-pcmpgtq     00001111 : +dp : 00111000 : 00110111 : mod xmmrx rm
-pcmpestrm   00001111 : +dp : 00111010 : 01100000 : mod xmmrx rm : imm8
-pcmpestri   00001111 : +dp : 00111010 : 01100001 : mod xmmrx rm : imm8
-pcmpistri   00001111 : +dp : 00111010 : 01100011 : mod xmmrx rm : imm8
-pcmpistrm   00001111 : +dp : 00111010 : 01100010 : mod xmmrx rm : imm8
+pcmpgtq     +dp : 00001111 : 00111000 : 00110111 : mod xmmrx rm
+pcmpestrm   +dp : 00001111 : 00111010 : 01100000 : mod xmmrx rm : imm8
+pcmpestri   +dp : 00001111 : 00111010 : 01100001 : mod xmmrx rm : imm8
+pcmpistri   +dp : 00001111 : 00111010 : 01100011 : mod xmmrx rm : imm8
+pcmpistrm   +dp : 00001111 : 00111010 : 01100010 : mod xmmrx rm : imm8
 
-crc32       00001111 : +f2 : 00111000 : 1111000w : mod rx rm
+crc32       +f2 : 00001111 : 00111000 : 1111000w : mod rx rm
 
-popcnt      00001111 : +f3 : 10111000 : mod rx rm
+popcnt      +f3 : 00001111 : 10111000 : mod rx rm
 
 

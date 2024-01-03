@@ -22,16 +22,26 @@ def write_split(file, split: str):
         file.write(f'{3*TAB}Field.{split_enum},\n')
 
 def write_line(file, splits: list[str]):
-    # print(splits)
+    op_idx: int|None = None
+    for idx, split in enumerate(splits[1:]):
+        is_bits = True
+        for ch in split:
+            if ch != '0' and ch != '1':
+                is_bits = False
+        if is_bits:
+            op_idx = idx+1
+            break
+    assert not(op_idx is None)
     inst = splits[0]
-    op_bits = splits[1]
-    op_len  = len(splits[1])
+    op_bits = splits[op_idx]
+    op_len  = len(splits[op_idx])
+    splits = splits[1:op_idx] + splits[op_idx+1:]
     file.write(f'{TAB}{{')
     file.write(f'\n{2*TAB}mnemonic = "{inst}",')
     file.write(f'\n{2*TAB}opcode = {{ 0b{op_bits}, {op_len} }},')
     mask_splits: list[str] = []
     flag_splits: list[str] = []
-    for split in splits[2:]:
+    for split in splits:
         if split[0] == '+':
             flag = split[1:]
             flag = flag[0].upper() + flag[1:]
