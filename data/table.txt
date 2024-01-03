@@ -616,6 +616,9 @@ cvttpd2dq  +dp : +0f : 11100110 : mod xmmrx rm
 movntdq    +dp : +0f : 11100111 : mod xmmrx rm
 maskmovdqu +dp : +0f : 11110111 : mod11 xmmrx rm
 
+punpckhqdq +dp : +0f : 01101101 : mod xmmrx rm
+punpcklqdq +dp : +0f : 01101100 : mod xmmrx rm
+
 # ------------------------------------------------------------------- #
 # SSE3 instruction formats and encodings
 # ------------------------------------------------------------------- #
