@@ -488,7 +488,7 @@ movaps     +np : +0f : 00101000 : mod xmmrx rm
 movaps     +np : +0f : 00101001 : mod xmmrx rm : _d
 ldmxcsr    +np : +0f : 10101110 : moda 010 rm
 stmxcsr    +np : +0f : 10101110 : moda 011 rm
-sfence     +np : +0f : 10101110 : 11   111 00
+sfence     +np : +0f : 10101110 : 11111000
 cmpps      +np : +0f : 11000010 : mod xmmrx rm : imm8
 shufps     +np : +0f : 11000110 : mod xmmrx rm : imm8
 movntq     +np : +0f : 11100111 : mod xmmrx rm
