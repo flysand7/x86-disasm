@@ -725,6 +725,7 @@ roundpd     00001111 : +dp : 00111010 : 00001001 : mod xmmrx rm : imm8
 blendps     00001111 : +dp : 00111010 : 00001100 : mod xmmrx rm
 blendpd     00001111 : +dp : 00111010 : 00001101 : mod xmmrx rm
 pextrb      00001111 : +dp : 00111010 : 00010100 : mod xmmrx rm : imm8
+pextrw      00001111 : +dp : 00111010 : 00010101 : mod xmmrx rm : imm8
 pextr       00001111 : +dp : 00111010 : 00010110 : mod xmmrx rm : imm8 : +ds
 extractps   00001111 : +dp : 00111010 : 00010111 : mod xmmrx rm : imm8
 pblendw     00001111 : +dp : 00111010 : 00011110 : mod xmmrx rm : imm8
