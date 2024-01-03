@@ -63,10 +63,14 @@ main :: proc() {
             fmt.eprintf("Error reading .text section: %v\n", text_err)
             os.exit(1)
         }
+        addr := text.addr
         ctx := disasm.create_ctx(text_bytes, bits)
         for inst in disasm.disasm_inst(&ctx) {
+            fmt.printf("%012x ", addr)
             disasm.print_inst(inst, true)
+            addr += cast(uintptr) len(inst.bytes)
         }
+        
         if ctx.offset < len(ctx.bytes) {
             fmt.printf("Error disassembling the byte: %02x (offset %016x)\n", ctx.bytes[ctx.offset], ctx.offset)
             fmt.printf("Context:\n")
