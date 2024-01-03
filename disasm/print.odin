@@ -195,20 +195,20 @@ reg_name :: proc(reg: Reg) -> string {
                 case 64: return "rcx"
                 case: unreachable()
             }
-        case .Bx:
-            switch reg.bits {
-                case 8:  return "bl"
-                case 16: return "bx"
-                case 32: return "ebx"
-                case 64: return "rbx"
-                case: unreachable()
-            }
         case .Dx:
             switch reg.bits {
                 case 8:  return "dl"
                 case 16: return "dx"
                 case 32: return "edx"
                 case 64: return "rdx"
+                case: unreachable()
+            }
+        case .Bx:
+            switch reg.bits {
+                case 8:  return "bl"
+                case 16: return "bx"
+                case 32: return "ebx"
+                case 64: return "rbx"
                 case: unreachable()
             }
         case .Di:
