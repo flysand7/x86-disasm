@@ -7,6 +7,7 @@ import "core:fmt"
 import "core:os"
 import "core:strings"
 import "core:slice"
+import "core:time"
 
 main :: proc() {
     bits := u8(64)
@@ -110,7 +111,7 @@ main :: proc() {
                 do_syms = false
             }
         }
-        builder := strings.builder_make()
+        builder := strings.builder_make(0x1000, context.temp_allocator)
         writer := strings.to_writer(&builder)
         if !do_syms {
             ctx := disasm.create_ctx(text_bytes, bits)
@@ -131,6 +132,8 @@ main :: proc() {
             slice.sort_by(symtab, proc (i, j: elf.Sym) -> bool {
                 return i.value < j.value
             })
+            d1 := time.Duration{}
+            d2 := time.Duration{}
             start_addr := -1
             for sym, sym_idx in symtab {
                 if sym.size == 0 {
@@ -148,10 +151,15 @@ main :: proc() {
                 fmt.wprintf(writer, "\e[38;5;33m<%s>:\e[0m\n", sym_name)
                 ctx := disasm.create_ctx(text_bytes[sym_offs_lo:sym_offs_hi], bits)
                 addr := sym_addr
+                t1 := time.tick_now()
                 for inst in disasm.disasm_inst(&ctx) {
+                    t2 := time.tick_now()
+                    d1 += time.tick_diff(t1, t2)
                     fmt.wprintf(writer, "  %012x ", addr)
                     disasm.print_inst(inst, writer, true)
                     addr += len(inst.bytes)
+                    t1 = time.tick_now()
+                    d2 += time.tick_diff(t2, t1)
                 }
                 if check_print_err(&ctx) {
                     os.exit(1)
