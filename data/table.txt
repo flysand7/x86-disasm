@@ -562,6 +562,8 @@ maxsd      +f2 : +0f : 01011111 : mod xmmrx rm
 cmpsd      +f2 : +0f : 11000010 : mod xmmrx rm : imm8
 movdq2q    +f2 : +0f : 11010110 : 11 xmmrx mmrx
 
+psrldq     +dp : +0f : 01110011 : 11 011 xmmrx : imm8
+pslldq     +dp : +0f : 01110011 : 11 111 xmmrx : imm8
 
 cvttss2si  +f3 : +0f : 00101100 : moda rx rm
 cvttss2si  +f3 : +0f : 00101100 : 11 rrr xmmrx
