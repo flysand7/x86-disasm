@@ -579,7 +579,7 @@ paddq      +np : +0f : 11010100 : mod mmrx rm
 # Packed doubles (prefix: 66 0F)
 unpckhpd   +dp : +0f : 00010101 : mod xmmrx rm
 movupd     +dp : +0f : 0001000d : mod xmmrx rm
-movlpd     +dp : +0f : 00010011 : mod xmmrx rm
+movlpd     +dp : +0f : 00010010 : mod xmmrx rm
 unpcklpd   +dp : +0f : 00010100 : mod xmmrx rm
 movhpd     +dp : +0f : 0001011d : mod xmmrx rm
 movapd     +dp : +0f : 0010100d : mod xmmrx rm
