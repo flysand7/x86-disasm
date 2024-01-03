@@ -753,7 +753,7 @@ pcmpestri   +dp : +0f : +3a : 01100001 : mod xmmrx rm : imm8
 pcmpistri   +dp : +0f : +3a : 01100011 : mod xmmrx rm : imm8
 pcmpistrm   +dp : +0f : +3a : 01100010 : mod xmmrx rm : imm8
 
-crc32       +f2 : +0f : 00111000 : 1111000w : mod rx rm
+crc32       +f2 : +0f : +38 : 1111000w : mod rx rm
 
 popcnt      +f3 : +0f : 10111000 : mod rx rm
 
