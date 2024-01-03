@@ -375,7 +375,7 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
         seg_override = ctx.seg_override,
         data_size = ctx.data_bits,
     }
-    if .Ds in encoding.flags {
+    if .Flag_Ds in encoding.flags {
         inst.flags += {.Data_Size_Suffix}
     }
     if ctx.lock {
@@ -558,35 +558,42 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
             }
         }
     }
+    opcode_0f := false
+    if match_u8(ctx, 0x0f) {
+        opcode_0f = true
+    }
     saved_offset := ctx.offset
     saved_data   := ctx.data_bits
     saved_addr   := ctx.addr_bits
     saved_repnz  := ctx.repnz
     saved_bnd    := ctx.rep_or_bnd
     for enc in table.encodings {
-        if .N64 in enc.flags && ctx.cpu_bits == 64 {
+        if (.Flag_0f in enc.flags) != opcode_0f {
             continue
         }
-        if .F64 in enc.flags && ctx.cpu_bits == 64 {
+        if .Flag_N64 in enc.flags && ctx.cpu_bits == 64 {
+            continue
+        }
+        if .Flag_F64 in enc.flags && ctx.cpu_bits == 64 {
             ctx.data_bits = 64
         }
-        if .Np in enc.flags {
+        if .Flag_Np in enc.flags {
             if (data_size_override || ctx.rep_or_bnd || ctx.repnz) {
                 continue
             }
         }
-        if .Dp in enc.flags {
+        if .Flag_Dp in enc.flags {
             if !data_size_override {
                 continue
             }
         }
-        if .F2 in enc.flags {
+        if .Flag_F2 in enc.flags {
             if !ctx.repnz {
                 continue
             }
             ctx.repnz = false
         }
-        if .F3 in enc.flags {
+        if .Flag_F3 in enc.flags {
             if !ctx.rep_or_bnd {
                 continue
             }

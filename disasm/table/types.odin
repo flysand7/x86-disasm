@@ -1,15 +1,16 @@
 package disasm_data
 
 Enc_Flags :: bit_set[enum{
-    N64,
-    F64,
-    Ncs,
-    Ds,
-    Ds1,
-    Np,
-    Dp,
-    F2,
-    F3,
+    Flag_N64,
+    Flag_F64,
+    Flag_Ncs,
+    Flag_Ds,
+    Flag_Ds1,
+    Flag_Np,
+    Flag_Dp,
+    Flag_F2,
+    Flag_F3,
+    Flag_0f,
 }]
 
 Bits :: struct {

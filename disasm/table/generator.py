@@ -44,7 +44,7 @@ def write_line(file, splits: list[str]):
     for split in splits:
         if split[0] == '+':
             flag = split[1:]
-            flag = flag[0].upper() + flag[1:]
+            flag = 'Flag_' + flag[0].upper() + flag[1:]
             flag_splits.append(flag)
         else:
             mask_splits.append(split)
