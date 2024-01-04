@@ -87,6 +87,7 @@
 # +ds  - data size is part of instruction name (movs -> movsb/movsw/movsl/movsq)
 # +np  - only decode if there was no prefix.
 # +dp  - only decode if 0x66 prefix was encountered.
+# +vp  - only decode if VEX (0xc4 or 0xc5) prefix was encountered.
 # +f2  - only decode if 0xf2 prefix was encountered.
 # +f3  - only encode if 0xf3 prefix was encountered.
 # +0f  - only encode if 0x0f opcode extension was encountered.
@@ -768,4 +769,9 @@ crc32       +f2 : +0f : +38 : 1111000w : mod rx rm
 
 popcnt      +f3 : +0f : 10111000 : mod rx rm
 
+# ------------------------------------------------------------------- #
+# AVX instruction formats and encodings
+# ------------------------------------------------------------------- #
+
+vaddps      +vp : +np : +0f : 01011000 : mod xmmrx rm
 

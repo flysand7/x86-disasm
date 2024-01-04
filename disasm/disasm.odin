@@ -12,12 +12,17 @@ Ctx :: struct {
     start_offs: int,
     data_bits:  u8,
     addr_bits:  u8,
+    vexvvvv:    u8,
     using _zeroctx: struct {
-        rex:        u8,
         seg:        Sreg,
-        lock:       bool,
-        repnz:      bool,
-        rep_or_bnd: bool,
+        lock:       b8,
+        repnz:      b8,
+        rep_or_bnd: b8,
+        rexw:       b8,
+        rexr:       b8,
+        rexb:       b8,
+        rexx:       b8,
+        vexl:       b8,
     },
     // Bit reading
     bits_offs:  u8,
@@ -128,7 +133,14 @@ match_bits :: proc(ctx: ^Ctx, bits: table.Bits) -> (matched: bool, ok: bool) {
 make_reg :: proc(idx: u8, bits: u8) -> Reg {
     return {
         idx  = cast(Reg_Idx) (idx + 1),
-        bits = bits,
+        bits = bits>>3,
+    }
+}
+
+make_xmmreg :: proc(idx: u8, #any_int bits: int) -> XMM_Reg {
+    return {
+        idx = cast(XMM_Reg_Idx) idx,
+        bits = cast(u8) (bits>>3),
     }
 }
 
@@ -145,16 +157,20 @@ make_sreg :: proc(idx: u8) -> Sreg {
     return cast(Sreg) (idx + 1)
 }
 
-rex_extend_b :: #force_inline proc(rex: u8, value: u8) -> u8 {
-    return (rex & 0b0001) << 3 | value
+rex_extend :: #force_inline proc(ext: b8, value: u8) -> u8 {
+    if ext {
+        return 0b1000 | value
+    } else {
+        return value
+    }
 }
 
-rex_extend_i :: #force_inline proc(rex: u8, value: u8) -> u8 {
-    return (rex & 0b0010) << 2 | value
-}
-
-rex_extend_r :: #force_inline proc(rex: u8, value: u8) -> u8 {
-    return (rex & 0b0100) << 1 | value
+vex_extend :: #force_inline proc(ext: b8, value: u8) -> u8 {
+    if ext {
+        return 0b10000 | value
+    } else {
+        return value
+    }
 }
 
 parse_modrm :: proc(ctx: ^Ctx, modrm: u8) -> (op1: Operand, op2: Operand, ok: bool) {
@@ -178,7 +194,7 @@ add_modrm_addr16 :: proc(ctx: ^Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind
         } else if kind == .Mmx {
             add_operand(inst, MMX_Reg(rm))
         } else if kind == .Xmm {
-            add_operand(inst, XMM_Reg(rm))
+            add_operand(inst, make_xmmreg(rm, 128))
         }
         return true
     }
@@ -219,11 +235,14 @@ add_modrm_addr32 :: proc(ctx: ^Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind
     }
     if mod == 0b11 {
         if kind == .Gpr {
-            add_operand(inst, make_reg(rex_extend_b(ctx.rex, rm), ctx.data_bits))
+            add_operand(inst, make_reg(rex_extend(ctx.rexb, rm), ctx.data_bits))
         } else if kind == .Mmx {
             add_operand(inst, MMX_Reg(rm))
         } else if kind == .Xmm {
-            add_operand(inst, XMM_Reg(rm))
+            add_operand(inst, make_xmmreg(
+                rex_extend(ctx.rexb, rm),
+                ctx.vexl? 256 : 128,
+            ))
         }
         return true
     }
@@ -244,14 +263,14 @@ add_modrm_addr32 :: proc(ctx: ^Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind
                 bits = ctx.addr_bits,
             }
         } else {
-            base = make_reg(rex_extend_b(ctx.rex, sb), ctx.addr_bits)
+            base = make_reg(rex_extend(ctx.rexb, sb), ctx.addr_bits)
         }
         if si != 0b100 {
             scale = 1<<ss
-            index = make_reg(rex_extend_i(ctx.rex, si), ctx.addr_bits)
+            index = make_reg(rex_extend(ctx.rexx, si), ctx.addr_bits)
         }
     } else {
-        base = make_reg(rex_extend_b(ctx.rex, rm), ctx.addr_bits)
+        base = make_reg(rex_extend(ctx.rexb, rm), ctx.addr_bits)
     }
     if mod == 0b01 {
         disp = cast(i32) pop_u8(ctx) or_return
@@ -377,7 +396,7 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
     inst^ = Inst {
         mnemonic = encoding.mnemonic,
         seg = ctx.seg,
-        data_size = ctx.data_bits,
+        data_size = ctx.data_bits>>3,
     }
     if .Flag_Ds in encoding.flags {
         inst.flags += {.Data_Size_Suffix}
@@ -404,17 +423,25 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
 
     if fields.has[.Rx] {
         add_operand(inst, make_reg(
-            rex_extend_r(ctx.rex, fields.bits[.Rx]),
+            rex_extend(ctx.rexr, fields.bits[.Rx]),
             ctx.data_bits,
         ))
     } else if fields.has[.Mmxrx] {
-        add_operand(inst, MMX_Reg(fields.bits[.Mmxrx]))
+        add_operand(inst, MMX_Reg(
+            fields.bits[.Mmxrx],
+        ))
     } else if fields.has[.Xmmrx] {
-        add_operand(inst, XMM_Reg(fields.bits[.Xmmrx]))
+        add_operand(inst, make_xmmreg(
+            rex_extend(ctx.rexr, fields.bits[.Xmmrx]),
+            ctx.vexl? 256 : 128,
+        ))
     } else if fields.has[.Mmrx] {
         // Data-size operand prefix used -- required for SSE interpretation.
         if ctx.data_bits == 16 {
-            add_operand(inst, XMM_Reg(fields.bits[.Mmrx]))
+            add_operand(inst, make_xmmreg(
+                rex_extend(ctx.rexr, fields.bits[.Mmrx]),
+                ctx.vexl? 256 : 128,
+            ))
         } else {
             add_operand(inst, MMX_Reg(fields.bits[.Mmrx]))
         }
@@ -437,9 +464,15 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
     } else if fields.has[._c] {
         add_operand(inst, Reg{.Cx, 8})
     }
+    if ctx.vexvvvv != 0b1111 {
+        add_operand(inst, make_xmmreg(
+            rex_extend(ctx.rexr, 15-ctx.vexvvvv),
+            ctx.vexl? 256 : 128,
+        ))
+    }
     if fields.has[.Rrr] {
         add_operand(inst, make_reg(
-            rex_extend_b(ctx.rex, fields.bits[.Rrr]),
+            rex_extend(ctx.rexb, fields.bits[.Rrr]),
             ctx.data_bits,
         ))
     }
@@ -487,7 +520,7 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
         } else if ctx.data_bits == 16 {
             imm = cast(i64) pop_u16(ctx) or_return
         } else if ctx.data_bits == 32 || ctx.data_bits == 64 {
-            if ctx.cpu_bits == 64 && ctx.rex & 0b1000 == 0b1000 && encoding.opcode.value == 0b1011 {
+            if ctx.cpu_bits == 64 && ctx.rexw && encoding.opcode.value == 0b1011 {
                 imm = cast(i64) pop_u64(ctx) or_return
             } else {
                 imm = cast(i64) pop_u32(ctx) or_return
@@ -518,6 +551,7 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
     ctx.data_bits = ctx.cpu_bits == 64? 32 : ctx.cpu_bits
     ctx.addr_bits = ctx.cpu_bits
     ctx.start_offs = ctx.offset
+    ctx.vexvvvv = 0b1111
     ctx._zeroctx = {}
     addr_size_override := false
     data_size_override := false
@@ -539,9 +573,72 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
         pop_u8(ctx) or_return
     }
     if (peek_u8(ctx) or_return) & 0xf0 == 0x40 {
-        ctx.rex = pop_u8(ctx) or_return
+        rex := pop_u8(ctx) or_return
+        if rex & 0b1000 != 0 {
+            ctx.rexw = true
+        }
+        if rex & 0b0100 != 0 {
+            ctx.rexr = true
+        }
+        if rex & 0b0010 != 0 {
+            ctx.rexx = true
+        }
+        if rex & 0b0001 != 0 {
+            ctx.rexb = true
+        }
     }
-    if ctx.rex & 0b1000 == 0b1000 {
+    opcode_0f := false
+    opcode_38 := false
+    opcode_3a := false
+    vex_found := false
+    if match_u8(ctx, 0xc5) {
+        vex_found = true
+        opcode_0f = true
+        b1 := pop_u8(ctx) or_return
+        ctx.rexr = ! cast(b8) ((b1 >> 7) & 1)
+        ctx.vexvvvv = (b1 >> 3) & 0b1111
+        ctx.vexl = cast(b8) ((b1 >> 2) & 1)
+        switch b1 & 0b11 {
+            case 0b01: data_size_override = true
+            case 0b10: ctx.rep_or_bnd = true
+            case 0b11: ctx.repnz = true
+        }
+    } else if match_u8(ctx, 0xc4) {
+        vex_found = true
+        b1 := pop_u8(ctx) or_return
+        b2 := pop_u8(ctx) or_return
+        ctx.rexr = ! cast(b8) ((b1 >> 7) & 1)
+        ctx.rexx = ! cast(b8) ((b1 >> 6) & 1)
+        ctx.rexb = ! cast(b8) ((b1 >> 5) & 1)
+        switch b1 & 0b11111 {
+            case 0b00010:
+                opcode_0f = true
+                opcode_38 = true
+            case 0b00011:
+                opcode_0f = true
+                opcode_3a = true
+            case 0b00001:
+                opcode_0f = true
+            case:
+                return {}, false
+        }
+        ctx.rexw = ! cast(b8) ((b1 >> 7) & 1)
+        ctx.vexvvvv = (b2 >> 3) & 0b1111
+        ctx.vexl = cast(b8) ((b2 >> 2) & 1)
+        switch b2 & 0b11 {
+            case 0b01: data_size_override = true
+            case 0b10: ctx.rep_or_bnd = true
+            case 0b11: ctx.repnz = true
+        }
+    } else if match_u8(ctx, 0x0f) {
+        opcode_0f = true
+        if match_u8(ctx, 0x38) {
+            opcode_38 = true
+        } else if match_u8(ctx, 0x3a) {
+            opcode_3a = true
+        }
+    }
+    if ctx.cpu_bits == 64 && ctx.rexw {
         if addr_size_override {
            ctx.addr_bits = 32
         }
@@ -562,23 +659,15 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
             }
         }
     }
-    opcode_0f := false
-    opcode_38 := false
-    opcode_3a := false
-    if match_u8(ctx, 0x0f) {
-        opcode_0f = true
-        if match_u8(ctx, 0x38) {
-            opcode_38 = true
-        } else if match_u8(ctx, 0x3a) {
-            opcode_3a = true
-        }
-    }
     saved_offset := ctx.offset
     saved_data   := ctx.data_bits
     saved_addr   := ctx.addr_bits
     saved_repnz  := ctx.repnz
     saved_bnd    := ctx.rep_or_bnd
     for enc in table.encodings {
+        if (.Flag_Vp in enc.flags) != vex_found {
+            continue
+        }
         if (.Flag_0f in enc.flags) != opcode_0f {
             continue
         }

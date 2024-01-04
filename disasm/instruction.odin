@@ -21,6 +21,25 @@ Reg_Idx :: enum u8 {
     Ip,
 }
 
+XMM_Reg_Idx :: enum u8 {
+    Xmm0,
+    Xmm1,
+    Xmm2,
+    Xmm3,
+    Xmm4,
+    Xmm5,
+    Xmm6,
+    Xmm7,
+    Xmm8,
+    Xmm9,
+    Xmm10,
+    Xmm11,
+    Xmm12,
+    Xmm13,
+    Xmm14,
+    Xmm15,
+}
+
 MMX_Reg :: enum u8 {
     Mm0,
     Mm1,
@@ -30,17 +49,6 @@ MMX_Reg :: enum u8 {
     Mm5,
     Mm6,
     Mm7,
-}
-
-XMM_Reg :: enum u8 {
-    Xmm0,
-    Xmm1,
-    Xmm2,
-    Xmm3,
-    Xmm4,
-    Xmm5,
-    Xmm6,
-    Xmm7,
 }
 
 Creg_Idx :: enum u8 {
@@ -77,6 +85,11 @@ Sreg :: enum {
 
 Reg :: struct {
     idx:  Reg_Idx,
+    bits: u8,
+}
+
+XMM_Reg :: struct {
+    idx: XMM_Reg_Idx,
     bits: u8,
 }
 
@@ -131,6 +144,6 @@ add_operand :: proc(inst: ^Inst, operand: Operand) {
     inst.op[inst.op_count] = operand
     inst.op_count += 1
     if xmm, ok := operand.(XMM_Reg); ok {
-        inst.data_size = 128
+        inst.data_size = xmm.bits
     }
 }

@@ -133,22 +133,24 @@ print_color_int :: proc(w: io.Writer, color: string, str: i64, colors: bool) {
 
 data_size_suffix :: proc(size: u8) -> string {
     switch size {
-        case 8:   return "b"
-        case 16:  return "w"
-        case 32:  return "d"
-        case 64:  return "q"
-        case 128: return "o"
+        case 1:  return "b"
+        case 2:  return "w"
+        case 4:  return "d"
+        case 8:  return "q"
+        case 16: return "o"
+        case 32: return "y"
         case: unreachable()
     }
 }
 
 data_size_spec :: proc(size: u8) -> string {
     switch size {
-        case 8:  return "byte"
-        case 16: return "word"
-        case 32: return "dword"
-        case 64: return "qword"
-        case 128: return "xmmword"
+        case 1:  return "byte"
+        case 2:  return "word"
+        case 4:  return "dword"
+        case 8:  return "qword"
+        case 16: return "xmmword"
+        case 32: return "ymmword"
         case: unreachable()
     }
 }
@@ -181,137 +183,137 @@ reg_name :: proc(reg: Reg) -> string {
     #partial switch reg.idx {
         case .Ax:
             switch reg.bits {
-                case 8:  return "al"
-                case 16: return "ax"
-                case 32: return "eax"
-                case 64: return "rax"
+                case 1: return "al"
+                case 2: return "ax"
+                case 4: return "eax"
+                case 8: return "rax"
                 case: unreachable()
             }
         case .Cx:
             switch reg.bits {
-                case 8:  return "cl"
-                case 16: return "cx"
-                case 32: return "ecx"
-                case 64: return "rcx"
+                case 1: return "cl"
+                case 2: return "cx"
+                case 4: return "ecx"
+                case 8: return "rcx"
                 case: unreachable()
             }
         case .Dx:
             switch reg.bits {
-                case 8:  return "dl"
-                case 16: return "dx"
-                case 32: return "edx"
-                case 64: return "rdx"
+                case 1: return "dl"
+                case 2: return "dx"
+                case 4: return "edx"
+                case 8: return "rdx"
                 case: unreachable()
             }
         case .Bx:
             switch reg.bits {
-                case 8:  return "bl"
-                case 16: return "bx"
-                case 32: return "ebx"
-                case 64: return "rbx"
+                case 1: return "bl"
+                case 2: return "bx"
+                case 4: return "ebx"
+                case 8: return "rbx"
                 case: unreachable()
             }
         case .Di:
             switch reg.bits {
-                case 8:  return "ah"
-                case 16: return "di"
-                case 32: return "edi"
-                case 64: return "rdi"
+                case 1: return "ah"
+                case 2: return "di"
+                case 4: return "edi"
+                case 8: return "rdi"
                 case: unreachable()
             }
         case .Si:
             switch reg.bits {
-                case 8:  return "ch"
-                case 16: return "si"
-                case 32: return "esi"
-                case 64: return "rsi"
+                case 1: return "ch"
+                case 2: return "si"
+                case 4: return "esi"
+                case 8: return "rsi"
                 case: unreachable()
             }
         case .Sp:
             switch reg.bits {
-                case 8:  return "dh"
-                case 16: return "sp"
-                case 32: return "esp"
-                case 64: return "rsp"
+                case 1: return "dh"
+                case 2: return "sp"
+                case 4: return "esp"
+                case 8: return "rsp"
                 case: unreachable()
             }
         case .Bp:
             switch reg.bits {
-                case 8:  return "bh"
-                case 16: return "bp"
-                case 32: return "ebp"
-                case 64: return "rbp"
+                case 1: return "bh"
+                case 2: return "bp"
+                case 4: return "ebp"
+                case 8: return "rbp"
                 case: unreachable()
             }
         case .R8:
             switch reg.bits {
-                case 8:  return "r8b"
-                case 16: return "r8w"
-                case 32: return "r8d"
-                case 64: return "r8"
+                case 1: return "r8b"
+                case 2: return "r8w"
+                case 4: return "r8d"
+                case 8: return "r8"
                 case: unreachable()
             }
         case .R9:
             switch reg.bits {
-                case 8:  return "r9b"
-                case 16: return "r9w"
-                case 32: return "r9d"
-                case 64: return "r9"
+                case 1: return "r9b"
+                case 2: return "r9w"
+                case 4: return "r9d"
+                case 8: return "r9"
                 case: unreachable()
             }
         case .R10:
             switch reg.bits {
-                case 8:  return "r10b"
-                case 16: return "r10w"
-                case 32: return "r10d"
-                case 64: return "r10"
+                case 1: return "r10b"
+                case 2: return "r10w"
+                case 4: return "r10d"
+                case 8: return "r10"
                 case: unreachable()
             }
         case .R11:
             switch reg.bits {
-                case 8:  return "r11b"
-                case 16: return "r11w"
-                case 32: return "r11d"
-                case 64: return "r11"
+                case 1: return "r11b"
+                case 2: return "r11w"
+                case 4: return "r11d"
+                case 8: return "r11"
                 case: unreachable()
             }
         case .R12:
             switch reg.bits {
-                case 8:  return "r12b"
-                case 16: return "r12w"
-                case 32: return "r12d"
-                case 64: return "r12"
+                case 1: return "r12b"
+                case 2: return "r12w"
+                case 4: return "r12d"
+                case 8: return "r12"
                 case: unreachable()
             }
         case .R13:
             switch reg.bits {
-                case 8:  return "r13b"
-                case 16: return "r13w"
-                case 32: return "r13d"
-                case 64: return "r13"
+                case 1: return "r13b"
+                case 2: return "r13w"
+                case 4: return "r13d"
+                case 8: return "r13"
                 case: unreachable()
             }
         case .R14:
             switch reg.bits {
-                case 8:  return "r14b"
-                case 16: return "r14w"
-                case 32: return "r14d"
-                case 64: return "r14"
+                case 1: return "r14b"
+                case 2: return "r14w"
+                case 4: return "r14d"
+                case 8: return "r14"
                 case: unreachable()
             }
         case .R15:
             switch reg.bits {
-                case 8:  return "r15b"
-                case 16: return "r15w"
-                case 32: return "r15d"
-                case 64: return "r15"
+                case 1: return "r15b"
+                case 2: return "r15w"
+                case 4: return "r15d"
+                case 8: return "r15"
                 case: unreachable()
             }
         case .Ip:
             switch reg.bits {
-                case 16: return "ip"
-                case 32: return "eip"
-                case 64: return "rip"
+                case 2: return "ip"
+                case 4: return "eip"
+                case 8: return "rip"
                 case: unreachable()
             }
         case: unreachable()
@@ -333,17 +335,89 @@ mmxreg_name :: proc(mmxreg: MMX_Reg) -> string {
 }
 
 xmmreg_name :: proc(xmmreg: XMM_Reg) -> string {
-    switch xmmreg {
-        case .Xmm0: return "xmm0"
-        case .Xmm1: return "xmm1"
-        case .Xmm2: return "xmm2"
-        case .Xmm3: return "xmm3"
-        case .Xmm4: return "xmm4"
-        case .Xmm5: return "xmm5"
-        case .Xmm6: return "xmm6"
-        case .Xmm7: return "xmm7"
-        case: unreachable()
+    switch xmmreg.idx {
+        case .Xmm0:
+            switch xmmreg.bits {
+                case 16: return "xmm0"
+                case 32: return "ymm0"
+            }
+        case .Xmm1:
+            switch xmmreg.bits {
+                case 16: return "xmm1"
+                case 32: return "ymm1"
+            }
+        case .Xmm2:
+            switch xmmreg.bits {
+                case 16: return "xmm2"
+                case 32: return "ymm2"
+            }
+        case .Xmm3:
+            switch xmmreg.bits {
+                case 16: return "xmm3"
+                case 32: return "ymm3"
+            }
+        case .Xmm4:
+            switch xmmreg.bits {
+                case 16: return "xmm4"
+                case 32: return "ymm4"
+            }
+        case .Xmm5:
+            switch xmmreg.bits {
+                case 16: return "xmm5"
+                case 32: return "ymm5"
+            }
+        case .Xmm6:
+            switch xmmreg.bits {
+                case 16: return "xmm6"
+                case 32: return "ymm6"
+            }
+        case .Xmm7:
+            switch xmmreg.bits {
+                case 16: return "xmm7"
+                case 32: return "ymm7"
+            }
+        case .Xmm8:
+            switch xmmreg.bits {
+                case 16: return "xmm8"
+                case 32: return "ymm8"
+            }
+        case .Xmm9:
+            switch xmmreg.bits {
+                case 16: return "xmm9"
+                case 32: return "ymm9"
+            }
+        case .Xmm10:
+            switch xmmreg.bits {
+                case 16: return "xmm10"
+                case 32: return "ymm10"
+            }
+        case .Xmm11:
+            switch xmmreg.bits {
+                case 16: return "xmm11"
+                case 32: return "ymm11"
+            }
+        case .Xmm12:
+            switch xmmreg.bits {
+                case 16: return "xmm12"
+                case 32: return "ymm12"
+            }
+        case .Xmm13:
+            switch xmmreg.bits {
+                case 16: return "xmm13"
+                case 32: return "ymm13"
+            }
+        case .Xmm14:
+            switch xmmreg.bits {
+                case 16: return "xmm14"
+                case 32: return "ymm14"
+            }
+        case .Xmm15:
+            switch xmmreg.bits {
+                case 16: return "xmm15"
+                case 32: return "ymm15"
+            }
     }
+    unreachable()
 }
 
 creg_name :: proc(creg: Creg_Idx) -> string {
