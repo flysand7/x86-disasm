@@ -133,14 +133,14 @@ match_bits :: proc(ctx: ^Ctx, bits: table.Bits) -> (matched: bool, ok: bool) {
 make_reg :: proc(idx: u8, bits: u8) -> Reg {
     return {
         idx  = cast(Reg_Idx) (idx + 1),
-        bits = bits>>3,
+        size = bits>>3,
     }
 }
 
 make_xmmreg :: proc(idx: u8, #any_int bits: int) -> XMM_Reg {
     return {
         idx = cast(XMM_Reg_Idx) idx,
-        bits = cast(u8) (bits>>3),
+        size = cast(u8) (bits>>3),
     }
 }
 
@@ -199,14 +199,14 @@ add_modrm_addr16 :: proc(ctx: ^Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind
         return true
     }
     base_regs: [8]struct{base: Reg, index: Reg} = {
-        {base = {.Bx, 16}, index = {.Si,  16}},
-        {base = {.Bx, 16}, index = {.Di,  16}},
-        {base = {.Bp, 16}, index = {.Si,  16}},
-        {base = {.Bp, 16}, index = {.Di,  16}},
-        {base = {.Si, 16}, index = {.None, 0}},
-        {base = {.Di, 16}, index = {.None, 0}},
-        {base = {.Bp, 16}, index = {.None, 0}},
-        {base = {.Bx, 16}, index = {.None, 0}},
+        {base = {.Bx, 2}, index = {.Si,   2}},
+        {base = {.Bx, 2}, index = {.Di,   2}},
+        {base = {.Bp, 2}, index = {.Si,   2}},
+        {base = {.Bp, 2}, index = {.Di,   2}},
+        {base = {.Si, 2}, index = {.None, 0}},
+        {base = {.Di, 2}, index = {.None, 0}},
+        {base = {.Bp, 2}, index = {.None, 0}},
+        {base = {.Bx, 2}, index = {.None, 0}},
     }
     pair := base_regs[rm]
     base := pair.base
@@ -229,7 +229,7 @@ add_modrm_addr32 :: proc(ctx: ^Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind
     if mod == 0b00 && rm == 0b101 {
         add_operand(inst, Mem {
             disp = cast(i32) pop_u32(ctx) or_return,
-            base = ctx.addr_bits == 64? {idx = .Ip, bits = 64} : {},
+            base = ctx.addr_bits == 64? {idx = .Ip, size = 8} : {},
         })
         return true
     }
@@ -260,7 +260,7 @@ add_modrm_addr32 :: proc(ctx: ^Ctx, inst: ^Inst, mod: u8, rm: u8, kind: Reg_Kind
         } else if sb == 0b101 && (mod == 0b01 || mod == 0b10) {
             base = {
                 idx = .Bp,
-                bits = ctx.addr_bits,
+                size = ctx.addr_bits>>3,
             }
         } else {
             base = make_reg(rex_extend(ctx.rexb, sb), ctx.addr_bits)

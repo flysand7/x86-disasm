@@ -15,7 +15,7 @@ dump FILENAME: generate (prepare-disasm FILENAME)
     odin test disasm -test-name:test_dump {{ODIN_FLAGS}} -- temp/temp.out
 
 build-cli: generate
-    odin build . -o:aggressive
+    odin build . -o:none -debug
 
 time-cli: generate build-cli
     time ./x86-disasm x86-disasm > /dev/null

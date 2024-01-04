@@ -182,7 +182,7 @@ reg_name :: proc(reg: Reg) -> string {
     assert(reg.idx != nil)
     #partial switch reg.idx {
         case .Ax:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "al"
                 case 2: return "ax"
                 case 4: return "eax"
@@ -190,7 +190,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .Cx:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "cl"
                 case 2: return "cx"
                 case 4: return "ecx"
@@ -198,7 +198,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .Dx:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "dl"
                 case 2: return "dx"
                 case 4: return "edx"
@@ -206,7 +206,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .Bx:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "bl"
                 case 2: return "bx"
                 case 4: return "ebx"
@@ -214,7 +214,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .Di:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "ah"
                 case 2: return "di"
                 case 4: return "edi"
@@ -222,7 +222,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .Si:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "ch"
                 case 2: return "si"
                 case 4: return "esi"
@@ -230,7 +230,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .Sp:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "dh"
                 case 2: return "sp"
                 case 4: return "esp"
@@ -238,7 +238,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .Bp:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "bh"
                 case 2: return "bp"
                 case 4: return "ebp"
@@ -246,7 +246,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .R8:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "r8b"
                 case 2: return "r8w"
                 case 4: return "r8d"
@@ -254,7 +254,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .R9:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "r9b"
                 case 2: return "r9w"
                 case 4: return "r9d"
@@ -262,7 +262,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .R10:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "r10b"
                 case 2: return "r10w"
                 case 4: return "r10d"
@@ -270,7 +270,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .R11:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "r11b"
                 case 2: return "r11w"
                 case 4: return "r11d"
@@ -278,7 +278,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .R12:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "r12b"
                 case 2: return "r12w"
                 case 4: return "r12d"
@@ -286,7 +286,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .R13:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "r13b"
                 case 2: return "r13w"
                 case 4: return "r13d"
@@ -294,7 +294,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .R14:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "r14b"
                 case 2: return "r14w"
                 case 4: return "r14d"
@@ -302,7 +302,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .R15:
-            switch reg.bits {
+            switch reg.size {
                 case 1: return "r15b"
                 case 2: return "r15w"
                 case 4: return "r15d"
@@ -310,7 +310,7 @@ reg_name :: proc(reg: Reg) -> string {
                 case: unreachable()
             }
         case .Ip:
-            switch reg.bits {
+            switch reg.size {
                 case 2: return "ip"
                 case 4: return "eip"
                 case 8: return "rip"
@@ -337,86 +337,87 @@ mmxreg_name :: proc(mmxreg: MMX_Reg) -> string {
 xmmreg_name :: proc(xmmreg: XMM_Reg) -> string {
     switch xmmreg.idx {
         case .Xmm0:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm0"
                 case 32: return "ymm0"
             }
         case .Xmm1:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm1"
                 case 32: return "ymm1"
             }
         case .Xmm2:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm2"
                 case 32: return "ymm2"
             }
         case .Xmm3:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm3"
                 case 32: return "ymm3"
             }
         case .Xmm4:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm4"
                 case 32: return "ymm4"
             }
         case .Xmm5:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm5"
                 case 32: return "ymm5"
             }
         case .Xmm6:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm6"
                 case 32: return "ymm6"
             }
         case .Xmm7:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm7"
                 case 32: return "ymm7"
             }
         case .Xmm8:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm8"
                 case 32: return "ymm8"
             }
         case .Xmm9:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm9"
                 case 32: return "ymm9"
             }
         case .Xmm10:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm10"
                 case 32: return "ymm10"
             }
         case .Xmm11:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm11"
                 case 32: return "ymm11"
             }
         case .Xmm12:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm12"
                 case 32: return "ymm12"
             }
         case .Xmm13:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm13"
                 case 32: return "ymm13"
             }
         case .Xmm14:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm14"
                 case 32: return "ymm14"
             }
         case .Xmm15:
-            switch xmmreg.bits {
+            switch xmmreg.size {
                 case 16: return "xmm15"
                 case 32: return "ymm15"
             }
     }
+    fmt.println(xmmreg)
     unreachable()
 }
 

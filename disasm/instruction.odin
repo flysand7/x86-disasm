@@ -85,12 +85,12 @@ Sreg :: enum {
 
 Reg :: struct {
     idx:  Reg_Idx,
-    bits: u8,
+    size: u8,
 }
 
 XMM_Reg :: struct {
     idx: XMM_Reg_Idx,
-    bits: u8,
+    size: u8,
 }
 
 Imm :: struct {
@@ -144,6 +144,6 @@ add_operand :: proc(inst: ^Inst, operand: Operand) {
     inst.op[inst.op_count] = operand
     inst.op_count += 1
     if xmm, ok := operand.(XMM_Reg); ok {
-        inst.data_size = xmm.bits
+        inst.data_size = xmm.size
     }
 }
