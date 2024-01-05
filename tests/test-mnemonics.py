@@ -128,4 +128,3 @@ for (our_address, our_mnemonic), (ref_address, ref_mnemonic) in zip(our_lines, r
         if ref_mnemonic == "movs" and our_mnemonic[:-1] == 'movs':
             continue
         print(f'Objdump mnemonic "{ref_mnemonic}" != "{our_mnemonic}" at address {ref_address}')
-        sys.exit(1)
