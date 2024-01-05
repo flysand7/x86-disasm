@@ -124,5 +124,8 @@ for (our_address, our_mnemonic), (ref_address, ref_mnemonic) in zip(our_lines, r
         # Fat mov that takes 64-bit immediate. Don't care
         if ref_mnemonic == "movabs" and our_mnemonic == "mov":
             continue
+        # Objdump doesn't add data size to opcode
+        if ref_mnemonic == "movs" and our_mnemonic[:-1] == 'movs':
+            continue
         print(f'Objdump mnemonic "{ref_mnemonic}" != "{our_mnemonic}" at address {ref_address}')
         sys.exit(1)
