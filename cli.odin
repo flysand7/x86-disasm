@@ -15,6 +15,7 @@ main :: proc() {
     find_function := Maybe(string) {}
     filenames := make([dynamic]string)
     color := true
+    force_no_syms := false
     for arg in os.args[1:] {
         if strings.has_prefix(arg, "-format:") {
             format := arg[8:]
@@ -46,6 +47,8 @@ main :: proc() {
             find_function = arg[10:]
         } else if arg == "-no-color" {
             color = false
+        } else if arg == "-force-no-syms" {
+            force_no_syms = true
         } else if arg[0] == '-' {
             fmt.eprintf("Unknown option: %s\n", arg)
             os.exit(2)
@@ -99,7 +102,7 @@ main :: proc() {
         symtab := []elf.Sym {}
         strtab := []u8 {}
         do_syms := true
-        {
+        if !force_no_syms {
             ok := true
             sym_sec, _, sym_err := elf.section_by_name(file, ".symtab")
             str_sec, _, str_err := elf.section_by_name(file, ".strtab")
@@ -134,6 +137,8 @@ main :: proc() {
             if !ok {
                 do_syms = false
             }
+        } else {
+            do_syms = false
         }
         if find_function != nil && do_syms == false {
             fmt.eprintln("Unable to do symbol lookups.")

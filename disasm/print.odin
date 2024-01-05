@@ -31,7 +31,7 @@ fmt_int :: proc(w: io.Writer, #any_int hex: i64) {
 }
 
 print_inst :: proc(inst: Inst, w: io.Writer, colors := true) {
-    WIDTH :: 15
+    WIDTH :: 16
     if colors {
         fmt.wprint(w, COLOR_GREY, sep="")
     }
