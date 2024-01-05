@@ -117,6 +117,10 @@ for (our_address, our_mnemonic), (ref_address, ref_mnemonic) in zip(our_lines, r
             continue
         if ref_mnemonic == "setne" and our_mnemonic == "setnz":
             continue
+        if ref_mnemonic == "cmove" and our_mnemonic == "cmovz":
+            continue
+        if ref_mnemonic == "cmovne" and our_mnemonic == "cmovnz":
+            continue
         # Fat mov that takes 64-bit immediate. Don't care
         if ref_mnemonic == "movabs" and our_mnemonic == "mov":
             continue

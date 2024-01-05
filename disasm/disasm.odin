@@ -706,6 +706,9 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
         }
     }
     for enc in table.encodings {
+        if .Flag_W64 in enc.flags && ctx.cpu_bits != 64 {
+            continue
+        }
         if (.Flag_Vp in enc.flags) != ctx.has_vex {
             continue
         }

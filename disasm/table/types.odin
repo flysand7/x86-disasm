@@ -3,6 +3,7 @@ package disasm_data
 Enc_Flags :: bit_set[enum{
     Flag_N64,
     Flag_F64,
+    Flag_W64,
     Flag_Ncs,
     Flag_Ds,
     Flag_Ds1,

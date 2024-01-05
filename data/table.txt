@@ -88,6 +88,7 @@
 # ------------------------------------------------------------------- #
 # +n64 - do not decode on 64-bit platforms
 # +f64 - force 64-bit data size in 64-bit mode even if REX.W is reset.
+# +w64 - only decoded on 64-bit CPUs.
 # +ncs - do not decode if cr2 or cr3 field turned out to be cs
 # +ds  - data size is part of instruction name (movs -> movsb/movsw/movsl/movsq)
 # +np  - only decode if there was no prefix.
@@ -134,7 +135,8 @@ pop     01011rrr : +f64
 pusha   01100000
 popa    01100001
 bound   01100010 : moda rx rm
-arpl    01100011 : mod rx rm
+arpl    01100011 : mod rx rm : +n64
+movsxd  01100011 : mod rx rm : +w64
 push    011010s0 : imm : +f64
 imul    011010s1 : mod rx rm : imm
 ins     0110110w
