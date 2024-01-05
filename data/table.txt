@@ -192,8 +192,8 @@ shr     1100000w : mod 101 rm : imm8
 sar     1100000w : mod 111 rm : imm8
 ret     11000010 : imm16
 ret     11000011
-les     11000100 : modab rx rm
-lds     11000101 : modab rx rm
+les     11000100 : modab rx rm : +n64
+lds     11000101 : modab rx rm : +n64
 mov     1100011w : mod 000 rm : imm
 leave   11001001
 ret     11001010 : imm16

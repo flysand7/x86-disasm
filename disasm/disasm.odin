@@ -23,6 +23,7 @@ Ctx :: struct {
         rexb:       b8,
         rexx:       b8,
         vexl:       b8,
+        has_vex:    b8,
     },
     // Bit reading
     bits_offs:  u8,
@@ -465,10 +466,12 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
     } else if fields.has[._c] {
         add_operand(inst, Reg{.Cx, 8})
     }
-    add_operand(inst, make_xmmreg(
-        rex_extend(ctx.rexr, 15-ctx.vexvvvv),
-        ctx.vexl? 256 : 128,
-    ))
+    if ctx.has_vex {
+        add_operand(inst, make_xmmreg(
+            rex_extend(ctx.rexr, 15-ctx.vexvvvv),
+            ctx.vexl? 256 : 128,
+        ))
+    }
     if fields.has[.Rrr] {
         add_operand(inst, make_reg(
             rex_extend(ctx.rexb, fields.bits[.Rrr]),
@@ -594,9 +597,8 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
     opcode_0f := false
     opcode_38 := false
     opcode_3a := false
-    vex_found := false
-    if match_u8(ctx, 0xc5) {
-        vex_found = true
+    if ctx.cpu_bits == 64 && match_u8(ctx, 0xc5) {
+        ctx.has_vex = true
         opcode_0f = true
         b1 := pop_u8(ctx) or_return
         ctx.rexr = ! cast(b8) ((b1 >> 7) & 1)
@@ -607,8 +609,8 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
             case 0b10: ctx.rep_or_bnd = true
             case 0b11: ctx.repnz = true
         }
-    } else if match_u8(ctx, 0xc4) {
-        vex_found = true
+    } else if ctx.cpu_bits == 64 && match_u8(ctx, 0xc4) {
+        ctx.has_vex = true
         b1 := pop_u8(ctx) or_return
         b2 := pop_u8(ctx) or_return
         ctx.rexr = ! cast(b8) ((b1 >> 7) & 1)
@@ -669,7 +671,7 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
     saved_repnz  := ctx.repnz
     saved_bnd    := ctx.rep_or_bnd
     for enc in table.encodings {
-        if (.Flag_Vp in enc.flags) != vex_found {
+        if (.Flag_Vp in enc.flags) != ctx.has_vex {
             continue
         }
         if (.Flag_Vw0 in enc.flags) && ctx.rexw {
