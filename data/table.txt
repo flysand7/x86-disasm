@@ -16,15 +16,19 @@
 # ------------------------------------------------------------------- #
 # Some instructions don't have a complete opcode on them. The list
 # below specifies such instructions
-#   c    - CWD, CDQ
 #   movs - movsb/movsw/movsd/movsq
 #   lods - lodsb/lodsw/lodsd/lodsq
 # The way they are meant to be interpreted is that the actual opcode
 # is constructed by appending suffixes to the opcode based on the
 # combination of encoding flags.
 # If the instruction encoding has `+ds` flag, it gets its data size
-# appended to its name. CWD/CDQ are special instructions that also
-# append double the data size to their name.
+# appended to its name.
+#
+# CBW/CDQ/CQO and CBW/CWDE/CDQE instructions are missing from this
+# table due to amount of special casing required to support them.
+# These should be special-cased in the decoder as they have mnemonics
+# that depend on instruction's data size in a non-trivial way that's
+# different from other instructions and is kind of unique.
 
 # Opcode encoding
 # ------------------------------------------------------------------- #
@@ -167,8 +171,6 @@ lea     10001101 : moda rx rm
 mov     10001110 : mod sss rm
 pop     10001111 : mod 000 rm : +f64
 xchg    10010rrr : _a
-c       10011000 : +ds
-C       10011001 : +ds
 call    10011010 : disp sel
 wait    10011011
 pushf   10011100

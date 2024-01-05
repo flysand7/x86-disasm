@@ -387,6 +387,23 @@ reg_kind_from_fields :: proc(ctx: ^Ctx, fields: Inst_Fields) -> Reg_Kind {
     return .Gpr
 }
 
+inst_flags_from_ctx :: proc(ctx: ^Ctx, inst: ^Inst) {
+    if ctx.lock {
+        inst.flags |= {.Lock}
+    }
+    if ctx.repnz {
+        inst.flags |= {.Repnz}
+    }
+    if ctx.rep_or_bnd {
+        switch inst.mnemonic {
+            case "call": fallthrough
+            case "ret":  fallthrough
+            case "jmp":  inst.flags |= {.Bnd}
+            case: inst.flags |= {.Rep}
+        }
+    }
+}
+
 decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matched: bool, ok: bool) {
     fields := Inst_Fields {}
     for mask in encoding.masks {
@@ -403,20 +420,7 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
     if .Flag_Ds in encoding.flags {
         inst.flags += {.Data_Size_Suffix}
     }
-    if ctx.lock {
-        inst.flags |= {.Lock}
-    }
-    if ctx.repnz {
-        inst.flags |= {.Repnz}
-    }
-    if ctx.rep_or_bnd {
-        switch inst.mnemonic {
-            case "call": fallthrough
-            case "ret":  fallthrough
-            case "jmp":  inst.flags |= {.Bnd}
-            case: inst.flags |= {.Rep}
-        }
-    }
+    inst_flags_from_ctx(ctx, inst)
     if fields.has[.W] {
         if fields.bits[.W] == 0 {
             ctx.data_bits = 8
@@ -670,6 +674,37 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
     saved_addr   := ctx.addr_bits
     saved_repnz  := ctx.repnz
     saved_bnd    := ctx.rep_or_bnd
+    if !ctx.has_vex && !opcode_0f {
+        if match_u8(ctx, 0x98) {
+            inst := Inst {
+                bytes = ctx.bytes[ctx.start_offs:ctx.offset],
+                data_size = ctx.data_bits,
+                op_count = 0,
+                seg = ctx.seg,
+            }
+            inst_flags_from_ctx(ctx, &inst)
+            switch ctx.data_bits {
+                case 64: inst.mnemonic = "cdqe"
+                case 32: inst.mnemonic = "cwde"
+                case:    inst.mnemonic = "cbw"
+            }
+            return inst, true
+        } else if match_u8(ctx, 0x99) {
+            inst := Inst {
+                bytes = ctx.bytes[ctx.start_offs:ctx.offset],
+                data_size = ctx.data_bits,
+                op_count = 0,
+                seg = ctx.seg,
+            }
+            inst_flags_from_ctx(ctx, &inst)
+            switch ctx.data_bits {
+                case 64: inst.mnemonic = "cqo"
+                case 32: inst.mnemonic = "cdq"
+                case:    inst.mnemonic = "cwd"
+            }
+            return inst, true
+        }
+    }
     for enc in table.encodings {
         if (.Flag_Vp in enc.flags) != ctx.has_vex {
             continue
