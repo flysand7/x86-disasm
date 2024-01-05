@@ -465,12 +465,10 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
     } else if fields.has[._c] {
         add_operand(inst, Reg{.Cx, 8})
     }
-    if ctx.vexvvvv != 0b1111 {
-        add_operand(inst, make_xmmreg(
-            rex_extend(ctx.rexr, 15-ctx.vexvvvv),
-            ctx.vexl? 256 : 128,
-        ))
-    }
+    add_operand(inst, make_xmmreg(
+        rex_extend(ctx.rexr, 15-ctx.vexvvvv),
+        ctx.vexl? 256 : 128,
+    ))
     if fields.has[.Rrr] {
         add_operand(inst, make_reg(
             rex_extend(ctx.rexb, fields.bits[.Rrr]),
