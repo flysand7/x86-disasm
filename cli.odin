@@ -14,6 +14,7 @@ main :: proc() {
     is_elf  := true
     find_function := Maybe(string) {}
     filenames := make([dynamic]string)
+    color := true
     for arg in os.args[1:] {
         if strings.has_prefix(arg, "-format:") {
             format := arg[8:]
@@ -43,6 +44,8 @@ main :: proc() {
             }
         } else if strings.has_prefix(arg, "-function:") {
             find_function = arg[10:]
+        } else if arg == "-no-color" {
+            color = false
         } else if arg[0] == '-' {
             fmt.eprintf("Unknown option: %s\n", arg)
             os.exit(2)
@@ -61,7 +64,7 @@ main :: proc() {
             builder := strings.builder_make()
             writer := strings.to_writer(&builder)
             for inst in disasm.disasm_inst(&ctx) {
-                disasm.print_inst(inst, writer, true)
+                disasm.print_inst(inst, writer, color)
             }
             fmt.println(strings.to_string(builder))
             if check_print_err(&ctx) {
@@ -143,7 +146,7 @@ main :: proc() {
             addr := text.addr
             for inst in disasm.disasm_inst(&ctx) {
                 fmt.wprintf(writer, "  %012x ", addr)
-                disasm.print_inst(inst, writer, true)
+                disasm.print_inst(inst, writer, color)
                 addr += cast(uintptr) len(inst.bytes)
             }
             if check_print_err(&ctx) {
@@ -186,7 +189,7 @@ main :: proc() {
                     t2 := time.tick_now()
                     d1 += time.tick_diff(t1, t2)
                     fmt.wprintf(writer, "  %012x ", addr)
-                    disasm.print_inst(inst, writer, true)
+                    disasm.print_inst(inst, writer, color)
                     addr += len(inst.bytes)
                     t1 = time.tick_now()
                     d2 += time.tick_diff(t2, t1)
