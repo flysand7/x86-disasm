@@ -340,6 +340,7 @@ read_field :: proc(ctx: ^Ctx, fields: ^Inst_Fields, field: table.Field) -> (matc
         case .Imm8:
         case .Imm16:
         case .Sel:
+        case .Xmmimm8:
         case ._1:
         case ._c:
         case ._a:
@@ -541,6 +542,11 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
         add_operand(inst, Imm {
             value = 1,
         })
+    } else if fields.has[.Xmmimm8] {
+        add_operand(inst, make_xmmreg(
+            (pop_u8(ctx) or_return)>>4,
+            ctx.vexl? 256 : 128,
+        ))
     }
     inst.bytes = ctx.bytes[ctx.start_offs:ctx.offset]
     return true, true
@@ -666,6 +672,12 @@ disasm_inst :: proc(ctx: ^Ctx) -> (inst: Inst, ok: bool) {
     saved_bnd    := ctx.rep_or_bnd
     for enc in table.encodings {
         if (.Flag_Vp in enc.flags) != vex_found {
+            continue
+        }
+        if (.Flag_Vw0 in enc.flags) && ctx.rexw {
+            continue
+        }
+        if (.Flag_Vw1 in enc.flags) && !ctx.rexw {
             continue
         }
         if (.Flag_0f in enc.flags) != opcode_0f {

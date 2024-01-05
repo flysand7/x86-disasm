@@ -14,6 +14,8 @@ Enc_Flags :: bit_set[enum{
     Flag_3a,
     Flag_38,
     Flag_Vp,
+    Flag_Vw0,
+    Flag_Vw1,
 }]
 
 Bits :: struct {
@@ -54,6 +56,7 @@ Field :: enum {
     Disp,
     Disp8,
     Disp16,
+    Xmmimm8,
     // Implicit fields
     _a,
     _d,
@@ -101,6 +104,7 @@ field_widths := [Field]u8 {
     .Imm   = 0,
     .Imm8  = 0,
     .Imm16 = 0,
+    .Xmmimm8 = 0,
     .Disp  = 0,
     .Disp8 = 0,
     .Disp16 = 0,

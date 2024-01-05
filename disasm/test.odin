@@ -72,6 +72,12 @@ encodings_intersect :: proc(enc1, enc2: table.Encoding) -> bool {
             return false
         }
     }
+    if (.Flag_Vw0 in enc1.flags && .Flag_Vw1 in enc2.flags || .Flag_Vw0 in enc2.flags && .Flag_Vw1 in enc1.flags) {
+        return false
+    }
+    if (.Flag_Vp in enc1.flags) != (.Flag_Vp in enc2.flags) {
+        return false
+    }
     if (.Flag_0f in enc1.flags) != (.Flag_0f in enc2.flags) {
         return false
     }
