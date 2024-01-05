@@ -623,7 +623,7 @@ cvttsd2si  +f2 : +0f : 00101100 : moda rrr rm
 cvtsd2si   +f2 : +0f : 00101101 : 11 rrr xmmrx
 cvtsd2si   +f2 : +0f : 00101101 : moda rx rm
 cvtsi2sd   +f2 : +0f : 00101010 : 11 xmmrx rrr
-cvtsi2sd   +f2 : +0f : 00101010 : moda xmmrx rrr
+cvtsi2sd   +f2 : +0f : 00101010 : moda xmmrx rm
 sqrtsd     +f2 : +0f : 01010001 : mod xmmrx rm
 addsd      +f2 : +0f : 01011000 : mod xmmrx rm
 mulsd      +f2 : +0f : 01011001 : mod xmmrx rm
