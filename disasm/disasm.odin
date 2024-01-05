@@ -377,12 +377,6 @@ reg_kind_from_fields :: proc(ctx: ^Ctx, fields: Inst_Fields) -> Reg_Kind {
         return .Mmx
     } else if fields.has[.Xmmrx] {
         return .Xmm
-    } else if fields.has[.Mmrx] {
-        if ctx.data_bits == 16 {
-            return .Xmm
-        } else {
-            return .Mmx
-        }
     }
     return .Gpr
 }
@@ -441,16 +435,6 @@ decode_inst :: proc(ctx: ^Ctx, encoding: table.Encoding, inst: ^Inst) -> (matche
             rex_extend(ctx.rexr, fields.bits[.Xmmrx]),
             ctx.vexl? 256 : 128,
         ))
-    } else if fields.has[.Mmrx] {
-        // Data-size operand prefix used -- required for SSE interpretation.
-        if ctx.data_bits == 16 {
-            add_operand(inst, make_xmmreg(
-                rex_extend(ctx.rexr, fields.bits[.Mmrx]),
-                ctx.vexl? 256 : 128,
-            ))
-        } else {
-            add_operand(inst, MMX_Reg(fields.bits[.Mmrx]))
-        }
     } else if fields.has[.Eee] {
         assert(fields.bits[.Eee] < cast(u8) max(Creg_Idx))
         add_operand(inst, cast(Creg_Idx) fields.bits[.Eee])

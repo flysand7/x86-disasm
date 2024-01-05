@@ -55,10 +55,6 @@
 # rm  - 3-bit rm field of the mod/rm byte.
 # mmxrx - 3-bit mmx register encoding in the reg field.
 # xmmrx - 3-bit xmm register encoding in the reg field.
-# mmrx  - 3-bit mmx or xmm register encoding in the reg field.
-#         The way the register is differentiated between mmx and xmm
-#         is by looking at the instruction, and if it has data override
-#         prefix it is an xmm register, otherwise mmx register.
 
 # Implicit operands
 # ------------------------------------------------------------------- #
@@ -375,68 +371,65 @@ cmpxchg8b +0f : 11000111 : mod 001 rm
 # MMX instruction formats and encodings
 # ------------------------------------------------------------------- #
 
-punpcklw +0f : 01100000 : mod mmrx rm
-punpckld +0f : 01100001 : mod mmrx rm
-punpcklq +0f : 01100010 : mod mmrx rm
-packsswb +0f : 01100011 : mod mmrx rm
-pcmpgtb  +0f : 01100100 : mod mmrx rm
-pcmpgtw  +0f : 01100101 : mod mmrx rm
-pcmpgtd  +0f : 01100110 : mod mmrx rm
-packuswb +0f : 01100111 : mod mmrx rm
-movd     +0f : 011d1110 : 11 mmrx rrr
-movd     +0f : 011d1110 : moda mmrx rm
-movq     +0f : 011d1111 : 11 mmrx rrr
-movq     +0f : 011d1111 : moda mmrx rm
-psrlw    +0f : 01110001 : 11 010 mmrx : imm8
-psraw    +0f : 01110001 : 11 100 mmrx : imm8
-psllw    +0f : 01110001 : 11 110 mmrx : imm8
-psrld    +0f : 01110010 : 11 010 mmrx : imm8
-psrad    +0f : 01110010 : 11 100 mmrx : imm8
-pslld    +0f : 01110010 : 11 110 mmrx : imm8
-pslrq    +0f : 01110011 : 11 010 mmrx : imm8
-psraq    +0f : 01110011 : 11 100 mmrx : imm8
-psllq    +0f : 01110011 : 11 110 mmrx : imm8
-punpckhw +0f : 01101000 : mod mmrx rm
-punpckhd +0f : 01101001 : mod mmrx rm
-punpckhq +0f : 01101010 : mod mmrx rm
-packssdw +0f : 01101011 : mod mmrx rm
-pcmpeqb  +0f : 01110100 : mod mmrx rm
-pcmpeqw  +0f : 01110101 : mod mmrx rm
-pcmpeqd  +0f : 01110110 : mod mmrx rm
-emms     +0f : 01110111
-psrlw    +0f : 11010001 : mod mmrx rm
-psrld    +0f : 11010010 : mod mmrx rm
-psrlq    +0f : 11010011 : mod mmrx rm
-pand     +0f : 11011011 : mod mmrx rm
-paddq    +0f : 11010100 : mod mmrx rm
-pmullw   +0f : 11010101 : mod mmrx rm
-psubusb  +0f : 11011000 : mod mmrx rm
-psubusw  +0f : 11011001 : mod mmrx rm
-paddusb  +0f : 11011100 : mod mmrx rm
-paddusw  +0f : 11011101 : mod mmrx rm
-pandn    +0f : 11011111 : mod mmrx rm
-psraw    +0f : 11100001 : mod mmrx rm
-psrad    +0f : 11100010 : mod mmrx rm
-pmulhuw  +0f : 11100100 : mod mmrx rm
-pmulhw   +0f : 11100101 : mod mmrx rm
-por      +0f : 11101011 : mod mmrx rm
-paddsb   +0f : 11101100 : mod mmrx rm
-paddsw   +0f : 11101101 : mod mmrx rm
-psllw    +0f : 11110001 : mod mmrx rm
-pslld    +0f : 11110010 : mod mmrx rm
-psllq    +0f : 11110011 : mod mmrx rm
-pmaddwd  +0f : 11110101 : mod mmrx rm
-psubsb   +0f : 11101000 : mod mmrx rm
-psubsw   +0f : 11101001 : mod mmrx rm
-pxor     +0f : 11101111 : mod mmrx rm
-psubb    +0f : 11111000 : mod mmrx rm
-psubw    +0f : 11111001 : mod mmrx rm
-psubd    +0f : 11111010 : mod mmrx rm
-psubq    +0f : 11111011 : mod mmrx rm
-paddb    +0f : 11111100 : mod mmrx rm
-paddw    +0f : 11111101 : mod mmrx rm
-paddd    +0f : 11111110 : mod mmrx rm
-
+punpcklw +np : +0f : 01100000 : mod mmxrx rm
+punpckld +np : +0f : 01100001 : mod mmxrx rm
+punpcklq +np : +0f : 01100010 : mod mmxrx rm
+packsswb +np : +0f : 01100011 : mod mmxrx rm
+pcmpgtb  +np : +0f : 01100100 : mod mmxrx rm
+pcmpgtw  +np : +0f : 01100101 : mod mmxrx rm
+pcmpgtd  +np : +0f : 01100110 : mod mmxrx rm
+packuswb +np : +0f : 01100111 : mod mmxrx rm
+mov      +np : +0f : 011d1110 : 11 mmxrx rrr  : +ds
+mov      +np : +0f : 011d1110 : moda mmxrx rm : +ds
+psrlw    +np : +0f : 01110001 : 11 010 mmxrx : imm8
+psraw    +np : +0f : 01110001 : 11 100 mmxrx : imm8
+psllw    +np : +0f : 01110001 : 11 110 mmxrx : imm8
+psrld    +np : +0f : 01110010 : 11 010 mmxrx : imm8
+psrad    +np : +0f : 01110010 : 11 100 mmxrx : imm8
+pslld    +np : +0f : 01110010 : 11 110 mmxrx : imm8
+pslrq    +np : +0f : 01110011 : 11 010 mmxrx : imm8
+psraq    +np : +0f : 01110011 : 11 100 mmxrx : imm8
+psllq    +np : +0f : 01110011 : 11 110 mmxrx : imm8
+punpckhw +np : +0f : 01101000 : mod mmxrx rm
+punpckhd +np : +0f : 01101001 : mod mmxrx rm
+punpckhq +np : +0f : 01101010 : mod mmxrx rm
+packssdw +np : +0f : 01101011 : mod mmxrx rm
+pcmpeqb  +np : +0f : 01110100 : mod mmxrx rm
+pcmpeqw  +np : +0f : 01110101 : mod mmxrx rm
+pcmpeqd  +np : +0f : 01110110 : mod mmxrx rm
+emms     +np : +0f : 01110111
+psrlw    +np : +0f : 11010001 : mod mmxrx rm
+psrld    +np : +0f : 11010010 : mod mmxrx rm
+psrlq    +np : +0f : 11010011 : mod mmxrx rm
+pand     +np : +0f : 11011011 : mod mmxrx rm
+paddq    +np : +0f : 11010100 : mod mmxrx rm
+pmullw   +np : +0f : 11010101 : mod mmxrx rm
+psubusb  +np : +0f : 11011000 : mod mmxrx rm
+psubusw  +np : +0f : 11011001 : mod mmxrx rm
+paddusb  +np : +0f : 11011100 : mod mmxrx rm
+paddusw  +np : +0f : 11011101 : mod mmxrx rm
+pandn    +np : +0f : 11011111 : mod mmxrx rm
+psraw    +np : +0f : 11100001 : mod mmxrx rm
+psrad    +np : +0f : 11100010 : mod mmxrx rm
+pmulhuw  +np : +0f : 11100100 : mod mmxrx rm
+pmulhw   +np : +0f : 11100101 : mod mmxrx rm
+por      +np : +0f : 11101011 : mod mmxrx rm
+paddsb   +np : +0f : 11101100 : mod mmxrx rm
+paddsw   +np : +0f : 11101101 : mod mmxrx rm
+psllw    +np : +0f : 11110001 : mod mmxrx rm
+pslld    +np : +0f : 11110010 : mod mmxrx rm
+psllq    +np : +0f : 11110011 : mod mmxrx rm
+pmaddwd  +np : +0f : 11110101 : mod mmxrx rm
+psubsb   +np : +0f : 11101000 : mod mmxrx rm
+psubsw   +np : +0f : 11101001 : mod mmxrx rm
+pxor     +np : +0f : 11101111 : mod mmxrx rm
+psubb    +np : +0f : 11111000 : mod mmxrx rm
+psubw    +np : +0f : 11111001 : mod mmxrx rm
+psubd    +np : +0f : 11111010 : mod mmxrx rm
+psubq    +np : +0f : 11111011 : mod mmxrx rm
+paddb    +np : +0f : 11111100 : mod mmxrx rm
+paddw    +np : +0f : 11111101 : mod mmxrx rm
+paddd    +np : +0f : 11111110 : mod mmxrx rm
 
 # ------------------------------------------------------------------- #
 # Processor extended state instruction formats
@@ -472,6 +465,77 @@ cmovg   +0f : 01001111 : mod rx rm
 # SSE instruction formats and encodings
 # ------------------------------------------------------------------- #
 
+punpcklw   +dp : 01100000 : mod xmmrx rm
+punpckld   +dp : 01100001 : mod xmmrx rm
+punpcklq   +dp : 01100010 : mod xmmrx rm
+packsswb   +dp : 01100011 : mod xmmrx rm
+pcmpgtb    +dp : 01100100 : mod xmmrx rm
+pcmpgtw    +dp : 01100101 : mod xmmrx rm
+pcmpgtd    +dp : 01100110 : mod xmmrx rm
+packuswb   +dp : 01100111 : mod xmmrx rm
+mov        +dp : 011d1110 : 11 xmmrx rrr  : +ds
+mov        +dp : 011d1110 : moda xmmrx rm : +ds
+psrlw      +dp : 01110001 : 11 010 xmmrx : imm8
+psraw      +dp : 01110001 : 11 100 xmmrx : imm8
+psllw      +dp : 01110001 : 11 110 xmmrx : imm8
+psrld      +dp : 01110010 : 11 010 xmmrx : imm8
+psrad      +dp : 01110010 : 11 100 xmmrx : imm8
+pslld      +dp : 01110010 : 11 110 xmmrx : imm8
+pslrq      +dp : 01110011 : 11 010 xmmrx : imm8
+psraq      +dp : 01110011 : 11 100 xmmrx : imm8
+psllq      +dp : 01110011 : 11 110 xmmrx : imm8
+punpckhw   +dp : 01101000 : mod xmmrx rm
+punpckhd   +dp : 01101001 : mod xmmrx rm
+punpckhq   +dp : 01101010 : mod xmmrx rm
+packssdw   +dp : 01101011 : mod xmmrx rm
+pcmpeqb    +dp : 01110100 : mod xmmrx rm
+pcmpeqw    +dp : 01110101 : mod xmmrx rm
+pcmpeqd    +dp : 01110110 : mod xmmrx rm
+psrlw      +dp : 11010001 : mod xmmrx rm
+psrld      +dp : 11010010 : mod xmmrx rm
+psrlq      +dp : 11010011 : mod xmmrx rm
+pand       +dp : 11011011 : mod xmmrx rm
+paddq      +dp : 11010100 : mod xmmrx rm
+pmullw     +dp : 11010101 : mod xmmrx rm
+psubusb    +dp : 11011000 : mod xmmrx rm
+psubusw    +dp : 11011001 : mod xmmrx rm
+paddusb    +dp : 11011100 : mod xmmrx rm
+paddusw    +dp : 11011101 : mod xmmrx rm
+pandn      +dp : 11011111 : mod xmmrx rm
+psraw      +dp : 11100001 : mod xmmrx rm
+psrad      +dp : 11100010 : mod xmmrx rm
+pmulhuw    +dp : 11100100 : mod xmmrx rm
+pmulhw     +dp : 11100101 : mod xmmrx rm
+por        +dp : 11101011 : mod xmmrx rm
+paddsb     +dp : 11101100 : mod xmmrx rm
+paddsw     +dp : 11101101 : mod xmmrx rm
+psllw      +dp : 11110001 : mod xmmrx rm
+pslld      +dp : 11110010 : mod xmmrx rm
+psllq      +dp : 11110011 : mod xmmrx rm
+pmaddwd    +dp : 11110101 : mod xmmrx rm
+psubsb     +dp : 11101000 : mod xmmrx rm
+psubsw     +dp : 11101001 : mod xmmrx rm
+pxor       +dp : 11101111 : mod xmmrx rm
+psubb      +dp : 11111000 : mod xmmrx rm
+psubw      +dp : 11111001 : mod xmmrx rm
+psubd      +dp : 11111010 : mod xmmrx rm
+psubq      +dp : 11111011 : mod xmmrx rm
+paddb      +dp : 11111100 : mod xmmrx rm
+paddw      +dp : 11111101 : mod xmmrx rm
+paddd      +dp : 11111110 : mod xmmrx rm
+
+pshufw     +dp : +0f : 01110000 : mod xmmrx rm : imm8
+pinsrw     +dp : +0f : 11000100 : mod xmmrx rm : imm8
+pextrw     +dp : +0f : 11000101 : 11 rrr xmmrx : imm8
+pmovmskb   +dp : +0f : 11010111 : 11 rrr xmmrx
+pminub     +dp : +0f : 11011010 : mod xmmrx rm
+pmaxub     +dp : +0f : 11011110 : mod xmmrx rm
+pavgb      +dp : +0f : 11100000 : mod xmmrx rm
+pavgw      +dp : +0f : 11100011 : mod xmmrx rm
+pminsw     +dp : +0f : 11101010 : mod xmmrx rm
+pmaxsw     +dp : +0f : 11101110 : mod xmmrx rm
+psadbw     +dp : +0f : 11110110 : mod xmmrx rm
+
 # Packed singles (prefix: <NP> 0F)
 movups     +np : +0f : 0001000d : mod xmmrx rm
 movhlps    +np : +0f : 00010010 : mod11 xmmrx rm
@@ -480,13 +544,13 @@ unpcklps   +np : +0f : 00010100 : mod xmmrx rm
 unpckhps   +np : +0f : 00010101 : mod xmmrx rm
 movhps     +np : +0f : 0001011d : moda xmmrx rm
 movlhps    +np : +0f : 00010110 : mod11 xmmrx rm
-cvtpi2ps   +np : +0f : 00101010 : 11 xmmrx mmrx
+cvtpi2ps   +np : +0f : 00101010 : 11 xmmrx mmxrx
 cvtpi2ps   +np : +0f : 00101010 : moda xmmrx rm
 movntps    +np : +0f : 00101011 : mod xmmrx rm
-cvttps2pi  +np : +0f : 00101100 : 11 mmrx xmmrx
-cvttps2pi  +np : +0f : 00101100 : moda mmrx rm
-cvtps2pi   +np : +0f : 00101101 : 11 mmrx xmmrx
-cvtps2pi   +np : +0f : 00101101 : moda mmrx rm
+cvttps2pi  +np : +0f : 00101100 : 11 mmxrx xmmrx
+cvttps2pi  +np : +0f : 00101100 : moda mmxrx rm
+cvtps2pi   +np : +0f : 00101101 : 11 mmxrx xmmrx
+cvtps2pi   +np : +0f : 00101101 : moda mmxrx rm
 ucomiss    +np : +0f : 00101110 : mod xmmrx rm
 comiss     +np : +0f : 00101111 : mod xmmrx rm
 movmskps   +np : +0f : 01010000 : 11 rrr xmmrx
@@ -511,22 +575,23 @@ cmpps      +np : +0f : 11000010 : mod xmmrx rm : imm8
 shufps     +np : +0f : 11000110 : mod xmmrx rm : imm8
 movntq     +np : +0f : 11100111 : mod xmmrx rm
 
+pshufw     +np : +0f : 01110000 : mod mmxrx rm : imm8
+pinsrw     +np : +0f : 11000100 : mod mmxrx rm : imm8
+pextrw     +np : +0f : 11000101 : 11 rrr mmxrx : imm8
+pmovmskb   +np : +0f : 11010111 : 11 rrr mmxrx
+pminub     +np : +0f : 11011010 : mod mmxrx rm
+pmaxub     +np : +0f : 11011110 : mod mmxrx rm
+pavgb      +np : +0f : 11100000 : mod mmxrx rm
+pavgw      +np : +0f : 11100011 : mod mmxrx rm
+pminsw     +np : +0f : 11101010 : mod mmxrx rm
+pmaxsw     +np : +0f : 11101110 : mod mmxrx rm
+psadbw     +np : +0f : 11110110 : mod mmxrx rm
+maskmovq   +np : +0f : 11110111 : mod11 mmxrx rm
+
 prefetcht3 +0f : 00011000 : moda 000 rm
 prefetcht0 +0f : 00011000 : moda 001 rm
 prefetcht1 +0f : 00011000 : moda 010 rm
 prefetcht2 +0f : 00011000 : moda 011 rm
-pshufw     +0f : 01110000 : mod mmrx rm : imm8
-pinsrw     +0f : 11000100 : mod mmrx rm : imm8
-pextrw     +0f : 11000101 : 11 rrr mmrx : imm8
-pmovmskb   +0f : 11010111 : 11 rrr mmrx
-pminub     +0f : 11011010 : mod mmrx rm
-pmaxub     +0f : 11011110 : mod mmrx rm
-pavgb      +0f : 11100000 : mod mmrx rm
-pavgw      +0f : 11100011 : mod mmrx rm
-pminsw     +0f : 11101010 : mod mmrx rm
-pmaxsw     +0f : 11101110 : mod mmrx rm
-psadbw     +0f : 11110110 : mod mmrx rm
-maskmovq   +0f : 11110111 : mod11 mmrx rm
 
 # Scalar floats (prefix: F3 0F)
 movss      +f3 : +0f : 0001000d : mod xmmrx rm
@@ -568,7 +633,7 @@ minsd      +f2 : +0f : 01011101 : mod xmmrx rm
 divsd      +f2 : +0f : 01011110 : mod xmmrx rm
 maxsd      +f2 : +0f : 01011111 : mod xmmrx rm
 cmpsd      +f2 : +0f : 11000010 : mod xmmrx rm : imm8
-movdq2q    +f2 : +0f : 11010110 : 11 xmmrx mmrx
+movdq2q    +f2 : +0f : 11010110 : 11 xmmrx mmxrx
 
 psrldq     +dp : +0f : 01110011 : 11 011 xmmrx : imm8
 pslldq     +dp : +0f : 01110011 : 11 111 xmmrx : imm8
@@ -603,8 +668,8 @@ cvtpi2pd   +dp : +0f : 00101010 : moda xmmrx rm
 movntpd    +dp : +0f : 00101011 : mod xmmrx rm
 cvttpd2pi  +dp : +0f : 00101100 : 11 mmxrx xmmrx
 cvttpd2pi  +dp : +0f : 00101100 : moda mmxrx xmmrx
-cvtpd2pi   +dp : +0f : 00101101 : 11 mmrx xmmrx
-cvtpd2pi   +dp : +0f : 00101101 : moda mmrx  rm
+cvtpd2pi   +dp : +0f : 00101101 : 11 mmxrx xmmrx
+cvtpd2pi   +dp : +0f : 00101101 : moda mmxrx  rm
 ucomisd    +dp : +0f : 00101110 : mod xmmrx rm
 comisd     +dp : +0f : 00101111 : mod xmmrx rm
 movmskpd   +dp : +0f : 01010000 : 11 rrr xmmrx

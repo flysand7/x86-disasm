@@ -48,7 +48,6 @@ Field :: enum {
     Rm,
     Mmxrx,
     Xmmrx,
-    Mmrx,
     // Bytes
     Sel,
     Imm,
@@ -100,7 +99,6 @@ field_widths := [Field]u8 {
     .Rm    = 3,
     .Mmxrx = 3,
     .Xmmrx = 3,
-    .Mmrx  = 3,
     .Sel   = 0,
     .Imm   = 0,
     .Imm8  = 0,
