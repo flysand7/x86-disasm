@@ -139,7 +139,7 @@ main :: proc() {
             fmt.eprintln("Unable to do symbol lookups.")
             os.exit(1)
         }
-        builder := strings.builder_make(0x1000, context.temp_allocator)
+        builder := strings.builder_make()
         writer := strings.to_writer(&builder)
         if !do_syms {
             ctx := disasm.create_ctx(text_bytes, bits)
