@@ -194,8 +194,8 @@ disasm_elf :: proc(ctx: ^Ctx, text_bytes: []u8, symtab: []elf.Sym, strtab: []u8)
     builder: strings.Builder
     writer: io.Writer
     if !ctx.print_all {
-        builder := strings.builder_make()
-        writer := strings.to_writer(&builder)
+        builder = strings.builder_make()
+        writer = strings.to_writer(&builder)
     } else {
         writer = os.stream_from_handle(os.stdout)
     }
