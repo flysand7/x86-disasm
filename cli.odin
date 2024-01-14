@@ -16,6 +16,11 @@ Obj_Format :: enum {
     Elf,
 }
 
+Print_Flavor :: enum {
+    Intel,
+    Att,
+}
+
 Ctx :: struct {
     cpu: disasm.CPU_Mode,
     format: Obj_Format,
@@ -24,11 +29,13 @@ Ctx :: struct {
     function: Maybe(string),
     filename: string,
     print_all: bool,
+    print_flavor: Print_Flavor,
 }
 
 main :: proc() {
     ctx := Ctx {
         color = true,
+        print_flavor = .Intel,
     }
     filename := Maybe(string) {}
     for arg in os.args[1:] {
@@ -44,6 +51,7 @@ main :: proc() {
                 fmt.println("    -format:raw16  16-bit raw binary file")
                 fmt.println("    -format:raw32  32-bit raw binary file")
                 fmt.println("    -format:raw64  64-bit raw binary file")
+                os.exit(0)
             }
             switch format {
                 case "elf64":
@@ -61,6 +69,19 @@ main :: proc() {
                 case "raw64":
                     ctx.format = .Raw
                     ctx.cpu = .Mode_64
+            }
+        } else if strings.has_prefix(arg, "-flavor:") {
+            flavor := arg[8:]
+            if flavor == "?" {
+                fmt.println("Available flavors:")
+                fmt.println("    -format:intel  Intel-style syntax")
+                fmt.println("    -format:raw64  AT&T-style syntax")
+                os.exit(0)
+            }
+            switch flavor {
+                case "intel": ctx.print_flavor = .Intel
+                case "att": ctx.print_flavor = .Att
+                case: fmt.eprintf("Unknown flavor: %s\n", flavor)
             }
         } else if strings.has_prefix(arg, "-function:") {
             ctx.function = arg[10:]
@@ -172,10 +193,10 @@ disasm_raw :: proc(ctx: ^Ctx, bytes: []u8) {
     if !ctx.print_all {
         builder := strings.builder_make()
         writer := strings.to_writer(&builder)
-        disasm_print_bytes(writer, 0, bytes)
+        disasm_print_bytes(ctx, writer, 0, bytes)
         fmt.println(strings.to_string(builder))
     } else {
-        disasm_print_bytes(os.stream_from_handle(os.stdout), 0, bytes)
+        disasm_print_bytes(ctx, os.stream_from_handle(os.stdout), 0, bytes)
     }
 }
 
@@ -183,10 +204,10 @@ disasm_elf_raw :: proc(ctx: ^Ctx, bytes: []u8, addr: uintptr) {
     if !ctx.print_all {
         builder := strings.builder_make()
         writer := strings.to_writer(&builder)
-        disasm_print_bytes(writer, addr, bytes)
+        disasm_print_bytes(ctx, writer, addr, bytes)
         fmt.println(strings.to_string(builder))
     } else {
-        disasm_print_bytes(os.stream_from_handle(os.stdout), addr, bytes)
+        disasm_print_bytes(ctx, os.stream_from_handle(os.stdout), addr, bytes)
     }
 }
 
@@ -227,6 +248,7 @@ disasm_elf :: proc(ctx: ^Ctx, text_bytes: []u8, symtab: []elf.Sym, strtab: []u8)
         sym_offs_hi := sym_addr - start_addr + sym_size
         fmt.wprintf(writer, "\e[38;5;33m<%s>:\e[0m\n", sym_name)
         if !disasm_print_bytes(
+            ctx,
             writer,
             cast(uintptr) sym_addr,
             text_bytes[sym_offs_lo:sym_offs_hi],
@@ -239,7 +261,7 @@ disasm_elf :: proc(ctx: ^Ctx, text_bytes: []u8, symtab: []elf.Sym, strtab: []u8)
     }
 }
 
-disasm_print_bytes :: proc(w: io.Writer, addr: uintptr, bytes: []u8) -> bool {
+disasm_print_bytes :: proc(ctx: ^Ctx, w: io.Writer, addr: uintptr, bytes: []u8) -> bool {
     b := bytes
     addr := addr
     for {
@@ -272,7 +294,11 @@ disasm_print_bytes :: proc(w: io.Writer, addr: uintptr, bytes: []u8) -> bool {
             fmt.wprintf(w, "  ")
         }
         fmt.wprintf(w, "\e[0m")
-        disasm.inst_print_intel(inst, w, true)
+        if ctx.print_flavor == .Intel {
+            disasm.inst_print_intel(inst, w, ctx.color)
+        } else {
+            disasm.inst_print_att(inst, w, ctx.color)
+        }
         if inst_len == len(b) {
             return true
         }
