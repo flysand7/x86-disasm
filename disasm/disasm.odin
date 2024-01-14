@@ -418,7 +418,7 @@ decode :: proc(cpu: CPU_Mode, bytes: []u8, encoding: table.Encoding) -> (Inst, b
         rx_type := table.encoding_rx_type(encoding)
         rx_size := table.encoding_rx_size(encoding, data_size)
         rx := table.encoding_rx(encoding)
-        add_operand(&inst, rx_operand_r(vex_l, rex_r, data_size, rx_type, rx))
+        add_operand(&inst, rx_operand_b(vex_l, rex_r, data_size, rx_type, rx))
     }
     if .D in flags {
         if inst.op_count != 2 {

@@ -9,10 +9,10 @@ build-cli: generate
     odin build . -o:none -debug
 
 build-cli-release: generate
-    odin build . -o:aggressive
+    odin build . -o:aggressive -disable-assert
 
-time-cli: generate build-cli
-    time ./x86-disasm x86-disasm > /dev/null
+time-cli: generate build-cli-release
+    hyperfine -w 16 "./x86-disasm ./x86-disasm -no-color" "objdump -M intel -d -j .text ./x86-disasm" --output pipe
 
 test-local: (prepare-disasm "./tests/local.asm") generate build-cli
     ./x86-disasm -format:raw64 ./temp/temp.out -print-all
