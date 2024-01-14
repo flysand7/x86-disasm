@@ -266,7 +266,7 @@ decode :: proc(cpu: CPU_Mode, bytes: []u8, encoding: table.Encoding) -> (Inst, b
         vex_p = true
         rex_r = (b1 >> 7) == 0
         vex_v = (b1 >> 3) & 0b1111
-        vex_l = ((b1>>2)&0b11)!=0
+        vex_l = ((b1>>2)&0b1)!=0
         switch b1 & 0b11 {
             case 0b01: ds_pfx = .Prefix_66
             case 0b10: ds_pfx = .Prefix_F3
