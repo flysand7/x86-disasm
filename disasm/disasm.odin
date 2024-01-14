@@ -414,6 +414,12 @@ decode :: proc(cpu: CPU_Mode, bytes: []u8, encoding: table.Encoding) -> (Inst, b
             add_operand(&inst, rm_op)
             idx += sz
     }
+    if vex_p && .Vex_Vz not_in flags {
+        add_operand(&inst, vex_operand(vex_l, vex_v))
+        if inst.op_count == 3 {
+            inst.op[1], inst.op[2] = inst.op[2], inst.op[1]
+        }
+    }
     if .Rx_Value in flags {
         rx_type := table.encoding_rx_type(encoding)
         rx_size := table.encoding_rx_size(encoding, data_size)
@@ -421,12 +427,8 @@ decode :: proc(cpu: CPU_Mode, bytes: []u8, encoding: table.Encoding) -> (Inst, b
         add_operand(&inst, rx_operand_b(vex_l, rex_r, data_size, rx_type, rx))
     }
     if .D in flags {
-        if inst.op_count != 2 {
-        }
-        inst.op[0], inst.op[1] = inst.op[1], inst.op[0]
-    }
-    if vex_p && .Vex_Vz not_in flags {
-        add_operand(&inst, vex_operand(vex_l, vex_v))
+        last_idx := inst.op_count-1
+        inst.op[0], inst.op[last_idx] = inst.op[last_idx], inst.op[0]
     }
     switch table.encoding_extra_op(encoding) {
         case .None: break
@@ -599,8 +601,9 @@ rx_operand_b :: proc(vex_l, rex_b: bool, ds: Size, rxt: Reg_Set, rxi: u8) -> Ope
         return Reg { rxt, ds, rxi }
     } else if rxt == .Xmm {
         rxi := rxi
+        size := ds
         if vex_l {
-            rxi |= 0b1000
+            size = .Size_256
         }
         return Reg { rxt, ds, rxi }
     } else {
@@ -617,8 +620,9 @@ rx_operand_r :: proc(vex_l, rex_b: bool, ds: Size, rxt: Reg_Set, rxi: u8) -> Ope
         return Reg { rxt, ds, rxi }
     } else if rxt == .Xmm {
         rxi := rxi
+        size := ds
         if vex_l {
-            rxi |= 0b1000
+            size = .Size_256
         }
         return Reg { rxt, ds, rxi }
     } else {
@@ -627,7 +631,7 @@ rx_operand_r :: proc(vex_l, rex_b: bool, ds: Size, rxt: Reg_Set, rxi: u8) -> Ope
 }
 
 vex_operand :: proc(vex_l: bool, vex_v: u8) -> Operand {
-    return Reg { .Xmm, vex_l? .Size_256 : .Size_128, vex_v }
+    return Reg { .Xmm, vex_l? .Size_256 : .Size_128, 15-vex_v }
 }
 
 default_size_for_reg_kind :: proc(s: Reg_Set) -> Size {
