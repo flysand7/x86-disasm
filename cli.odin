@@ -8,14 +8,29 @@ import "core:os"
 import "core:strings"
 import "core:slice"
 import "core:time"
+import "core:io"
+
+Obj_Format :: enum {
+    Detect,
+    Raw,
+    Elf,
+}
+
+Ctx :: struct {
+    cpu: disasm.CPU_Mode,
+    format: Obj_Format,
+    color: bool,
+    force_no_syms: bool,
+    function: Maybe(string),
+    filename: string,
+    print_all: bool,
+}
 
 main :: proc() {
-    bits := u8(64)
-    is_elf  := true
-    find_function := Maybe(string) {}
-    filenames := make([dynamic]string)
-    color := true
-    force_no_syms := false
+    ctx := Ctx {
+        color = true,
+    }
+    filename := Maybe(string) {}
     for arg in os.args[1:] {
         if strings.has_prefix(arg, "-format:") {
             format := arg[8:]
@@ -31,59 +46,60 @@ main :: proc() {
                 fmt.println("    -format:raw64  64-bit raw binary file")
             }
             switch format {
-                case "elf":
-                    is_elf = true
+                case "elf64":
+                    ctx.format = .Elf
+                    ctx.cpu = .Mode_64
+                case "elf32":
+                    ctx.format = .Elf
+                    ctx.cpu = .Mode_32
                 case "raw16":
-                    is_elf = false
-                    bits = 16
+                    ctx.format = .Raw
+                    ctx.cpu = .Mode_16
                 case "raw32":
-                    is_elf = false
-                    bits = 32
+                    ctx.format = .Raw
+                    ctx.cpu = .Mode_32
                 case "raw64":
-                    is_elf = false
-                    bits = 64
+                    ctx.format = .Raw
+                    ctx.cpu = .Mode_64
             }
         } else if strings.has_prefix(arg, "-function:") {
-            find_function = arg[10:]
+            ctx.function = arg[10:]
         } else if arg == "-no-color" {
-            color = false
+            ctx.color = false
         } else if arg == "-force-no-syms" {
-            force_no_syms = true
+            ctx.force_no_syms = true
+        } else if arg == "-print-all" {
+            ctx.print_all = true
         } else if arg[0] == '-' {
             fmt.eprintf("Unknown option: %s\n", arg)
             os.exit(2)
         } else {
-            append(&filenames, arg)
+            ctx.filename = arg
         }
     }
-    if !is_elf {
-        for filename in filenames {
-            bytes, ok := os.read_entire_file(filename)
-            if !ok {
-                fmt.eprintf("File %s: not able to read\n", filename)
-                os.exit(1)
-            }
-            ctx := disasm.create_ctx(bytes, bits)
-            builder := strings.builder_make()
-            writer := strings.to_writer(&builder)
-            for inst in disasm.disasm_inst(&ctx) {
-                disasm.print_inst(inst, writer, color)
-            }
-            fmt.println(strings.to_string(builder))
-            if check_print_err(&ctx) {
-                os.exit(1)
-            }
+    bytes, bytes_ok := os.read_entire_file(ctx.filename)
+    if !bytes_ok {
+        fmt.eprintf("Unable to read file: %s\n", ctx.filename)
+        os.exit(1)
+    }
+    disasm_file(&ctx, bytes)
+}
+
+disasm_file :: proc(ctx: ^Ctx, bytes: []u8) {
+    if ctx.format == .Detect {
+        if len(bytes) >= 4 &&
+            bytes[0] == '\x7f' &&
+            bytes[1] == 'E' &&
+            bytes[2] == 'L' &&
+            bytes[3] == 'F'
+        {
+            ctx.cpu = .Mode_64
+            ctx.format = .Elf
         }
-    } else {
-        if len(filenames) > 1 || len(filenames) == 0 {
-            fmt.eprintf("Please provide one file to disassemble\n")
-            os.exit(2)
-        }
-        bytes, bytes_ok := os.read_entire_file(filenames[0])
-        if !bytes_ok {
-            fmt.eprintf("Unable to read file: %s\n", filenames[0])
-            os.exit(1)
-        }
+    }
+    if ctx.format == .Raw {
+        disasm_raw(ctx, bytes)
+    } else if ctx.format == .Elf {
         file, file_err := elf.file_from_bytes(bytes)
         if file_err != nil {
             fmt.eprintf("Elf reading error: %v\n", file_err)
@@ -102,7 +118,7 @@ main :: proc() {
         symtab := []elf.Sym {}
         strtab := []u8 {}
         do_syms := true
-        if !force_no_syms {
+        if !ctx.force_no_syms {
             ok := true
             sym_sec, _, sym_err := elf.section_by_name(file, ".symtab")
             str_sec, _, str_err := elf.section_by_name(file, ".strtab")
@@ -140,83 +156,142 @@ main :: proc() {
         } else {
             do_syms = false
         }
-        if find_function != nil && do_syms == false {
+        if ctx.function != nil && do_syms == false {
             fmt.eprintln("Unable to do symbol lookups.")
             os.exit(1)
         }
+        if do_syms {
+            disasm_elf(ctx, text_bytes, symtab, strtab)
+        } else {
+            disasm_elf_raw(ctx, text_bytes, text.addr)
+        }
+    }
+}
+
+disasm_raw :: proc(ctx: ^Ctx, bytes: []u8) {
+    if !ctx.print_all {
         builder := strings.builder_make()
         writer := strings.to_writer(&builder)
-        if !do_syms {
-            ctx := disasm.create_ctx(text_bytes, bits)
-            addr := text.addr
-            for inst in disasm.disasm_inst(&ctx) {
-                fmt.wprintf(writer, "  %012x ", addr)
-                disasm.print_inst(inst, writer, color)
-                addr += cast(uintptr) len(inst.bytes)
-            }
-            if check_print_err(&ctx) {
-                os.exit(1)
-            }
-        } else {
-            symtab := slice.filter(symtab, proc(sym: elf.Sym) -> bool {
-                type, _ := elf.symbol_info(sym)
-                return type == .Func && sym.size > 0
-            })
-            slice.sort_by(symtab, proc (i, j: elf.Sym) -> bool {
-                return i.value < j.value
-            })
-            d1 := time.Duration{}
-            d2 := time.Duration{}
-            start_addr := -1
-            for sym, sym_idx in symtab {
-                if sym.size == 0 {
-                    continue
-                }
-                if start_addr == -1 {
-                    start_addr = cast(int) sym.value
-                }
-                type, bind := elf.symbol_info(sym)
-                sym_name := cast(string) cast(cstring) &strtab[sym.name]
-                if func_name, ok := find_function.?; ok {
-                    if sym_name != func_name {
-                        continue
-                    }
-                }
-                sym_addr := cast(int) sym.value
-                sym_size := cast(int) sym.size
-                sym_offs_lo := sym_addr - start_addr
-                sym_offs_hi := sym_addr - start_addr + sym_size
-                fmt.wprintf(writer, "\e[38;5;33m<%s>:\e[0m\n", sym_name)
-                ctx := disasm.create_ctx(text_bytes[sym_offs_lo:sym_offs_hi], bits)
-                addr := sym_addr
-                t1 := time.tick_now()
-                for inst in disasm.disasm_inst(&ctx) {
-                    t2 := time.tick_now()
-                    d1 += time.tick_diff(t1, t2)
-                    fmt.wprintf(writer, "  %012x ", addr)
-                    disasm.print_inst(inst, writer, color)
-                    addr += len(inst.bytes)
-                    t1 = time.tick_now()
-                    d2 += time.tick_diff(t2, t1)
-                }
-                if check_print_err(&ctx) {
-                    os.exit(1)
-                }
+        disasm_print_bytes(writer, 0, bytes)
+        fmt.println(strings.to_string(builder))
+    } else {
+        disasm_print_bytes(os.stream_from_handle(os.stdout), 0, bytes)
+    }
+}
+
+disasm_elf_raw :: proc(ctx: ^Ctx, bytes: []u8, addr: uintptr) {
+    if !ctx.print_all {
+        builder := strings.builder_make()
+        writer := strings.to_writer(&builder)
+        disasm_print_bytes(writer, addr, bytes)
+        fmt.println(strings.to_string(builder))
+    } else {
+        disasm_print_bytes(os.stream_from_handle(os.stdout), addr, bytes)
+    }
+}
+
+disasm_elf :: proc(ctx: ^Ctx, text_bytes: []u8, symtab: []elf.Sym, strtab: []u8) {
+    builder: strings.Builder
+    writer: io.Writer
+    if !ctx.print_all {
+        builder := strings.builder_make()
+        writer := strings.to_writer(&builder)
+    } else {
+        writer = os.stream_from_handle(os.stdout)
+    }
+    symtab := slice.filter(symtab, proc(sym: elf.Sym) -> bool {
+        type, _ := elf.symbol_info(sym)
+        return type == .Func && sym.size > 0
+    })
+    slice.sort_by(symtab, proc (i, j: elf.Sym) -> bool {
+        return i.value < j.value
+    })
+    start_addr := -1
+    for sym, sym_idx in symtab {
+        if sym.size == 0 {
+            continue
+        }
+        if start_addr == -1 {
+            start_addr = cast(int) sym.value
+        }
+        type, bind := elf.symbol_info(sym)
+        sym_name := cast(string) cast(cstring) &strtab[sym.name]
+        if func_name, ok := ctx.function.?; ok {
+            if sym_name != func_name {
+                continue
             }
         }
+        sym_addr := cast(int) sym.value
+        sym_size := cast(int) sym.size
+        sym_offs_lo := sym_addr - start_addr
+        sym_offs_hi := sym_addr - start_addr + sym_size
+        fmt.wprintf(writer, "\e[38;5;33m<%s>:\e[0m\n", sym_name)
+        if !disasm_print_bytes(
+            writer,
+            cast(uintptr) sym_addr,
+            text_bytes[sym_offs_lo:sym_offs_hi],
+        ) {
+            break
+        }
+    }
+    if !ctx.print_all {
         fmt.println(strings.to_string(builder))
     }
 }
 
-check_print_err :: proc(ctx: ^disasm.Ctx) -> bool {
-    if ctx.offset < len(ctx.bytes) {
-        fmt.eprintf("Error disassembling the byte: %02x (offset %016x)\n", ctx.bytes[ctx.offset], ctx.offset)
-        fmt.eprintf("Context:\n")
-        disasm.dump_bytes(ctx.bytes[max(0,ctx.offset-32):ctx.offset])
-        fmt.eprintf("\e[38;5;210m%02x\e[0m ", ctx.bytes[ctx.offset])
-        disasm.dump_bytes(ctx.bytes[ctx.offset+1:min(len(ctx.bytes), ctx.offset+32)])
-        fmt.eprintln()
-        return true
+disasm_print_bytes :: proc(w: io.Writer, addr: uintptr, bytes: []u8) -> bool {
+    b := bytes
+    addr := addr
+    for {
+        inst_len, inst_enc, inst_err := disasm.pre_decode(.Mode_64, b)
+        if inst_err == .Trunc {
+            fmt.eprintf("Error(%012x): Failed to pre-decode instruction\n", addr)
+            print_disasm_failure_ctx(b, inst_len)
+            return false
+        } else if inst_err == .No_Encoding {
+            fmt.eprintf("Error(%012x): Failed to find an encoding for instruction\n", addr)
+            print_disasm_failure_ctx(b, inst_len)
+            return false
+        } else if inst_err == .Invalid {
+            fmt.eprintf("Error(%012x): Instruction encoding was found invalid\n", addr)
+            print_disasm_failure_ctx(b, inst_len)
+            return false
+        }
+        inst, inst_ok := disasm.decode(.Mode_64, b[:inst_len], inst_enc)
+        if !inst_ok {
+            fmt.eprintf("Error(%012x): Failed to disassemble instruction: Error finding an encoding matching constraints\n", addr)
+            print_disasm_failure_ctx(b, inst_len, false)
+            return false
+        }
+        fmt.wprintf(w, "  %012x ", addr)
+        fmt.wprintf(w, "\e[38;5;242m")
+        for b in b[:inst_len] {
+            fmt.wprintf(w, "%02x", b)
+        }
+        for i in 0 ..< 16-inst_len {
+            fmt.wprintf(w, "  ")
+        }
+        fmt.wprintf(w, "\e[0m")
+        disasm.inst_print_intel(inst, w, true)
+        if inst_len == len(b) {
+            return true
+        }
+        b = b[inst_len:]
+        addr += cast(uintptr) inst_len
     }
-    return false
+}
+
+print_disasm_failure_ctx :: proc(b: []u8, off: int, highlight := false) {
+    fmt.eprintf("Context:\n")
+    fmt.eprintf("  \e[31m")
+    for i in 0 ..< min(len(b), 15) {
+        if highlight && i == off {
+            fmt.eprintf("\e[33m")
+        }
+        if i == off+1 {
+            fmt.eprintf("\e[0m")
+        }
+        fmt.eprintf("%02x", b[i])
+    }
+    fmt.eprintf("\e[0m\n")
 }

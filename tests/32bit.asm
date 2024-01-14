@@ -12,3 +12,6 @@ main:
     mov ax, bx
     mov ax, cx
     mov ax, [si]
+    mov ax, [si]
+    mov ax, [si]
+    mov ax, [si]

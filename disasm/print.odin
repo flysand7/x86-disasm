@@ -2,6 +2,8 @@ package disasm
 
 import "core:fmt"
 import "core:io"
+import "table"
+import "generated_table"
 
 COLOR_RESET :: "\e[0m"
 COLOR_R :: "\e[38;5;210m"
@@ -9,7 +11,7 @@ COLOR_G :: "\e[38;5;114m"
 COLOR_B :: "\e[38;5;105m"
 COLOR_GREY :: "\e[38;5;242m"
 
-@(private="file")
+@(private)
 fmt_int :: proc(w: io.Writer, #any_int hex: i64) {
     sign_ch := '+'
     hex_abs := hex
@@ -30,79 +32,42 @@ fmt_int :: proc(w: io.Writer, #any_int hex: i64) {
     }
 }
 
-print_inst :: proc(inst: Inst, w: io.Writer, colors := true) {
-    WIDTH :: 16
-    if colors {
-        fmt.wprint(w, COLOR_GREY, sep="")
+encoding_print :: proc(e: table.Encoding) {
+    fmt.println("Encoding {")
+    if .Is_Slice in table.encoding_flags(e) {
+        fmt.printf("\tslice_idx: %#04x\n", table.encoding_slice_index(e))
+        fmt.println("\textra op:", table.encoding_extra_op(e))
+        fmt.println("\tflags:", table.encoding_flags(e))
+        fmt.println("\tmod kind:", table.encoding_mod_kind(e))
+    } else {
+        fmt.println("\tdata override:", table.encoding_data_override(e))
+        fmt.println("\textra op:", table.encoding_extra_op(e))
+        fmt.println("\tflags:", table.encoding_flags(e))
+        fmt.println("\tmnemonic:", generated_table.string_table[table.encoding_mnemonic_idx(e)])
+        fmt.println("\tmod kind:", table.encoding_mod_kind(e))
+        fmt.println(
+            "\trm size:", table.encoding_rm_size(e, 0b00, .Default),
+            "rx type:", table.encoding_rm_type(e),
+        )
+        fmt.println(
+            "\trx size:", table.encoding_rx_size(e, .Default),
+            "rx type:", table.encoding_rx_type(e),
+            "rx idx:", table.encoding_rx(e),
+        )
     }
-    for i in 0 ..< len(inst.bytes) {
-        fmt.wprintf(w, "%02x", inst.bytes[i])
+    fmt.println("}")
+}
+
+reg_name :: proc(r: Reg) -> string {
+    name := reg_names[r.kind][r.size][r.idx]
+    if len(name) == 0 {
+        return "(bad reg)"
     }
-    if colors {
-        fmt.wprint(w, COLOR_RESET, sep="")
-    }
-    for i in len(inst.bytes) ..< WIDTH {
-        fmt.wprintf(w, "  ")
-    }
-    if colors {
-        fmt.wprint(w, COLOR_R, sep="")
-    }
-    if .Lock in inst.flags {
-        fmt.wprintf(w, "lock ")
-    }
-    if .Rep in inst.flags {
-        fmt.wprintf(w, "rep ")
-    }
-    if .Repnz in inst.flags {
-        fmt.wprintf(w, "repnz ")
-    }
-    fmt.wprintf(w, "%s", inst.mnemonic)
-    if .Data_Size_Suffix in inst.flags {
-        fmt.wprintf(w, "%s", data_size_suffix(inst.data_size))
-    }
-    if colors {
-        fmt.wprint(w, COLOR_RESET, sep="")
-    }
-    for i in 0 ..< inst.op_count {
-        fmt.wprintf(w, i != 0? ", " : " ")
-        operand := inst.op[i]
-        switch op in operand {
-            case Mem_Short:
-                fmt.wprintf(w, "short ")
-                fmt_int(w, op.disp)
-            case Mem:
-                fmt.wprintf(w, "%s ", data_size_spec(inst.data_size))
-                if inst.seg != nil {
-                    fmt.wprintf(w, "%s:", sreg_name(inst.seg))
-                }
-                if selector, ok := inst.selector.?; ok {
-                    fmt.wprintf(w, "%02x:", selector)
-                }
-                fmt.wprintf(w, "[")
-                has_before := false
-                if op.base.idx != nil {
-                    print_color_string(w, COLOR_G, reg_name(op.base), colors)
-                    has_before = true
-                }
-                if op.index.idx != nil {
-                    fmt.wprintf(w, "%s%d*", has_before?"+":"", op.scale)
-                    print_color_string(w, COLOR_G, reg_name(op.index), colors)
-                }
-                if op.disp != 0 {
-                    fmt_int(w, op.disp)
-                }
-                fmt.wprintf(w, "]")
-            case Reg:      print_color_string(w, COLOR_G, reg_name(op), colors)
-            case MMX_Reg:  print_color_string(w, COLOR_G, mmxreg_name(op), colors)
-            case XMM_Reg:  print_color_string(w, COLOR_G, xmmreg_name(op), colors)
-            case Sreg:     print_color_string(w, COLOR_G, sreg_name(op), colors)
-            case Creg_Idx: print_color_string(w, COLOR_G, creg_name(op), colors)
-            case Dreg_Idx: print_color_string(w, COLOR_G, dreg_name(op), colors)
-            case Imm:      print_color_int(w, COLOR_B, op.value, colors)
-                
-        }
-    }
-    fmt.wprintf(w, "\n")
+    return name
+}
+
+mem_size_name :: proc(s: Size) -> string {
+    return mem_sizes[s]
 }
 
 print_color_string :: proc(w: io.Writer, color: string, str: string, colors: bool) {
@@ -125,321 +90,272 @@ print_color_int :: proc(w: io.Writer, color: string, str: i64, colors: bool) {
     }
 }
 
-data_size_suffix :: proc(size: u8) -> string {
-    switch size {
-        case 1:  return "b"
-        case 2:  return "w"
-        case 4:  return "d"
-        case 8:  return "q"
-        case 16: return "o"
-        case 32: return "y"
-        case: unreachable()
-    }
+@(private="file")
+mem_sizes := [Size]string {
+    .Default  = "*bad size*",
+    .Size_8   = "byte",
+    .Size_16  = "word",
+    .Size_32  = "dword",
+    .Size_64  = "qword",
+    .Size_128 = "xmmword",
+    .Size_256 = "ymmword",
+    .Size_512 = "zmmword",
 }
 
-data_size_spec :: proc(size: u8) -> string {
-    switch size {
-        case 1:  return "byte"
-        case 2:  return "word"
-        case 4:  return "dword"
-        case 8:  return "qword"
-        case 16: return "xmmword"
-        case 32: return "ymmword"
-        case: unreachable()
-    }
+@(private="file")
+reg_names := [Reg_Set][Size][16]string {
+    .Reg = {
+        .Default  = {},
+        .Size_128 = {},
+        .Size_256 = {},
+        .Size_512 = {},
+        .Size_8   = {
+            "al",
+            "cl",
+            "dl",
+            "bl",
+            "ah",
+            "ch",
+            "dh",
+            "bh",
+            "r8b",
+            "r9b",
+            "r10b",
+            "r11b",
+            "r12b",
+            "r13b",
+            "r14b",
+            "r15b",
+        },
+        .Size_16  = {
+            "ax",
+            "cx",
+            "dx",
+            "bx",
+            "si",
+            "di",
+            "sp",
+            "bp",
+            "r8w",
+            "r9w",
+            "r10w",
+            "r11w",
+            "r12w",
+            "r13w",
+            "r14w",
+            "r15w",
+        },
+        .Size_32  = {
+            "eax",
+            "ecx",
+            "edx",
+            "ebx",
+            "esi",
+            "edi",
+            "esp",
+            "ebp",
+            "r8d",
+            "r9d",
+            "r10d",
+            "r11d",
+            "r12d",
+            "r13d",
+            "r14d",
+            "r15d",
+        },
+        .Size_64  = {
+            "rax",
+            "rcx",
+            "rdx",
+            "rbx",
+            "rsi",
+            "rdi",
+            "rsp",
+            "rbp",
+            "r8",
+            "r9",
+            "r10",
+            "r11",
+            "r12",
+            "r13",
+            "r14",
+            "r15",
+        },
+    },
+    .Mmx = {
+        .Default = {},
+        .Size_8 = {},
+        .Size_16 = {},
+        .Size_32 = {},
+        .Size_64 = {
+            0 = "mm0",
+            1 = "mm1",
+            2 = "mm2",
+            3 = "mm3",
+            4 = "mm4",
+            5 = "mm5",
+            6 = "mm6",
+            7 = "mm7",
+        },
+        .Size_128 = {},
+        .Size_256 = {},
+        .Size_512 = {},
+    },
+    .Xmm = {
+        .Default = {},
+        .Size_8 = {},
+        .Size_16 = {},
+        .Size_32 = {},
+        .Size_64 = {},
+        .Size_512 = {},
+        .Size_128 = {
+            "xmm0",
+            "xmm1",
+            "xmm2",
+            "xmm3",
+            "xmm4",
+            "xmm5",
+            "xmm6",
+            "xmm7",
+            "xmm8",
+            "xmm9",
+            "xmm10",
+            "xmm11",
+            "xmm12",
+            "xmm13",
+            "xmm14",
+            "xmm15",
+        },
+        .Size_256 = {
+            "ymm0",
+            "ymm1",
+            "ymm2",
+            "ymm3",
+            "ymm4",
+            "ymm5",
+            "ymm6",
+            "ymm7",
+            "ymm8",
+            "ymm9",
+            "ymm10",
+            "ymm11",
+            "ymm12",
+            "ymm13",
+            "ymm14",
+            "ymm15",
+        },
+    },
+    .Sreg = {
+        .Default = {},
+        .Size_8 = {},
+        .Size_32 = {},
+        .Size_64 = {},
+        .Size_128 = {},
+        .Size_256 = {},
+        .Size_512 = {},
+        .Size_16 = {
+            0 = "es",
+            1 = "cs",
+            2 = "ss",
+            3 = "ds",
+            4 = "fs",
+            5 = "gs",
+        },
+    },
+    .Dreg = {
+        .Default = {},
+        .Size_8 = {},
+        .Size_32 = {},
+        .Size_64 = {},
+        .Size_128 = {},
+        .Size_256 = {},
+        .Size_512 = {},
+        .Size_16 = {
+            0 = "dr0",
+            1 = "dr1",
+            2 = "dr2",
+            3 = "dr3",
+            4 = "dr4",
+            5 = "dr5",
+            6 = "dr6",
+            7 = "dr7",
+        },
+    },
+    .Creg = {
+        .Default = {},
+        .Size_8 = {},
+        .Size_16 = {},
+        .Size_64 = {},
+        .Size_128 = {},
+        .Size_256 = {},
+        .Size_512 = {},
+        .Size_32 = {
+            0 = "cr0",
+            1 = "cr1",
+            2 = "cr2",
+            3 = "cr3",
+            4 = "cr4",
+            5 = "cr5",
+            6 = "cr6",
+            7 = "cr7",
+        },
+    },
+    .Bndreg = {
+        .Default = {},
+        .Size_8 = {},
+        .Size_16 = {},
+        .Size_64 = {},
+        .Size_128 = {},
+        .Size_256 = {},
+        .Size_512 = {},
+        .Size_32 = {
+            0 = "bnd0",
+            1 = "bnd1",
+            2 = "bnd2",
+            3 = "bnd3",
+            4 = "bnd4",
+            5 = "bnd5",
+            6 = "bnd6",
+            7 = "bnd7",
+        },
+        
+    },
+    .St = {
+        .Default = {},
+        .Size_8 = {},
+        .Size_16 = {},
+        .Size_32 = {},
+        .Size_128 = {},
+        .Size_256 = {},
+        .Size_512 = {},
+        .Size_64 = {
+            0 = "st(0)",
+            1 = "st(1)",
+            2 = "st(2)",
+            3 = "st(3)",
+            4 = "st(4)",
+            5 = "st(5)",
+            6 = "st(6)",
+            7 = "st(7)",
+        },
+    },
+    .Extras = {
+        .Default = {},
+        .Size_128 = {},
+        .Size_256 = {},
+        .Size_512 = {},
+        .Size_8 = {},
+        .Size_16 = {
+            0 = "ip",
+            1 = "flags",
+        },
+        .Size_32 = {
+            0 = "eip",
+            1 = "eflags",
+        },
+        .Size_64 = {
+            0 = "rip",
+            1 = "rflags",
+        },
+    },
 }
-
-granularity_suffix :: proc(gr: u8) -> string {
-    switch gr {
-        case 0b00: return "b"
-        case 0b01: return "w"
-        case 0b10: return "d"
-        case 0b11: return "q"
-        case: unreachable()
-    }
-}
-
-sreg_name :: proc(sreg: Sreg) -> string {
-    assert(sreg != nil)
-    #partial switch sreg {
-        case .Cs: return "cs"
-        case .Ds: return "ds"
-        case .Es: return "es"
-        case .Fs: return "fs"
-        case .Gs: return "gs"
-        case .Ss: return "ss"
-        case: unreachable()
-    }
-}
-
-reg_name :: proc(reg: Reg) -> string {
-    assert(reg.idx != nil)
-    #partial switch reg.idx {
-        case .Ax:
-            switch reg.size {
-                case 1: return "al"
-                case 2: return "ax"
-                case 4: return "eax"
-                case 8: return "rax"
-                case: unreachable()
-            }
-        case .Cx:
-            switch reg.size {
-                case 1: return "cl"
-                case 2: return "cx"
-                case 4: return "ecx"
-                case 8: return "rcx"
-                case: unreachable()
-            }
-        case .Dx:
-            switch reg.size {
-                case 1: return "dl"
-                case 2: return "dx"
-                case 4: return "edx"
-                case 8: return "rdx"
-                case: unreachable()
-            }
-        case .Bx:
-            switch reg.size {
-                case 1: return "bl"
-                case 2: return "bx"
-                case 4: return "ebx"
-                case 8: return "rbx"
-                case: unreachable()
-            }
-        case .Di:
-            switch reg.size {
-                case 1: return "ah"
-                case 2: return "di"
-                case 4: return "edi"
-                case 8: return "rdi"
-                case: unreachable()
-            }
-        case .Si:
-            switch reg.size {
-                case 1: return "ch"
-                case 2: return "si"
-                case 4: return "esi"
-                case 8: return "rsi"
-                case: unreachable()
-            }
-        case .Sp:
-            switch reg.size {
-                case 1: return "dh"
-                case 2: return "sp"
-                case 4: return "esp"
-                case 8: return "rsp"
-                case: unreachable()
-            }
-        case .Bp:
-            switch reg.size {
-                case 1: return "bh"
-                case 2: return "bp"
-                case 4: return "ebp"
-                case 8: return "rbp"
-                case: unreachable()
-            }
-        case .R8:
-            switch reg.size {
-                case 1: return "r8b"
-                case 2: return "r8w"
-                case 4: return "r8d"
-                case 8: return "r8"
-                case: unreachable()
-            }
-        case .R9:
-            switch reg.size {
-                case 1: return "r9b"
-                case 2: return "r9w"
-                case 4: return "r9d"
-                case 8: return "r9"
-                case: unreachable()
-            }
-        case .R10:
-            switch reg.size {
-                case 1: return "r10b"
-                case 2: return "r10w"
-                case 4: return "r10d"
-                case 8: return "r10"
-                case: unreachable()
-            }
-        case .R11:
-            switch reg.size {
-                case 1: return "r11b"
-                case 2: return "r11w"
-                case 4: return "r11d"
-                case 8: return "r11"
-                case: unreachable()
-            }
-        case .R12:
-            switch reg.size {
-                case 1: return "r12b"
-                case 2: return "r12w"
-                case 4: return "r12d"
-                case 8: return "r12"
-                case: unreachable()
-            }
-        case .R13:
-            switch reg.size {
-                case 1: return "r13b"
-                case 2: return "r13w"
-                case 4: return "r13d"
-                case 8: return "r13"
-                case: unreachable()
-            }
-        case .R14:
-            switch reg.size {
-                case 1: return "r14b"
-                case 2: return "r14w"
-                case 4: return "r14d"
-                case 8: return "r14"
-                case: unreachable()
-            }
-        case .R15:
-            switch reg.size {
-                case 1: return "r15b"
-                case 2: return "r15w"
-                case 4: return "r15d"
-                case 8: return "r15"
-                case: unreachable()
-            }
-        case .Ip:
-            switch reg.size {
-                case 2: return "ip"
-                case 4: return "eip"
-                case 8: return "rip"
-                case: unreachable()
-            }
-        case: unreachable()
-    }
-}
-
-mmxreg_name :: proc(mmxreg: MMX_Reg) -> string {
-    switch mmxreg {
-        case .Mm7: return "mm7"
-        case .Mm6: return "mm6"
-        case .Mm5: return "mm5"
-        case .Mm4: return "mm4"
-        case .Mm3: return "mm3"
-        case .Mm2: return "mm2"
-        case .Mm1: return "mm1"
-        case .Mm0: return "mm0"
-        case: unreachable()
-    }
-}
-
-xmmreg_name :: proc(xmmreg: XMM_Reg) -> string {
-    switch xmmreg.idx {
-        case .Xmm0:
-            switch xmmreg.size {
-                case 16: return "xmm0"
-                case 32: return "ymm0"
-            }
-        case .Xmm1:
-            switch xmmreg.size {
-                case 16: return "xmm1"
-                case 32: return "ymm1"
-            }
-        case .Xmm2:
-            switch xmmreg.size {
-                case 16: return "xmm2"
-                case 32: return "ymm2"
-            }
-        case .Xmm3:
-            switch xmmreg.size {
-                case 16: return "xmm3"
-                case 32: return "ymm3"
-            }
-        case .Xmm4:
-            switch xmmreg.size {
-                case 16: return "xmm4"
-                case 32: return "ymm4"
-            }
-        case .Xmm5:
-            switch xmmreg.size {
-                case 16: return "xmm5"
-                case 32: return "ymm5"
-            }
-        case .Xmm6:
-            switch xmmreg.size {
-                case 16: return "xmm6"
-                case 32: return "ymm6"
-            }
-        case .Xmm7:
-            switch xmmreg.size {
-                case 16: return "xmm7"
-                case 32: return "ymm7"
-            }
-        case .Xmm8:
-            switch xmmreg.size {
-                case 16: return "xmm8"
-                case 32: return "ymm8"
-            }
-        case .Xmm9:
-            switch xmmreg.size {
-                case 16: return "xmm9"
-                case 32: return "ymm9"
-            }
-        case .Xmm10:
-            switch xmmreg.size {
-                case 16: return "xmm10"
-                case 32: return "ymm10"
-            }
-        case .Xmm11:
-            switch xmmreg.size {
-                case 16: return "xmm11"
-                case 32: return "ymm11"
-            }
-        case .Xmm12:
-            switch xmmreg.size {
-                case 16: return "xmm12"
-                case 32: return "ymm12"
-            }
-        case .Xmm13:
-            switch xmmreg.size {
-                case 16: return "xmm13"
-                case 32: return "ymm13"
-            }
-        case .Xmm14:
-            switch xmmreg.size {
-                case 16: return "xmm14"
-                case 32: return "ymm14"
-            }
-        case .Xmm15:
-            switch xmmreg.size {
-                case 16: return "xmm15"
-                case 32: return "ymm15"
-            }
-    }
-    fmt.println(xmmreg)
-    unreachable()
-}
-
-creg_name :: proc(creg: Creg_Idx) -> string {
-    switch creg {
-        case .Cr0: return "cr0"
-        case .Cr1: return "cr1"
-        case .Cr2: return "cr2"
-        case .Cr3: return "cr3"
-        case .Cr4: return "cr4"
-        case .Cr5: return "cr5"
-        case .Cr6: return "cr6"
-        case .Cr7: return "cr7"
-        case: unreachable()
-    }
-}
-
-dreg_name :: proc(dreg: Dreg_Idx) -> string {
-    switch dreg {
-        case .Dr0: return "dr0"
-        case .Dr1: return "dr1"
-        case .Dr2: return "dr2"
-        case .Dr3: return "dr3"
-        case .Dr4: return "dr4"
-        case .Dr5: return "dr5"
-        case .Dr6: return "dr6"
-        case .Dr7: return "dr7"
-        case: unreachable()
-    }
-}
-

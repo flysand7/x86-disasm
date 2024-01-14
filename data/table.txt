@@ -1,1028 +1,1540 @@
 
-# Instruction table.
-# ------------------------------------------------------------------- #
-# Every line in this file represents an instruction. Empty lines and
-# lines startingwith the # symbol are to be ignored. Instructions have
-# the following format:
-#     <bits...>
-
-# <bits...> specify the bits to be matched/stored as parameters to the
-# decoder. The first portion of binary digits specifies the opcode
-# of the instruction.
-
-# Colons can be used to visually separate bytes of the instruction.
-
-# Instruction opcodes
-# ------------------------------------------------------------------- #
-# Some instructions don't have a complete opcode on them. The list
-# below specifies such instructions
-#   movs - movsb/movsw/movsd/movsq
-#   lods - lodsb/lodsw/lodsd/lodsq
-# The way they are meant to be interpreted is that the actual opcode
-# is constructed by appending suffixes to the opcode based on the
-# combination of encoding flags.
-# If the instruction encoding has `+ds` flag, it gets its data size
-# appended to its name.
-#
-# CBW/CDQ/CQO and CBW/CWDE/CDQE instructions are missing from this
-# table due to amount of special casing required to support them.
-# These should be special-cased in the decoder as they have mnemonics
-# that depend on instruction's data size in a non-trivial way that's
-# different from other instructions and is kind of unique.
-
-# Opcode encoding
-# ------------------------------------------------------------------- #
-# <binary number> - specifies a string of bits that must be matched
-# in the opcode exactly.
-# <dashes> - specifies a group of bits to be ignored. The number of
-# dashes specifies the number of bits to be ignored.
-# d - 1 bit direction bit.
-# w - 1 bitwidth bit.
-# rrr - 3-bit opcode reg field.
-# eee - 3-bit control register field.
-# ddd - 3-bit debug register field.
-# sss - 3-bit segment register field (includes GS and FS)
-# ss  - 2-bit segment register field (doesn't include GS and FS)
-
-# Mod/RM encoding
-# ------------------------------------------------------------------- #
-# mod - 2-bit mod field of the mod/rm byte.
-# mod11 - mod field that is expected to be 11.
-# moda - mod field that is not 11.
-# modb - mod field that is not 10 nor 01.
-# modab - mod field that is expected to be 00.
-# rx  - 3-bit reg field of the mod/rm byte.
-# rm  - 3-bit rm field of the mod/rm byte.
-# mmxrx - 3-bit mmx register encoding in the reg field.
-# xmmrx - 3-bit xmm register encoding in the reg field.
-
-# Implicit operands
-# ------------------------------------------------------------------- #
-# Implicit operands do not appear in the opcode but rather provide
-# information aboutwhat an opcode means.
-# 
-# _d   - implicit d-bit with value 0.
-# _64  - implicit force 64-bit operand size.
-# _a   - implicit AL/AX/EAX register.
-# _c   - implicit CL/CX/ECX register.
-# _1   - implicit constant 1 operand.
-# _fs  - implicit FS operand.
-# _gs  - implicit GS operand.
-
-# "Immediate" Bytes
-# ------------------------------------------------------------------- #
-# imm - immediate parameter, size depends on current data size.
-# imm8 - 8-bit immediate parameter.
-# imm16 - 16-bit immediate parameter.
-# disp - displacement parameter, size depends on current addr size.
-# disp8 - 8-bit displacement from the next instruction
-# disp16 - 16-bit displacement.
-# sel  - segment selector, a 2 byte value following disp.
-# xmmimm8 - imm8 where the top 3 bits specify XMM/YMM register operand.
-
-# Encoding flags
-# ------------------------------------------------------------------- #
-# +n64 - do not decode on 64-bit platforms
-# +f64 - force 64-bit data size in 64-bit mode even if REX.W is reset.
-# +w64 - only decoded on 64-bit CPUs.
-# +ncs - do not decode if cr2 or cr3 field turned out to be cs
-# +ds  - data size is part of instruction name (movs -> movsb/movsw/movsl/movsq)
-# +np  - only decode if there was no prefix.
-# +dp  - only decode if 0x66 prefix was encountered.
-# +vp  - only decode if VEX (0xc4 or 0xc5) prefix was encountered.
-# +f2  - only decode if 0xf2 prefix was encountered.
-# +f3  - only decode if 0xf3 prefix was encountered.
-# +0f  - only decode if 0x0f opcode extension was encountered.
-# +38  - only decode if 0x38 opcode extension was encountered.
-# +3a  - only decode if 0x3a opcode extension was encountered.
-# +vw0 - only decode if VEC.W was equal to 0.
-# +vw1 - only decode if VEC.W was equal to 1.
-
-# ------------------------------------------------------------------- #
-# General purpose instruction formats and encodings.
-# ------------------------------------------------------------------- #
-
-add     000000dw : mod rx rm
-add     0000010w : _a imm
-or      000010dw : mod rx rm
-or      0000110w : _a imm
-push    000ss110 : +f64
-pop     000ss111 : +f64
-adc     000100dw : mod rx rm
-adc     0001010w : _a imm
-sbb     000110dw : mod rx rm
-sbb     0001110w : _a imm
-and     001000dw : mod rx rm
-and     0010010w : _a imm
-daa     00100111
-sub     001010dw : mod rx rm
-sub     0010110w : _a imm
-das     00101111
-xor     001100dw : mod rx rm
-xor     0011010w : _a imm
-aaa     00110111
-cmp     001110dw : mod rx rm
-cmp     0011110w : _a imm
-aas     00111111
-inc     01000rrr : +n64
-dec     01001rrr : +n64
-push    01010rrr : +f64
-pop     01011rrr : +f64
-pusha   01100000
-popa    01100001
-bound   01100010 : moda rx rm
-arpl    01100011 : mod rx rm : +n64
-movsxd  01100011 : mod rx rm : +w64
-push    011010s0 : imm : +f64
-imul    011010s1 : mod rx rm : imm
-ins     0110110w
-outs    0110111w
-jo      01110000 : disp8
-jno     01110001 : disp8
-jb      01110010 : disp8
-jae     01110011 : disp8
-jz      01110100 : disp8
-jnz     01110101 : disp8
-jbe     01110110 : disp8
-ja      01110111 : disp8
-js      01111000 : disp8
-jns     01111001 : disp8
-jp      01111010 : disp8
-jnp     01111011 : disp8
-jl      01111100 : disp8
-jge     01111101 : disp8
-jle     01111110 : disp8
-jg      01111111 : disp8
-add     100000sw : mod 000 rm : imm
-or      100000sw : mod 001 rm : imm
-adc     100000sw : mod 010 rm : imm
-sbb     100000sw : mod 011 rm : imm
-and     100000sw : mod 100 rm : imm
-sub     100000sw : mod 101 rm : imm
-xor     100000sw : mod 110 rm : imm
-cmp     100000sw : mod 111 rm : imm
-test    1000010w : mod rx rm
-xchg    1000011w : mod rx rm
-mov     100010dw : mod rx rm
-mov     10001100 : mod sss rm : _d
-lea     10001101 : moda rx rm
-mov     10001110 : mod sss rm
-pop     10001111 : mod 000 rm : +f64
-xchg    10010rrr : _a
-call    10011010 : disp sel
-wait    10011011
-pushf   10011100
-popf    10011101 : +f64
-sahf    10011110
-lahf    10011111
-mov     1010000w : _a disp
-movs    1010010w : +ds
-cmps    1010011w : +ds
-test    1010100w : _a imm
-stos    1010101w : +ds
-lods    1010110w : +ds
-scas    1010111w : +ds
-mov     1011wrrr : imm
-rol     1100000w : mod 000 rm : imm8
-ror     1100000w : mod 001 rm : imm8
-rcl     1100000w : mod 010 rm : imm8
-rcr     1100000w : mod 011 rm : imm8
-shl     1100000w : mod 100 rm : imm8
-shr     1100000w : mod 101 rm : imm8
-sar     1100000w : mod 111 rm : imm8
-ret     11000010 : imm16
-ret     11000011
-les     11000100 : modab rx rm : +n64
-lds     11000101 : modab rx rm : +n64
-mov     1100011w : mod 000 rm : imm
-leave   11001001
-ret     11001010 : imm16
-ret     11001011
-int3    11001100
-int     11001101 : imm8
-into    11001110
-iret    11001111
-rol     1101000w : mod 000 rm : _1
-ror     1101000w : mod 001 rm : _1
-rcl     1101000w : mod 010 rm : _1
-rcr     1101000w : mod 011 rm : _1
-shl     1101000w : mod 100 rm : _1
-shr     1101000w : mod 101 rm : _1
-sar     1101000w : mod 111 rm : _1
-rol     1101001w : mod 000 rm : _c _d
-ror     1101001w : mod 001 rm : _c _d
-rcl     1101001w : mod 010 rm : _c _d
-rcr     1101001w : mod 011 rm : _c _d
-shl     1101001w : mod 100 rm : _c _d
-shr     1101001w : mod 101 rm : _c _d
-sar     1101001w : mod 111 rm : _c _d
-aam     11010100 : 00001010
-aad     11010101 : 00001010
-xlat    11010111
-loopnz  11100000 : disp8
-loopz   11100001 : disp8
-loop    11100010 : disp8
-jcxz    11100011 : disp8
-in      1110010w : imm8
-out     1110011w : imm8
-call    11101000 : disp
-jmp     11101001 : disp
-jmp     11101011 : disp8
-in      1110110w
-out     1110111w
-hlt     11110100
-cmc     11110101
-test    1111011w : mod 000 rm : imm
-test    1111011w : mod 001 rm : imm
-not     1111011w : mod 010 rm
-neg     1111011w : mod 011 rm
-imul    1111011w : mod 101 rm : _a
-div     1111011w : mod 110 rm : _a
-mul     1111011w : mod 100 rm : _a
-idiv    1111011w : mod 111 rm : _a
-clc     11111000
-stc     11111001
-cli     11111010
-sti     11111011
-cld     11111100
-std     11111101
-inc     1111111w : mod 000 rm
-dec     1111111w : mod 001 rm
-call    11111111 : mod 010 rm : +f64
-call    11111111 : mod 011 rm : +f64
-jmp     11111111 : mod 100 rm : +f64
-push    11111111 : mod 110 rm : +f64
-
-sldt    +0f : 00000000 : mod 000 rm
-str     +0f : 00000000 : mod 001 rm
-lldt    +0f : 00000000 : mod 010 rm
-ltr     +0f : 00000000 : mod 011 rm
-verr    +0f : 00000000 : mod 100 rm
-verw    +0f : 00000000 : mod 101 rm
-sgdt    +0f : 00000001 : moda 000 rm
-sidt    +0f : 00000001 : moda 001 rm
-lgdt    +0f : 00000001 : moda 010 rm
-lidt    +0f : 00000001 : moda 011 rm
-lmsw    +0f : 00000001 : moda 110 rm
-smsw    +0f : 00000001 : moda 100 rm
-invlpg  +0f : 00000001 : moda 111 rm
-rdtscp  +0f : 00000001 : 11   111 001
-lar     +0f : 00000010 : mod rx rm
-lsl     +0f : 00000011 : mod rx rm
-clts    +0f : 00000110
-wbinvd  +0f : 00001001
-ud2     +0f : 00001011
-invd    +0f : 00001000
-nop     +0f : 00011111 : mod 000 rm
-mov     +0f : 00100000 : -- eee rrr : _64 _d
-mov     +0f : 00100001 : -- ddd rrr : _64 _d
-mov     +0f : 00100010 : -- eee rrr : _64
-mov     +0f : 00100011 : -- ddd rrr : _64
-wrmsr   +0f : 00110000
-rdtsc   +0f : 00110001
-rdmsr   +0f : 00110010
-rdpmc   +0f : 00110011
-movbe   +0f : +38 : 1111000 d : mod rx rm
-jo      +0f : 10000000 : disp
-jno     +0f : 10000001 : disp
-jb      +0f : 10000010 : disp
-jae     +0f : 10000011 : disp
-jz      +0f : 10000100 : disp
-jnz     +0f : 10000101 : disp
-jbe     +0f : 10000110 : disp
-ja      +0f : 10000111 : disp
-js      +0f : 10001000 : disp
-jns     +0f : 10001001 : disp
-jp      +0f : 10001010 : disp
-jnp     +0f : 10001011 : disp
-jl      +0f : 10001100 : disp
-jge     +0f : 10001101 : disp
-jle     +0f : 10001110 : disp
-jg      +0f : 10001111 : disp
-push    +0f : 10100000 : _fs
-push    +0f : 10101000 : _gs
-pop     +0f : 10100001 : _fs
-pop     +0f : 10101001 : _gs
-seto    +0f : 10010000 : mod 000 rm
-setno   +0f : 10010001 : mod 000 rm
-setb    +0f : 10010010 : mod 000 rm
-setae   +0f : 10010011 : mod 000 rm
-setz    +0f : 10010100 : mod 000 rm
-setnz   +0f : 10010101 : mod 000 rm
-setbe   +0f : 10010110 : mod 000 rm
-seta    +0f : 10010111 : mod 000 rm
-sets    +0f : 10011000 : mod 000 rm
-setns   +0f : 10011001 : mod 000 rm
-setp    +0f : 10011010 : mod 000 rm
-setnp   +0f : 10011011 : mod 000 rm
-setl    +0f : 10011100 : mod 000 rm
-setge   +0f : 10011101 : mod 000 rm
-setle   +0f : 10011110 : mod 000 rm
-setg    +0f : 10011111 : mod 000 rm
-cpuid   +0f : 10100010
-bt      +0f : 10100011 : mod rx rm
-shld    +0f : 10100100 : mod rx rm : imm8
-shld    +0f : 10100101 : mod rx rm : _c 
-bts     +0f : 10101011 : mod rx rm
-shrd    +0f : 10101100 : mod rx rm : imm8
-shrd    +0f : 10101101 : mod rx rm : _c 
-imul    +0f : 10101111 : mod rx rm
-lss     +0f : 10110010 : moda rx rm
-btr     +0f : 10110011 : mod rx rm
-bt      +0f : 10111010 : mod 100 rm : imm8
-bts     +0f : 10111010 : mod 101 rm : imm8
-btr     +0f : 10111010 : mod 110 rm : imm8
-btc     +0f : 10111010 : mod 111 rm : imm8
-btc     +0f : 10111011 : mod rx rm
-bsf     +0f : 10111100 : mod rx rm
-bsr     +0f : 10111101 : mod rx rm
-movsx   +0f : 1011111w : mod rx rm
-xadd    +0f : 1100000w : mod rx rm
-bswap   +0f : 11001rrr
-rsm     +0f : 10101010
-cmpxchg +0f : 1011000w : mod rx rm
-movzx   +0f : 1011011w : mod rx rm
-lfs     +0f : 10110100 : moda rx rm
-lgs     +0f : 10110101 : moda rx rm
-ud1     +0f : 10111001 : mod rx rm
-ud0     +0f : 11111111 : mod rx rm
-invpcid +dp : +0f : 00111000 : 10000010 : mod rx rm
-
-# ------------------------------------------------------------------- #
-# General purpose 64-bit mode instructions
-# ------------------------------------------------------------------- #
-
-enter   11001000 : disp16 : imm8
-swapgs  +0f : 00000001 : 11111000
-syscall +0f : 00000101
-sysret  +0f : 00000111
-
-endbr64 +f3 : +0f : 00011110 : 11111010
-endbr32 +f3 : +0f : 00011110 : 11111011
-
-# ------------------------------------------------------------------- #
-# Pentium processor family instructions
-# ------------------------------------------------------------------- #
-
-cmpxchg8b +0f : 11000111 : mod 001 rm
-
-
-# ------------------------------------------------------------------- #
-# MMX instruction formats and encodings
-# ------------------------------------------------------------------- #
-
-punpcklbw  +np : +0f : 01100000 : mod mmxrx rm
-punpcklwd  +np : +0f : 01100001 : mod mmxrx rm
-punpckldq  +np : +0f : 01100010 : mod mmxrx rm
-packsswb   +np : +0f : 01100011 : mod mmxrx rm
-pcmpgtb    +np : +0f : 01100100 : mod mmxrx rm
-pcmpgtw    +np : +0f : 01100101 : mod mmxrx rm
-pcmpgtd    +np : +0f : 01100110 : mod mmxrx rm
-packuswb   +np : +0f : 01100111 : mod mmxrx rm
-mov        +np : +0f : 011d1110 : 11 mmxrx rrr  : +ds
-mov        +np : +0f : 011d1110 : moda mmxrx rm : +ds
-psrlw      +np : +0f : 01110001 : 11 010 mmxrx : imm8
-psraw      +np : +0f : 01110001 : 11 100 mmxrx : imm8
-psllw      +np : +0f : 01110001 : 11 110 mmxrx : imm8
-psrld      +np : +0f : 01110010 : 11 010 mmxrx : imm8
-psrad      +np : +0f : 01110010 : 11 100 mmxrx : imm8
-pslld      +np : +0f : 01110010 : 11 110 mmxrx : imm8
-pslrq      +np : +0f : 01110011 : 11 010 mmxrx : imm8
-psraq      +np : +0f : 01110011 : 11 100 mmxrx : imm8
-psllq      +np : +0f : 01110011 : 11 110 mmxrx : imm8
-punpckhw   +np : +0f : 01101000 : mod mmxrx rm
-punpckhd   +np : +0f : 01101001 : mod mmxrx rm
-punpckhq   +np : +0f : 01101010 : mod mmxrx rm
-packssdw   +np : +0f : 01101011 : mod mmxrx rm
-pcmpeqb    +np : +0f : 01110100 : mod mmxrx rm
-pcmpeqw    +np : +0f : 01110101 : mod mmxrx rm
-pcmpeqd    +np : +0f : 01110110 : mod mmxrx rm
-emms       +np : +0f : 01110111
-psrlw      +np : +0f : 11010001 : mod mmxrx rm
-psrld      +np : +0f : 11010010 : mod mmxrx rm
-psrlq      +np : +0f : 11010011 : mod mmxrx rm
-pand       +np : +0f : 11011011 : mod mmxrx rm
-paddq      +np : +0f : 11010100 : mod mmxrx rm
-pmullw     +np : +0f : 11010101 : mod mmxrx rm
-psubusb    +np : +0f : 11011000 : mod mmxrx rm
-psubusw    +np : +0f : 11011001 : mod mmxrx rm
-paddusb    +np : +0f : 11011100 : mod mmxrx rm
-paddusw    +np : +0f : 11011101 : mod mmxrx rm
-pandn      +np : +0f : 11011111 : mod mmxrx rm
-psraw      +np : +0f : 11100001 : mod mmxrx rm
-psrad      +np : +0f : 11100010 : mod mmxrx rm
-pmulhuw    +np : +0f : 11100100 : mod mmxrx rm
-pmulhw     +np : +0f : 11100101 : mod mmxrx rm
-por        +np : +0f : 11101011 : mod mmxrx rm
-paddsb     +np : +0f : 11101100 : mod mmxrx rm
-paddsw     +np : +0f : 11101101 : mod mmxrx rm
-psllw      +np : +0f : 11110001 : mod mmxrx rm
-pslld      +np : +0f : 11110010 : mod mmxrx rm
-psllq      +np : +0f : 11110011 : mod mmxrx rm
-pmaddwd    +np : +0f : 11110101 : mod mmxrx rm
-psubsb     +np : +0f : 11101000 : mod mmxrx rm
-psubsw     +np : +0f : 11101001 : mod mmxrx rm
-pxor       +np : +0f : 11101111 : mod mmxrx rm
-psubb      +np : +0f : 11111000 : mod mmxrx rm
-psubw      +np : +0f : 11111001 : mod mmxrx rm
-psubd      +np : +0f : 11111010 : mod mmxrx rm
-psubq      +np : +0f : 11111011 : mod mmxrx rm
-paddb      +np : +0f : 11111100 : mod mmxrx rm
-paddw      +np : +0f : 11111101 : mod mmxrx rm
-paddd      +np : +0f : 11111110 : mod mmxrx rm
-
-# ------------------------------------------------------------------- #
-# Processor extended state instruction formats
-# ------------------------------------------------------------------- #
-
-xgetbv     +0f : 00000001 : 11010000
-xsetbv     +0f : 00000001 : 11010001
-xrstor     +0f : 10101110 : moda 101 rm
-xsave      +0f : 10101110 : moda 100 rm
-
-# ------------------------------------------------------------------- #
-# P6 family instruction formats and encodings
-# ------------------------------------------------------------------- #
-
-cmovo      +0f : 01000000 : mod rx rm
-cmovno     +0f : 01000001 : mod rx rm
-cmovb      +0f : 01000010 : mod rx rm
-cmovae     +0f : 01000011 : mod rx rm
-cmovz      +0f : 01000100 : mod rx rm
-cmovnz     +0f : 01000101 : mod rx rm
-cmovbe     +0f : 01000110 : mod rx rm
-cmova      +0f : 01000111 : mod rx rm
-cmovs      +0f : 01001000 : mod rx rm
-cmovns     +0f : 01001001 : mod rx rm
-cmovp      +0f : 01001010 : mod rx rm
-cmovnp     +0f : 01001011 : mod rx rm
-cmovl      +0f : 01001100 : mod rx rm
-cmovge     +0f : 01001101 : mod rx rm
-cmovle     +0f : 01001110 : mod rx rm
-cmovg      +0f : 01001111 : mod rx rm
-
-# ------------------------------------------------------------------- #
-# SSE instruction formats and encodings
-# ------------------------------------------------------------------- #
-
-punpcklbw  +dp : +0f : 01100000 : mod xmmrx rm
-punpcklwd  +dp : +0f : 01100001 : mod xmmrx rm
-punpckldq  +dp : +0f : 01100010 : mod xmmrx rm
-packsswb   +dp : +0f : 01100011 : mod xmmrx rm
-pcmpgtb    +dp : +0f : 01100100 : mod xmmrx rm
-pcmpgtw    +dp : +0f : 01100101 : mod xmmrx rm
-pcmpgtd    +dp : +0f : 01100110 : mod xmmrx rm
-packuswb   +dp : +0f : 01100111 : mod xmmrx rm
-mov        +dp : +0f : 011d1110 : 11 xmmrx rrr  : +ds
-mov        +dp : +0f : 011d1110 : moda xmmrx rm : +ds
-psrlw      +dp : +0f : 01110001 : 11 010 xmmrx : imm8
-psraw      +dp : +0f : 01110001 : 11 100 xmmrx : imm8
-psllw      +dp : +0f : 01110001 : 11 110 xmmrx : imm8
-psrld      +dp : +0f : 01110010 : 11 010 xmmrx : imm8
-psrad      +dp : +0f : 01110010 : 11 100 xmmrx : imm8
-pslld      +dp : +0f : 01110010 : 11 110 xmmrx : imm8
-pslrq      +dp : +0f : 01110011 : 11 010 xmmrx : imm8
-psraq      +dp : +0f : 01110011 : 11 100 xmmrx : imm8
-psllq      +dp : +0f : 01110011 : 11 110 xmmrx : imm8
-punpckhw   +dp : +0f : 01101000 : mod xmmrx rm
-punpckhd   +dp : +0f : 01101001 : mod xmmrx rm
-punpckhq   +dp : +0f : 01101010 : mod xmmrx rm
-packssdw   +dp : +0f : 01101011 : mod xmmrx rm
-pcmpeqb    +dp : +0f : 01110100 : mod xmmrx rm
-pcmpeqw    +dp : +0f : 01110101 : mod xmmrx rm
-pcmpeqd    +dp : +0f : 01110110 : mod xmmrx rm
-psrlw      +dp : +0f : 11010001 : mod xmmrx rm
-psrld      +dp : +0f : 11010010 : mod xmmrx rm
-psrlq      +dp : +0f : 11010011 : mod xmmrx rm
-pand       +dp : +0f : 11011011 : mod xmmrx rm
-paddq      +dp : +0f : 11010100 : mod xmmrx rm
-pmullw     +dp : +0f : 11010101 : mod xmmrx rm
-psubusb    +dp : +0f : 11011000 : mod xmmrx rm
-psubusw    +dp : +0f : 11011001 : mod xmmrx rm
-paddusb    +dp : +0f : 11011100 : mod xmmrx rm
-paddusw    +dp : +0f : 11011101 : mod xmmrx rm
-pandn      +dp : +0f : 11011111 : mod xmmrx rm
-psraw      +dp : +0f : 11100001 : mod xmmrx rm
-psrad      +dp : +0f : 11100010 : mod xmmrx rm
-pmulhuw    +dp : +0f : 11100100 : mod xmmrx rm
-pmulhw     +dp : +0f : 11100101 : mod xmmrx rm
-por        +dp : +0f : 11101011 : mod xmmrx rm
-paddsb     +dp : +0f : 11101100 : mod xmmrx rm
-paddsw     +dp : +0f : 11101101 : mod xmmrx rm
-psllw      +dp : +0f : 11110001 : mod xmmrx rm
-pslld      +dp : +0f : 11110010 : mod xmmrx rm
-psllq      +dp : +0f : 11110011 : mod xmmrx rm
-pmaddwd    +dp : +0f : 11110101 : mod xmmrx rm
-psubsb     +dp : +0f : 11101000 : mod xmmrx rm
-psubsw     +dp : +0f : 11101001 : mod xmmrx rm
-pxor       +dp : +0f : 11101111 : mod xmmrx rm
-psubb      +dp : +0f : 11111000 : mod xmmrx rm
-psubw      +dp : +0f : 11111001 : mod xmmrx rm
-psubd      +dp : +0f : 11111010 : mod xmmrx rm
-psubq      +dp : +0f : 11111011 : mod xmmrx rm
-paddb      +dp : +0f : 11111100 : mod xmmrx rm
-paddw      +dp : +0f : 11111101 : mod xmmrx rm
-paddd      +dp : +0f : 11111110 : mod xmmrx rm
-
-pshufw     +dp : +0f : 01110000 : mod xmmrx rm : imm8
-pinsrw     +dp : +0f : 11000100 : mod xmmrx rm : imm8
-pextrw     +dp : +0f : 11000101 : 11 rrr xmmrx : imm8
-pmovmskb   +dp : +0f : 11010111 : 11 rrr xmmrx
-pminub     +dp : +0f : 11011010 : mod xmmrx rm
-pmaxub     +dp : +0f : 11011110 : mod xmmrx rm
-pavgb      +dp : +0f : 11100000 : mod xmmrx rm
-pavgw      +dp : +0f : 11100011 : mod xmmrx rm
-pminsw     +dp : +0f : 11101010 : mod xmmrx rm
-pmaxsw     +dp : +0f : 11101110 : mod xmmrx rm
-psadbw     +dp : +0f : 11110110 : mod xmmrx rm
-
-# Packed singles (prefix: <NP> 0F)
-movups     +np : +0f : 0001000d : mod xmmrx rm
-movhlps    +np : +0f : 00010010 : mod11 xmmrx rm
-movlps     +np : +0f : 0001001d : moda xmmrx rm
-unpcklps   +np : +0f : 00010100 : mod xmmrx rm
-unpckhps   +np : +0f : 00010101 : mod xmmrx rm
-movhps     +np : +0f : 0001011d : moda xmmrx rm
-movlhps    +np : +0f : 00010110 : mod11 xmmrx rm
-cvtpi2ps   +np : +0f : 00101010 : 11 xmmrx mmxrx
-cvtpi2ps   +np : +0f : 00101010 : moda xmmrx rm
-movntps    +np : +0f : 00101011 : mod xmmrx rm
-cvttps2pi  +np : +0f : 00101100 : 11 mmxrx xmmrx
-cvttps2pi  +np : +0f : 00101100 : moda mmxrx rm
-cvtps2pi   +np : +0f : 00101101 : 11 mmxrx xmmrx
-cvtps2pi   +np : +0f : 00101101 : moda mmxrx rm
-ucomiss    +np : +0f : 00101110 : mod xmmrx rm
-comiss     +np : +0f : 00101111 : mod xmmrx rm
-movmskps   +np : +0f : 01010000 : 11 rrr xmmrx
-sqrtps     +np : +0f : 01010001 : mod xmmrx rm
-rsqrtps    +np : +0f : 01010010 : mod xmmrx rm
-rcpps      +np : +0f : 01010011 : mod xmmrx rm
-addps      +np : +0f : 01011000 : mod xmmrx rm
-mulps      +np : +0f : 01011001 : mod xmmrx rm
-andnps     +np : +0f : 01010101 : mod xmmrx rm
-orps       +np : +0f : 01010110 : mod xmmrx rm
-xorps      +np : +0f : 01010111 : mod xmmrx rm
-subps      +np : +0f : 01011100 : mod xmmrx rm
-minps      +np : +0f : 01011101 : mod xmmrx rm
-divps      +np : +0f : 01011110 : mod xmmrx rm
-maxps      +np : +0f : 01011111 : mod xmmrx rm
-movaps     +np : +0f : 00101000 : mod xmmrx rm
-movaps     +np : +0f : 00101001 : mod xmmrx rm : _d
-ldmxcsr    +np : +0f : 10101110 : moda 010 rm
-stmxcsr    +np : +0f : 10101110 : moda 011 rm
-sfence     +np : +0f : 10101110 : 11111000
-cmpps      +np : +0f : 11000010 : mod xmmrx rm : imm8
-shufps     +np : +0f : 11000110 : mod xmmrx rm : imm8
-movntq     +np : +0f : 11100111 : mod xmmrx rm
-
-pshufw     +np : +0f : 01110000 : mod mmxrx rm : imm8
-pinsrw     +np : +0f : 11000100 : mod mmxrx rm : imm8
-pextrw     +np : +0f : 11000101 : 11 rrr mmxrx : imm8
-pmovmskb   +np : +0f : 11010111 : 11 rrr mmxrx
-pminub     +np : +0f : 11011010 : mod mmxrx rm
-pmaxub     +np : +0f : 11011110 : mod mmxrx rm
-pavgb      +np : +0f : 11100000 : mod mmxrx rm
-pavgw      +np : +0f : 11100011 : mod mmxrx rm
-pminsw     +np : +0f : 11101010 : mod mmxrx rm
-pmaxsw     +np : +0f : 11101110 : mod mmxrx rm
-psadbw     +np : +0f : 11110110 : mod mmxrx rm
-maskmovq   +np : +0f : 11110111 : mod11 mmxrx rm
-
-prefetcht3 +0f : 00011000 : moda 000 rm
-prefetcht0 +0f : 00011000 : moda 001 rm
-prefetcht1 +0f : 00011000 : moda 010 rm
-prefetcht2 +0f : 00011000 : moda 011 rm
-
-# Scalar floats (prefix: F3 0F)
-movss      +f3 : +0f : 0001000d : mod xmmrx rm
-cvtsi2ss   +f3 : +0f : 00101010 : 11 rrr xmmrx
-cvtsi2ss   +f3 : +0f : 00101010 : moda rrr rm 
-cvtss2si   +f3 : +0f : 00101101 : 11 rrr xmmrx
-cvtss2si   +f3 : +0f : 00101101 : moda rx rm
-sqrtss     +f3 : +0f : 01010001 : mod xmmrx rm
-rsqrtss    +f3 : +0f : 01010010 : mod xmmrx rm
-rcpss      +f3 : +0f : 01010011 : mod xmmrx rm
-addss      +f3 : +0f : 01011000 : mod xmmrx rm
-mulss      +f3 : +0f : 01011001 : mod xmmrx rm
-subss      +f3 : +0f : 01011100 : mod xmmrx rm
-minss      +f3 : +0f : 01011101 : mod xmmrx rm
-divss      +f3 : +0f : 01011110 : mod xmmrx rm
-maxss      +f3 : +0f : 01011111 : mod xmmrx rm
-cmpss      +f3 : +0f : 11000010 : mod xmmrx rm : imm8
-
-# ------------------------------------------------------------------- #
-# SSE2 instruction formats and encodings
-# ------------------------------------------------------------------- #
-
-pause      +f3 : 10010000
-
-# Scalar doubles (prefix: F2 0F)
-movsd      +f2 : +0f : 0001000d : mod xmmrx rm
-cvttsd2si  +f2 : +0f : 00101100 : 11 rrr xmmrx
-cvttsd2si  +f2 : +0f : 00101100 : moda rrr rm
-cvtsd2si   +f2 : +0f : 00101101 : 11 rrr xmmrx
-cvtsd2si   +f2 : +0f : 00101101 : moda rx rm
-cvtsi2sd   +f2 : +0f : 00101010 : 11 xmmrx rrr
-cvtsi2sd   +f2 : +0f : 00101010 : moda xmmrx rm
-sqrtsd     +f2 : +0f : 01010001 : mod xmmrx rm
-addsd      +f2 : +0f : 01011000 : mod xmmrx rm
-mulsd      +f2 : +0f : 01011001 : mod xmmrx rm
-cvtsd2ss   +f2 : +0f : 01011010 : mod xmmrx rm
-subsd      +f2 : +0f : 01011100 : mod xmmrx rm
-minsd      +f2 : +0f : 01011101 : mod xmmrx rm
-divsd      +f2 : +0f : 01011110 : mod xmmrx rm
-maxsd      +f2 : +0f : 01011111 : mod xmmrx rm
-cmpsd      +f2 : +0f : 11000010 : mod xmmrx rm : imm8
-movdq2q    +f2 : +0f : 11010110 : 11 xmmrx mmxrx
-
-psrldq     +dp : +0f : 01110011 : 11 011 xmmrx : imm8
-pslldq     +dp : +0f : 01110011 : 11 111 xmmrx : imm8
-
-cvttss2si  +f3 : +0f : 00101100 : moda rx rm
-cvttss2si  +f3 : +0f : 00101100 : 11 rrr xmmrx
-cvtss2sd   +f3 : +0f : 01011010 : mod xmmrx rm
-cvttps2dq  +f3 : +0f : 01011011 : mod xmmrx rm
-movdqu     +f3 : +0f : 011d1111 : mod xmmrx rm
-movq       +f3 : +0f : 01111110 : mod xmmrx rm : _d
-movq2dq    +f3 : +0f : 11010110 : 11 mmxrx xmmrx : _d
-cvtdq2pd   +f3 : +0f : 11100110 : mod xmmrx rm
-
-clflush    +0f : 10101110 : mod 111 rm
-lfence     +0f : 10101110 : 111 010 00
-mfence     +0f : 10101110 : 111 100 00
-movnti     +0f : 11000011 : mod rx rm
-
-# Packed singles (prefix: <NP> 0F)
-cvtps2pd   +np : +0f : 01011010 : mod xmmrx rm
-cvtdq2ps   +np : +0f : 01011011 : mod xmmrx rm
-
-# Packed doubles (prefix: 66 0F)
-unpckhpd   +dp : +0f : 00010101 : mod xmmrx rm
-movupd     +dp : +0f : 0001000d : mod xmmrx rm
-movlpd     +dp : +0f : 00010010 : mod xmmrx rm
-unpcklpd   +dp : +0f : 00010100 : mod xmmrx rm
-movhpd     +dp : +0f : 0001011d : mod xmmrx rm
-movapd     +dp : +0f : 0010100d : mod xmmrx rm
-cvtpi2pd   +dp : +0f : 00101010 : 11 xmmrx mmxrx
-cvtpi2pd   +dp : +0f : 00101010 : moda xmmrx rm
-movntpd    +dp : +0f : 00101011 : mod xmmrx rm
-cvttpd2pi  +dp : +0f : 00101100 : 11 mmxrx xmmrx
-cvttpd2pi  +dp : +0f : 00101100 : moda mmxrx xmmrx
-cvtpd2pi   +dp : +0f : 00101101 : 11 mmxrx xmmrx
-cvtpd2pi   +dp : +0f : 00101101 : moda mmxrx  rm
-ucomisd    +dp : +0f : 00101110 : mod xmmrx rm
-comisd     +dp : +0f : 00101111 : mod xmmrx rm
-movmskpd   +dp : +0f : 01010000 : 11 rrr xmmrx
-sqrtpd     +dp : +0f : 01010001 : mod xmmrx rm
-addpd      +dp : +0f : 01011000 : mod xmmrx rm
-andpd      +dp : +0f : 01010100 : mod xmmrx rm
-andnpd     +dp : +0f : 01010101 : mod xmmrx rm
-orpd       +dp : +0f : 01010110 : mod xmmrx rm
-xorpd      +dp : +0f : 01010111 : mod xmmrx rm
-mulpd      +dp : +0f : 01011001 : mod xmmrx rm
-cvtpd2ps   +dp : +0f : 01011010 : mod xmmrx rm
-subpd      +dp : +0f : 01011100 : mod xmmrx rm
-minpd      +dp : +0f : 01011101 : mod xmmrx rm
-divpd      +dp : +0f : 01011110 : mod xmmrx rm
-maxpd      +dp : +0f : 01011111 : mod xmmrx rm
-packsswb   +dp : +0f : 01100011 : mod xmmrx rm
-packuswb   +dp : +0f : 01100111 : mod xmmrx rm
-packssdw   +dp : +0f : 01101011 : mod xmmrx rm
-movd       +dp : +0f : 011d1110 : mod xmmrx rm
-movdqa     +dp : +0f : 011d1111 : mod xmmrx rm
-cmppd      +dp : +0f : 11000010 : mod xmmrx rm : imm8
-shufpd     +dp : +0f : 11000110 : mod xmmrx rm : imm8
-movq       +dp : +0f : 11010110 : mod xmmrx rm
-cvttpd2dq  +dp : +0f : 11100110 : mod xmmrx rm
-movntdq    +dp : +0f : 11100111 : mod xmmrx rm
-maskmovdqu +dp : +0f : 11110111 : mod11 xmmrx rm
-
-punpckhqdq +dp : +0f : 01101101 : mod xmmrx rm
-punpcklqdq +dp : +0f : 01101100 : mod xmmrx rm
-
-# ------------------------------------------------------------------- #
-# SSE3 instruction formats and encodings
-# ------------------------------------------------------------------- #
-
-fisttp     11011011 : moda 001 rm
-fisttp     11011101 : moda 001 rm
-fisttp     11011111 : moda 001 rm
-
-monitor    +0f : 00000001 : 11001000 : _a
-mwait      +0f : 00000001 : 11001001 : _c
-
-haddpd     +dp : +0f : 01111100 : mod xmmrx rm
-hsubpd     +dp : +0f : 01111101 : mod xmmrx rm
-addsubpd   +dp : +0f : 11010000 : mod xmmrx rm
-
-lddqu      +f2 : +0f : 00010010 : mod xmmrx rm
-haddps     +f2 : +0f : 01111100 : mod xmmrx rm
-hsubps     +f2 : +0f : 01111101 : mod xmmrx rm
-addsubps   +f2 : +0f : 11010000 : mod xmmrx rm
-
-movshdup   +f3 : +0f : 00010110 : mod xmmrx rm
-movsldup   +f3 : +0f : 00010010 : mod xmmrx rm
-
-# ------------------------------------------------------------------- #
-# SSSE3 instruction formats and encodings
-# ------------------------------------------------------------------- #
-
-pshufb     +np : +0f : +38 : 00000000 : mod mmxrx rm
-phaddw     +np : +0f : +38 : 00000001 : mod mmxrx rm
-phaddd     +np : +0f : +38 : 00000010 : mod mmxrx rm
-phaddsw    +np : +0f : +38 : 00000011 : mod mmxrx rm
-pmaddubsw  +np : +0f : +38 : 00000100 : mod mmxrx rm
-phsubd     +np : +0f : +38 : 00000110 : mod mmxrx rm
-phsubw     +np : +0f : +38 : 00000101 : mod mmxrx rm
-phsubsw    +np : +0f : +38 : 00000111 : mod mmxrx rm
-psignb     +np : +0f : +38 : 00001000 : mod mmxrx rm
-psignw     +np : +0f : +38 : 00001001 : mod mmxrx rm
-psignd     +np : +0f : +38 : 00001010 : mod mmxrx rm
-pmulhrsw   +np : +0f : +38 : 00001011 : mod mmxrx rm
-pabsb      +np : +0f : +38 : 00011100 : mod mmxrx rm
-pabsw      +np : +0f : +38 : 00011101 : mod mmxrx rm
-pabsd      +np : +0f : +38 : 00011110 : mod mmxrx rm
-
-palignr    +np : +0f : +3a : 00001111 : mod mmxrx rm : imm8
-
-pshufb     +dp : +0f : +38 : 00000000 : mod xmmrx rm
-phaddw     +dp : +0f : +38 : 00000001 : mod xmmrx rm
-phaddd     +dp : +0f : +38 : 00000010 : mod xmmrx rm
-phaddsw    +dp : +0f : +38 : 00000011 : mod xmmrx rm
-pmaddubsw  +dp : +0f : +38 : 00000100 : mod xmmrx rm
-phsubw     +dp : +0f : +38 : 00000101 : mod xmmrx rm
-phsubd     +dp : +0f : +38 : 00000110 : mod xmmrx rm
-phsubsw    +dp : +0f : +38 : 00000111 : mod xmmrx rm
-psignb     +dp : +0f : +38 : 00001000 : mod xmmrx rm
-psignw     +dp : +0f : +38 : 00001001 : mod xmmrx rm
-psignd     +dp : +0f : +38 : 00001010 : mod xmmrx rm
-pmulhrsw   +dp : +0f : +38 : 00001011 : mod xmmrx rm
-pabsb      +dp : +0f : +38 : 00011100 : mod xmmrx rm
-pabsw      +dp : +0f : +38 : 00011101 : mod xmmrx rm
-pabsd      +dp : +0f : +38 : 00011110 : mod xmmrx rm
-
-palignr    +dp : +0f : +3a : 00001111 : mod xmmrx rm : imm8
-
-# ------------------------------------------------------------------- #
-# AESNI and PCLMULQDQ instruction formats and encodings
-# ------------------------------------------------------------------- #
-
-aesdec          +dp : +0f : +38 : 11011110 : mod xmmrx rm
-aesdeclast      +dp : +0f : +38 : 11011111 : mod xmmrx rm
-aesenc          +dp : +0f : +38 : 11011100 : mod xmmrx rm
-aesenclast      +dp : +0f : +38 : 11011101 : mod xmmrx rm
-aesimc          +dp : +0f : +38 : 11011011 : mod xmmrx rm
-
-pclmulqdq       +dp : +0f : +3a : 01000100 : mod xmmrx rm : imm8
-aeskeygenassist +dp : +0f : +3a : 11011111 : mod xmmrx rm : imm8
-
-# ------------------------------------------------------------------- #
-# SSE 4.1 instruction formats and encodings
-# ------------------------------------------------------------------- #
-
-pblendvb    +dp : +0f : +38 : 00010000 : mod xmmrx rm
-blendvps    +dp : +0f : +38 : 00010100 : mod xmmrx rm
-blendvpd    +dp : +0f : +38 : 00010101 : mod xmmrx rm
-ptest       +dp : +0f : +38 : 00010111 : mod xmmrx rm
-pmovsxbw    +dp : +0f : +38 : 00100000 : mod xmmrx rm
-pmovsxbd    +dp : +0f : +38 : 00100001 : mod xmmrx rm
-pmovsxbq    +dp : +0f : +38 : 00100010 : mod xmmrx rm
-pmovsxwd    +dp : +0f : +38 : 00100011 : mod xmmrx rm
-pmovsxwq    +dp : +0f : +38 : 00100100 : mod xmmrx rm
-pmovsxdq    +dp : +0f : +38 : 00100101 : mod xmmrx rm
-pmuldq      +dp : +0f : +38 : 00101000 : mod xmmrx rm
-pcmpeqq     +dp : +0f : +38 : 00101001 : mod xmmrx rm
-movntdqa    +dp : +0f : +38 : 00101010 : 11 rrr xmmrx
-packusdw    +dp : +0f : +38 : 00101011 : mod xmmrx rm
-pmovzxbw    +dp : +0f : +38 : 00110000 : mod xmmrx rm
-pmovzxbq    +dp : +0f : +38 : 00110010 : mod xmmrx rm
-pmovzxwd    +dp : +0f : +38 : 00110011 : mod xmmrx rm
-pmovzxwq    +dp : +0f : +38 : 00110100 : mod xmmrx rm
-pmovzxdq    +dp : +0f : +38 : 00110101 : mod xmmrx rm
-pminsb      +dp : +0f : +38 : 00111000 : mod xmmrx rm
-pminsd      +dp : +0f : +38 : 00111001 : mod xmmrx rm
-pminuw      +dp : +0f : +38 : 00111010 : mod xmmrx rm
-pminud      +dp : +0f : +38 : 00111011 : mod xmmrx rm
-pmaxsb      +dp : +0f : +38 : 00111100 : mod xmmrx rm
-pmaxsd      +dp : +0f : +38 : 00111101 : mod xmmrx rm
-pmaxuw      +dp : +0f : +38 : 00111110 : mod xmmrx rm
-pmaxud      +dp : +0f : +38 : 00111111 : mod xmmrx rm
-phminposuw  +dp : +0f : +38 : 01000001 : mod xmmrx rm
-pmovzxbd    +dp : +0f : +38 : 10000011 : mod xmmrx rm
-pmulld      +dp : +0f : +38 : 01000000 : mod xmmrx rm
-
-roundpd     +dp : +0f : +3a : 00001001 : mod xmmrx rm : imm8
-blendps     +dp : +0f : +3a : 00001100 : mod xmmrx rm
-blendpd     +dp : +0f : +3a : 00001101 : mod xmmrx rm
-pextrb      +dp : +0f : +3a : 00010100 : mod xmmrx rm : imm8
-pextrw      +dp : +0f : +3a : 00010101 : mod xmmrx rm : imm8
-pextr       +dp : +0f : +3a : 00010110 : mod xmmrx rm : imm8 : +ds
-extractps   +dp : +0f : +3a : 00010111 : mod xmmrx rm : imm8
-pblendw     +dp : +0f : +3a : 00011110 : mod xmmrx rm : imm8
-pinsrb      +dp : +0f : +3a : 00100000 : mod xmmrx rm : imm8
-insertps    +dp : +0f : +3a : 00100001 : mod xmmrx rm : imm8
-pinsr       +dp : +0f : +3a : 00100010 : mod xmmrx rm : imm8 : +ds
-dpps        +dp : +0f : +3a : 01000000 : mod xmmrx rm : imm8
-dppd        +dp : +0f : +3a : 01000001 : mod xmmrx rm : imm8
-mpsadbw     +dp : +0f : +3a : 01000010 : mod xmmrx rm : imm8
-
-# ------------------------------------------------------------------- #
-# SSE 4.2 instruction formats and encodings
-# ------------------------------------------------------------------- #
-
-pcmpgtq     +dp : +0f : +38 : 00110111 : mod xmmrx rm
-
-pcmpestrm   +dp : +0f : +3a : 01100000 : mod xmmrx rm : imm8
-pcmpestri   +dp : +0f : +3a : 01100001 : mod xmmrx rm : imm8
-pcmpistri   +dp : +0f : +3a : 01100011 : mod xmmrx rm : imm8
-pcmpistrm   +dp : +0f : +3a : 01100010 : mod xmmrx rm : imm8
-
-crc32       +f2 : +0f : +38 : 1111000w : mod rx rm
-
-popcnt      +f3 : +0f : 10111000 : mod rx rm
-
-# ------------------------------------------------------------------- #
-# AVX instruction formats and encodings
-# ------------------------------------------------------------------- #
-
-vmovhlps    +vp : +np : +0f : 00010010 : mod xmmrx rm
-vaddps      +vp : +np : +0f : 01011000 : mod xmmrx rm
-vcvtps2pd   +vp : +np : +0f : 01011010 : mod xmmrx rm
-vcvtdq2ps   +vp : +np : +0f : 01011101 : mod xmmrx rm
-
-vmovupd     +vp : +dp : +0f : 00010000 : mod xmmrx rm
-vmovlpd     +vp : +dp : +0f : 00010010 : mod xmmrx rm
-vmovhpd     +vp : +dp : +0f : 00010110 : mod xmmrx rm
-vmovapd     +vp : +dp : +0f : 0010100d : mod xmmrx rm
-vmovntpd    +vp : +dp : +0f : 00101011 : mod xmmrx rm
-vcomisd     +vp : +dp : +0f : 00101111 : mod xmmrx rm
-vmovmskpd   +vp : +dp : +0f : 01010000 : mod xmmrx rm
-vandpd      +vp : +dp : +0f : 01010100 : mod xmmrx rm
-vandnpd     +vp : +dp : +0f : 01010101 : mod xmmrx rm
-vorpd       +vp : +dp : +0f : 01010110 : mod xmmrx rm
-vaddpd      +vp : +dp : +0f : 01011000 : mod xmmrx rm
-vmulpd      +vp : +dp : +0f : 01011001 : mod xmmrx rm
-vcvtpd2ps   +vp : +dp : +0f : 01011010 : mod xmmrx rm
-vcvtps2dq   +vp : +dp : +0f : 01011011 : mod xmmrx rm
-vminpd      +vp : +dp : +0f : 01011101 : mod xmmrx rm
-vdivpd      +vp : +dp : +0f : 01011110 : mod xmmrx rm
-vmaxpd      +vp : +dp : +0f : 01011111 : mod xmmrx rm
-vmov        +vp : +dp : +0f : 011d1110 : 11 xmmrx rrr  : +ds
-vmov        +vp : +dp : +0f : 011d1110 : moda xmmrx rm : +ds
-vpacksswb   +vp : +dp : +0f : 01100011 : mod xmmrx rm
-vpcmpgtb    +vp : +dp : +0f : 01100100 : mod xmmrx rm
-vpcmpgtw    +vp : +dp : +0f : 01100101 : mod xmmrx rm
-vpcmpgtd    +vp : +dp : +0f : 01100110 : mod xmmrx rm
-vpackusbw   +vp : +dp : +0f : 01100111 : mod xmmrx rm
-vpackssdw   +vp : +dp : +0f : 01101011 : mod xmmrx rm
-vmovdqa     +vp : +dp : +0f : 01101111 : mod xmmrx rm
-vpshufd     +vp : +dp : +0f : 01110000 : mod xmmrx rm : imm8
-vpcmpeqb    +vp : +dp : +0f : 01110100 : mod xmmrx rm
-vpcmpeqw    +vp : +dp : +0f : 01110101 : mod xmmrx rm
-vpcmpeqd    +vp : +dp : +0f : 01110110 : mod xmmrx rm
-vhaddpd     +vp : +dp : +0f : 01111100 : mod xmmrx rm
-vhsubpd     +vp : +dp : +0f : 01111101 : mod xmmrx rm
-vcmppd      +vp : +dp : +0f : 11000010 : mod xmmrx rm
-vpextrw     +vp : +dp : +0f : 11000101 : 11 rrr xmmrx : imm8 : +vw0
-vpinsrw     +vp : +dp : +0f : 11000100 : 11 xmmrx rrr : imm8 : +vw0
-vpinsrw     +vp : +dp : +0f : 11000100 : moda xmmrx rm : imm8 : +vw0
-vaddsubpd   +vp : +dp : +0f : 11010000 : mod xmmrx rm
-vpaddq      +vp : +dp : +0f : 11010100 : mod xmmrx rm
-vpmullw     +vp : +dp : +0f : 11010101 : mod xmmrx rm
-vpmovmskb   +vp : +dp : +0f : 11010111 : 11 rrr xmmrx
-vpminub     +vp : +dp : +0f : 11011010 : mod xmmrx rm
-vpmaxub     +vp : +dp : +0f : 11011110 : mod xmmrx rm
-vpand       +vp : +dp : +0f : 11011011 : mod xmmrx rm
-vpaddusb    +vp : +dp : +0f : 11011100 : mod xmmrx rm
-vpaddusw    +vp : +dp : +0f : 11011101 : mod xmmrx rm
-vpandn      +vp : +dp : +0f : 11011111 : mod xmmrx rm
-vpavgb      +vp : +dp : +0f : 11100000 : mod xmmrx rm
-vpavgw      +vp : +dp : +0f : 11100011 : mod xmmrx rm
-vpmulhuw    +vp : +dp : +0f : 11100100 : mod xmmrx rm
-vpmulhw     +vp : +dp : +0f : 11100101 : mod xmmrx rm
-vcvttpd2dq  +vp : +dp : +0f : 11100110 : mod xmmrx rm
-vmovntdq    +vp : +dp : +0f : 11100111 : mod xmmrx rm
-vpminsw     +vp : +dp : +0f : 11101010 : mod xmmrx rm
-vpor        +vp : +dp : +0f : 11101011 : mod xmmrx rm
-vpaddsb     +vp : +dp : +0f : 11101100 : mod xmmrx rm
-vpmaxsw     +vp : +dp : +0f : 11101110 : mod xmmrx rm
-vpaddsw     +vp : +dp : +0f : 11101101 : mod xmmrx rm
-vpmuludq    +vp : +dp : +0f : 11110100 : mod xmmrx rm
-vpmaddwd    +vp : +dp : +0f : 11110101 : mod xmmrx rm
-vpsadbw     +vp : +dp : +0f : 11110110 : mod xmmrx rm
-vmaskmovdqu +vp : +dp : +0f : 11110111 : mod xmmrx rm
-vpaddb      +vp : +dp : +0f : 11111100 : mod xmmrx rm
-vpaddw      +vp : +dp : +0f : 11111101 : mod xmmrx rm
-vpaddd      +vp : +dp : +0f : 11111110 : mod xmmrx rm
-
-vmovsd      +vp : +f2 : +0f : 00010000 : mod xmmrx rm
-vlddqu      +vp : +f2 : +0f : 00010010 : mod xmmrx rm
-vcvtsi2sd   +vp : +f2 : +0f : 00101010 : mod xmmrx rm
-vcvttsd2si  +vp : +f2 : +0f : 00101100 : mod xmmrx rm
-vcvtsd2si   +vp : +f2 : +0f : 00101101 : mod xmmrx rm
-vaddsd      +vp : +f2 : +0f : 01011000 : mod xmmrx rm
-vmulsd      +vp : +f2 : +0f : 01011001 : mod xmmrx rm
-vcvtsd2ss   +vp : +f2 : +0f : 01011010 : mod xmmrx rm
-vminsd      +vp : +f2 : +0f : 01011101 : mod xmmrx rm
-vdivsd      +vp : +f2 : +0f : 01011110 : mod xmmrx rm
-vmaxsd      +vp : +f2 : +0f : 01011111 : mod xmmrx rm
-vpshuflw    +vp : +f2 : +0f : 01110000 : mod xmmrx rm : imm8
-vhaddps     +vp : +f2 : +0f : 01111100 : mod xmmrx rm
-vhsubps     +vp : +f2 : +0f : 01111101 : mod xmmrx rm
-vcmpsd      +vp : +f2 : +0f : 11000010 : mod xmmrx rm
-vaddsubps   +vp : +f2 : +0f : 11010000 : mod xmmrx rm
-vcvtdq2pd   +vp : +f2 : +0f : 11100110 : mod xmmrx rm
-vmovddup    +vp : +f2 : +0f : 11110000 : mod xmmrx rm
-
-vmovsldup   +vp : +f3 : +0f : 00010010 : mod xmmrx rm
-vmovshdup   +vp : +f3 : +0f : 00010110 : mod xmmrx rm
-vcvtss2sd   +vp : +f3 : +0f : 01011010 : mod xmmrx rm
-vcvttps2dq  +vp : +f3 : +0f : 01011011 : mod xmmrx rm
-movdqu      +vp : +f3 : +0f : 01101111 : mod xmmrx rm
-vpshufhw    +vp : +f3 : +0f : 01110000 : mod xmmrx rm : imm8
-vcvtpd2dq   +vp : +f3 : +0f : 11100110 : mod xmmrx rm
-
-vpshufb     +vp : +dp : +0f : +38 : 00000000 : mod xmmrx rm
-vphaddw     +vp : +dp : +0f : +38 : 00000001 : mod xmmrx rm
-vphaddd     +vp : +dp : +0f : +38 : 00000010 : mod xmmrx rm
-vphaddsw    +vp : +dp : +0f : +38 : 00000011 : mod xmmrx rm
-vpmaddubsw  +vp : +dp : +0f : +38 : 00000100 : mod xmmrx rm
-vphsubw     +vp : +dp : +0f : +38 : 00000101 : mod xmmrx rm
-vphsubd     +vp : +dp : +0f : +38 : 00000110 : mod xmmrx rm
-vphsubsw    +vp : +dp : +0f : +38 : 00000111 : mod xmmrx rm
-vpsignb     +vp : +dp : +0f : +38 : 00001000 : mod xmmrx rm
-vpsignw     +vp : +dp : +0f : +38 : 00001001 : mod xmmrx rm
-vpsignd     +vp : +dp : +0f : +38 : 00001010 : mod xmmrx rm
-vptest      +vp : +dp : +0f : +38 : 00010111 : mod xmmrx rm
-vpcmpeqq    +vp : +dp : +0f : +38 : 00101001 : mod xmmrx rm
-vpackusdw   +vp : +dp : +0f : +38 : 00101011 : mod xmmrx rm
-vmovntdqa   +vp : +dp : +0f : +38 : 00101010 : 11 xmmrx rrr
-vpmaxsb     +vp : +dp : +0f : +38 : 00111100 : mod xmmrx rm
-vpmaxsd     +vp : +dp : +0f : +38 : 00111101 : mod xmmrx rm
-vpmaxuw     +vp : +dp : +0f : +38 : 00111110 : mod xmmrx rm
-vpmaxud     +vp : +dp : +0f : +38 : 00111111 : mod xmmrx rm
-vpminsb     +vp : +dp : +0f : +38 : 00111000 : mod xmmrx rm
-vpminsd     +vp : +dp : +0f : +38 : 00111001 : mod xmmrx rm
-vpminuw     +vp : +dp : +0f : +38 : 00111010 : mod xmmrx rm
-vpminud     +vp : +dp : +0f : +38 : 00111011 : mod xmmrx rm
-vpmovsxbd   +vp : +dp : +0f : +38 : 00100000 : mod xmmrx rm
-vpmovsxbw   +vp : +dp : +0f : +38 : 00100001 : mod xmmrx rm
-vpmovsxbq   +vp : +dp : +0f : +38 : 00100010 : mod xmmrx rm
-vpmovsxwd   +vp : +dp : +0f : +38 : 00100011 : mod xmmrx rm
-vpmovsxwq   +vp : +dp : +0f : +38 : 00100100 : mod xmmrx rm
-vpmovsxdq   +vp : +dp : +0f : +38 : 00100101 : mod xmmrx rm
-vpmovzxbd   +vp : +dp : +0f : +38 : 00110000 : mod xmmrx rm
-vpmovzxbw   +vp : +dp : +0f : +38 : 00110001 : mod xmmrx rm
-vpmovzxbq   +vp : +dp : +0f : +38 : 00110010 : mod xmmrx rm
-vpmovzxwd   +vp : +dp : +0f : +38 : 00110011 : mod xmmrx rm
-vpmovzxwq   +vp : +dp : +0f : +38 : 00110100 : mod xmmrx rm
-vpmovzxdq   +vp : +dp : +0f : +38 : 00110101 : mod xmmrx rm
-vpcmpgtq    +vp : +dp : +0f : +38 : 00110111 : mod xmmrx rm
-vpmuldq     +vp : +dp : +0f : +38 : 00101000 : mod xmmrx rm
-vpmulld     +vp : +dp : +0f : +38 : 01000000 : mod xmmrx rm
-vphminposuw +vp : +dp : +0f : +38 : 01000001 : mod xmmrx rm
-vaesenc     +vp : +dp : +0f : +38 : 11011100 : mod xmmrx rm
-vaesenclast +vp : +dp : +0f : +38 : 11011101 : mod xmmrx rm
-vaesdec     +vp : +dp : +0f : +38 : 11011110 : mod xmmrx rm
-vaesdeclast +vp : +dp : +0f : +38 : 11011111 : mod xmmrx rm
-vaesimc     +vp : +dp : +0f : +38 : 11011011 : mod xmmrx rm
-vpabsb      +vp : +dp : +0f : +38 : 00011100 : mod xmmrx rm
-vpabsw      +vp : +dp : +0f : +38 : 00011101 : mod xmmrx rm
-vpabsd      +vp : +dp : +0f : +38 : 00011110 : mod xmmrx rm
-vpmulhrsw   +vp : +dp : +0f : +38 : 00001011 : mod11 xmmrx rm
-
-vpalignr    +vp : +dp : +0f : +3a : 11011101 : mod xmmrx rm : imm8
-vaeskeygenassist +vp : +dp : +0f : +3a : 11011111 : mod xmmrx rm : imm8
-vpcmpestrm  +vp : +dp : +0f : +3a : 01100000 : mod xmmrx rm : imm8
-vpcmpestri  +vp : +dp : +0f : +3a : 01100001 : mod xmmrx rm : imm8
-vpcmpistrm  +vp : +dp : +0f : +3a : 01100010 : mod xmmrx rm : imm8
-vpcmpistri  +vp : +dp : +0f : +3a : 01100011 : mod xmmrx rm : imm8
-vroundps    +vp : +dp : +0f : +3a : 00001000 : mod xmmrx rm : imm8
-vroundpd    +vp : +dp : +0f : +3a : 00001001 : mod xmmrx rm : imm8
-vroundss    +vp : +dp : +0f : +3a : 00001010 : mod xmmrx rm : imm8
-vroundsd    +vp : +dp : +0f : +3a : 00001011 : mod xmmrx rm : imm8
-vblendpd    +vp : +dp : +0f : +3a : 00001101 : mod xmmrx rm : imm8
-vblendps    +vp : +dp : +0f : +3a : 00001100 : mod xmmrx rm : imm8
-vblendvpd   +vp : +dp : +0f : +3a : 01001011 : mod xmmrx rm : imm8 : +vw0
-vblendvps   +vp : +dp : +0f : +3a : 01001010 : mod xmmrx rm : imm8 : +vw0
-vdppd       +vp : +dp : +0f : +3a : 01000001 : mod xmmrx rm : imm8
-vdpps       +vp : +dp : +0f : +3a : 01000000 : mod xmmrx rm : imm8
-vextractps  +vp : +dp : +0f : +3a : 00011110 : 11 xmmrx rrr  : imm8
-vextractps  +vp : +dp : +0f : +3a : 00011110 : moda xmmrx rm : imm8
-vinsertps   +vp : +dp : +0f : +3a : 00100001 : mod xmmrx rm : imm8
-vmpsadbw    +vp : +dp : +0f : +3a : 01000010 : mod xmmrx rm : imm8
-vpblendvb   +vp : +dp : +0f : +3a : 01001100 : mod xmmrx rm : xmmimm8
-vpblendw    +vp : +dp : +0f : +3a : 00001110 : mod xmmrx rm : imm8
-vpextrb     +vp : +dp : +0f : +3a : 00010100 : 11 xmmrx rrr  : imm8 : +vw0
-vpextrb     +vp : +dp : +0f : +3a : 00010100 : moda xmmrx rm : imm8 : +vw0
-vpextrw     +vp : +dp : +0f : +3a : 00010101 : 11 xmmrx rrr  : imm8 : +vw1
-vpextrw     +vp : +dp : +0f : +3a : 00010101 : moda xmmrx rm : imm8 : +vw1
-vpextrd     +vp : +dp : +0f : +3a : 00010110 : 11 xmmrx rrr  : imm8 : +vw0
-vpextrd     +vp : +dp : +0f : +3a : 00010110 : moda xmmrx rm : imm8 : +vw0
-vpextr1     +vp : +dp : +0f : +3a : 00010110 : 11 xmmrx rrr  : imm8 : +vw1
-vpextr1     +vp : +dp : +0f : +3a : 00010110 : moda xmmrx rm : imm8 : +vw1
-vpinsrb     +vp : +dp : +0f : +3a : 00100000 : 11 xmmrx rrr : imm8 : +vw0
-vpinsrb     +vp : +dp : +0f : +3a : 00100000 : moda xmmrx rm : imm8 : +vw0
-vpinsrd     +vp : +dp : +0f : +3a : 00100010 : 11 xmmrx rrr : imm8 : +vw0
-vpinsrd     +vp : +dp : +0f : +3a : 00100010 : moda xmmrx rm : imm8 : +vw0
-
+# x86 Instruction encoding table.
+
+# Format:
+# -----------------------------------------------------------------------------
+# <mnemonic> <prefixes..> <opcode> <ops..> <flags..> <ctrs..>
+
+# <mnemonic>  -  specifies the full name of the instruction, including prefixes
+# and  suffixes such as "v-" for AVX instructions, "b" for byte operations etc.
+# <prefixes..>  - specifies a list of prefixes.
+# <opcode..>  -  specifies  an  instruction  opcode  in  lowercase  hexadecimal
+# notation. 
+# <ops..>  -  the immediate and address operands.
+# <ctrs..>  -  specifies the list of constraints related to when an instruction
+# needs  to  be decoded, such as "only decode when REX.W is set" or "when VEX.W
+# is 1".
+# <fields..> - specifies the list of fields set for an instruction, such as the
+# direction bit, the wideness bit, 
+
+# Mnemonics
+# -----------------------------------------------------------------------------
+# The  mnemonics are always a full instruction name in lowercase ascii. To keep
+# the table properly aligned the mnemonics are truncated at 11 characters.
+# In case the mnemonic name is larger than 11 character use the following table
+# to figure out the full name of the mnemonic:
+#    aeskeygen..  => aeskeygenassist
+#    vaeskeyge..  => vaeskeygenassist
+#    vpbc..i128   => vbroadcasti128
+# These  long mnemonics are rare but kind of a pain for this table to deal with
+# without assuming this expansion.
+
+# Instruction prefixes
+# -----------------------------------------------------------------------------
+# The below lists group prefixes into categories.
+# Extension prefixes:
+#   vp - specifies the VEX prefix (bytes C4 and C5 followed by other VEX crap)
+#   ep - specifies the EVEX prefix (byte 62 followed by EVEX crap)
+# Mandatory "legacy" prefixes
+#   np - no prefix.
+#   66 - the operand size override prefix.
+#   f3 - the rep(nz) prefix.
+#   f2 - the repz prefix.
+# Opcode escapes
+#   0f - Two-byte opcode escape
+#   3a - Three-byte opcode escape (in these tables always follows 0f)
+#   3f - Three-byte opcode escape (in these tables always follows 0f)
+
+# Opcode
+# -----------------------------------------------------------------------------
+# The  instruction  opcode  is  a  single byte in lowercase hexadecimal format.
+# Opcode  can  be  extended by Mod/RM byte's rx field, in which case opcode has
+# the  form  similar  to 80/1 for opcode for the SUB instruction. Sometimes the
+# opcode   is extended by Mod/RM byte's mod field or VEX.W field, in which case
+# that information is put into the flags array.
+# Opcode  can  be  specified as a range by register set. An example is B8 (mov)
+# that can be written as B8+reg.
+# Opcode can imply the presence of a Mod/RM byte. An example is c6 (mov), which
+# will  be  written  as c6/reg. The part after slash represents a register set,
+# which are described below.
+
+# Operands
+# -----------------------------------------------------------------------------
+# The  table  below  lists  operands  stored in bytes immediately following the
+# opcodes.
+# imm8 - an 8-bit immediate.
+# imm16 - a 16-bit immediate.
+# imm32 - a 32-bit immediate.
+# immr - a 64-bit immediate (only `mov`).
+# imm - an immediate whose size depends on the data size. In 64-bit mode it's
+#   a 32-bit immediate.
+# imm16imm8 - 16 bit immediate followed by 8-bit immediate (only `enter`)
+# rel8 - an 8-bit short pointer (offset from RIP)
+# rel16 - a 16-bit short pointer.
+# rel32 - a 32-bit short pointer.
+# rel - a short pointer whose size depends on the address size.
+# far16 - a 16-bit far pointer (16-bit offset followed by 16-bit segment)
+# far32 - a 32-bit far pointer (32-bit offset followed by 32-bit segment)
+# far   - a far pointer (depends on address size)
+# xmmimm - an xmm-register encoded in top 4 bits of an 8-bit immediate.
+
+# Constraints
+# -----------------------------------------------------------------------------
+# The  constraints  are  prefixed  with  '@'  symbol and specify the additional
+# conditions under which the particular decoding can be decoded.
+#  @m64 - decode only in 64-bit mode.
+#  @mcl - decode only in compatibility/legacy mode.
+#  @ds64 - decode only if the operand size is 64-bit.
+#  @ds32 - decode only if the operand size is 32-bit.
+#  @ds16 - decode only if the operand size is 16-bit.
+#  @dn64 - decode only if the operand size is not-64-bit.
+#  @as64 - decode only if the address size is 64-bit.
+#  @as32 - decode only if the address size is 32-bit.
+#  @as16 - decode only if the address size is 16-bit.
+#  @vexw1 - decode only if the VEX.W bit is set to 1.
+#  @vexw0 - decode only if the VEX.W bit is set to 1.
+#  @mod11 - decode only if the MOD field of the Mod/RM byte is 11
+#  @moda - decode only if the MOD field of the Mod/RM byte is not 11
+#  @modb - decode only if the MOD field of the Mod/RM byte is 01/10
+#  @modab - decode only if the MOD field of the Mod/RM byte is not 00
+
+# Fields
+# -----------------------------------------------------------------------------
+# The  fields  specify  additional information about an instruction that may be
+# useful  for  disassemblers. The fields do not affect the process of decoding,
+# but rather the process of interpretation.
+#  +rx=<regset><number> - implicit register operand.
+#  +rm=<regset> - specifies what set of registers RM indexes into in
+#    case MOD field of the Mod/RM byte is 11. If this field is not specified,
+#    the default is to assume RM is the same as RX.
+#  +rxs=<size> - set rx operand size (also sets rm)
+#  +rms=<size> - set rm operand size
+#  +rmm - set only the memory size for rm operand (register same as rx)
+#  +d - in a Mod/RM encoding RM byte is the destination. By default RX is
+#    first.
+#  +w - operand size is 8-bit (default depends on data size)
+#  +ds64 - force 64-bit operand size, even in the absence of REX.W=1 field.
+#  +ds32 - force 32-bit operand size
+#  +ds16 - force 16-bit operand size, even in 32-bit mode.
+#  +vexvz - VEX.vvvv is unused (=1111)
+#  +far - the address operand given is a far pointer.
+#  +rep - this instruction may have a rep prefix.
+
+# Register sets
+# -----------------------------------------------------------------------------
+# reg - general purpose register (rax..r15, eax..r15d, ax..r15w, r0b..r15b)
+# mmx - MMX registers (mm0 .. mm7)
+# xmm - XMM/YMM registers (xmm0 .. xmm15, ymm0..ymm15)
+# sreg - Segment register (ds, cs, ss, es, fs, gs)
+# dreg - Debug register (dr0 .. dr7)
+# creg - Control register (cr0 .. cr7)
+# bndreg - BND Register
+# st - x87 FPU register (st(0) .. st(7))
+
+aam         d4 imm8 @mcl +rx=reg0
+aad         d5 imm8 @mcl +rx=reg0
+aaa         37 @mcl
+aas         3f @mcl
+
+adc         10/reg +d +w
+adc         11/reg +d
+adc         12/reg +w
+adc         13/reg
+adc         14 imm8 +w +rx=reg0
+adc         15 imm +rx=reg0
+adc         80/2 imm8 +w
+adc         81/2 imm
+adc         83/2 imm8
+
+adcx        66 0f 38 f6/reg
+
+add         00/reg +d +w
+add         01/reg +d
+add         02/reg +w
+add         03/reg
+add         04 imm8 +w +rx=reg0
+add         05 imm +rx=reg0
+add         80/0 imm8 +w
+add         81/0 imm
+add         83/0 imm8
+
+addps       np 0f 58/xmm
+addpd       66 0f 58/xmm
+addss       f3 0f 58/xmm
+addsd       f2 0f 58/xmm
+vaddps      vp np 0f 58/xmm
+vaddpd      vp 66 0f 58/xmm
+vaddss      vp f3 0f 58/xmm
+vaddsd      vp f2 0f 58/xmm
+
+addsubpd    66 0f d0/xmm
+addsubps    f2 0f d0/xmm
+vaddsubpd   vp 66 0f d0/xmm
+vaddsubps   vp f2 0f d0/xmm
+
+adox        f3 0f 38 f6/reg
+
+aesimc      66 0f 38 db/xmm
+aesenc      66 0f 38 dc/xmm
+aesenclast  66 0f 38 dd/xmm
+aesdec      66 0f 38 de/xmm
+aesdeclast  66 0f 38 df/xmm
+aeskeygen.. 66 0f 3a df/xmm
+vaesimc     vp 66 0f 38 db/xmm +vexvz
+vaesenc     vp 66 0f 38 dc/xmm
+vaesenclast vp 66 0f 38 dd/xmm
+vaesdec     vp 66 0f 38 de/xmm
+vaesdeclast vp 66 0f 38 df/xmm
+vaeskeyge.. vp 66 0f 3a df/xmm +vexvz
+
+and         20/reg +d +w
+and         21/reg +d
+and         22/reg +w
+and         23/reg
+and         24 imm8 +rx=reg0 +w
+and         25 imm  +rx=reg0
+and         80/4 imm8 +w
+and         81/4 imm
+and         83/4 imm8
+
+andps       np 0f 54/xmm
+andpd       66 0f 54/xmm
+andps       vp np 0f 54/xmm
+andpd       vp 66 0f 54/xmm
+
+andnps      np 0f 55/xmm
+andnpd      66 0f 55/xmm
+andnps      vp np 0f 55/xmm
+andnpd      vp 66 0f 55/xmm
+
+arpl        63/reg @mcl +ds16
+
+blendps     66 0f 3a 0c/xmm imm8
+blendpd     66 0f 3a 0d/xmm xmmimm
+vblendps    vp 66 0f 3a 0c/xmm xmmimm
+vblendpd    vp 66 0f 3a 0d/xmm xmmimm
+
+blendvps    66 0f 38 14/xmm +rx=xmm0
+blendvpd    66 0f 38 15/xmm +rx=xmm0
+vblendvps   vp 66 0f 3a 4a/xmm xmmimm @vexw0
+vblendvpd   vp 66 0f 38 4b/xmm xmmimm @vexw0
+
+bndcl       f3 0f 1a/reg @mcl +ds32
+bndcl       f3 0f 1a/reg @m64 +ds64
+
+bndldx      np 0f 1a/bndreg
+bndmov      66 0f 1a/bndreg
+bndcu       f2 0f 1a/bndreg
+bndmov      66 0f 1b/bndreg +d
+bndstx      np 0f 1b/bndreg +d
+bndmk       f3 0f 1b/bndreg
+bndcn       f2 0f 1b/bndreg
+
+bound       62/reg
+
+bsr         0f bd/reg
+bsf         0f bc/reg
+bswap       0f c8+reg
+
+bt          0f a3/reg +d
+bt          0f ba/4 imm8
+
+btc         0f ba/7 imm8
+btc         0f bb/reg +d
+
+btr         0f b3/reg +d
+btr         0f ba/6 imm8
+
+bts         0f ab/reg +d
+bts         0f ba/5 imm8
+
+call        e8 rel
+call        ff/2
+call        9a far
+call        ff/3 +far
+
+cbw         98 @ds16
+cwde        98 @ds32
+cdqe        98 @ds64
+
+cld         fc
+clc         f8
+
+clflush     np 0f ae/7 +w
+clflushopt  66 0f ae/7
+
+cli         fa
+clts        0f 06
+clui        f3 0f 01 ee
+clwb        66 0f ae/6 +w
+cmc         f5
+
+cmovo       0f 40/reg
+cmovno      0f 41/reg
+cmovb       0f 42/reg
+cmovae      0f 43/reg
+cmovz       0f 44/reg
+cmovnz      0f 45/reg
+cmovbe      0f 46/reg
+cmova       0f 47/reg
+cmovs       0f 48/reg
+cmovns      0f 49/reg
+cmovp       0f 4a/reg
+cmovnp      0f 4b/reg
+cmovl       0f 4c/reg
+cmovge      0f 4d/reg
+cmovle      0f 4e/reg
+cmovg       0f 4f/reg
+
+cmp         38/reg +d +w
+cmp         39/reg +d
+cmp         3a/reg +w
+cmp         3b/reg
+cmp         3c imm8 +w +rx=reg0
+cmp         3d imm +rx=reg0
+cmp         80/7 imm8 +w
+cmp         81/7 imm
+cmp         83/7 imm8
+
+cmpps       np 0f c2/xmm imm8
+cmppd       66 0f c2/xmm imm8
+cmpsd       f2 0f c2/xmm imm8
+cmpss       f3 0f c2/xmm imm8
+vcmpps      vp np 0f c2/xmm imm8
+vcmppd      vp 66 0f c2/xmm imm8
+vcmpsd      vp f2 0f c2/xmm imm8
+vcmpss      vp f3 0f c2/xmm imm8
+
+cmpxchg     0f b0/reg +w
+cmpxchg     0f b1/reg
+
+cmpxchg8b   0f c7/1 @dn64 @moda +ds64
+# cmpxchg16b  0f c7/1 @ds64 @moda +ds128
+
+cmpsb       a6 +rep
+cmpsw       a7 @ds16 +rep
+cmpsd       a7 @ds32 +rep
+cmpsq       a7 @ds64 +rep
+
+comiss      np 0f 2f/xmm
+comisd      66 0f 2f/xmm
+vcomiss     vp np 0f 2f/xmm +vexvz
+vcomisd     vp 66 0f 2f/xmm +vexvz
+
+cpuid       0f a2
+
+crc32       f2 0f 38 f0/reg
+crc32       f2 0f 38 f1/reg
+
+cvtps2pd    np 0f 5a/xmm
+cvtpd2ps    66 0f 5a/xmm
+cvtss2sd    f3 0f 5a/xmm
+cvtsd2ss    f2 0f 5a/xmm
+vcvtps2pd   vp np 0f 5a/xmm +vexvz
+vcvtpd2ps   vp 66 0f 5a/xmm +vexvz
+vcvtss2sd   vp f3 0f 5a/xmm +vexvz
+vcvtsd2ss   vp f2 0f 5a/xmm +vexvz
+
+cvtdq2ps    np 0f 5b/xmm
+cvtps2dq    66 0f 5b/xmm
+cvttps2dq   f3 0f 5b/xmm
+vcvtdq2ps   vp np 0f 5b/xmm +vexvz
+vcvtps2dq   vp 66 0f 5b/xmm +vexvz
+vcvttps2dq  vp f3 0f 5b/xmm +vexvz
+
+cvttpd2dq   66 0f e6/xmm
+cvtdq2pd    f3 0f e6/xmm
+cvtpd2dq    f2 0f e6/xmm
+vcvttpd2dq  vp 66 0f e6/xmm +vexvz
+vcvtdq2pd   vp f3 0f e6/xmm +vexvz
+vcvtpd2dq   vp f2 0f e6/xmm +vexvz
+
+cvtpi2ps    np 0f 2a/xmm +rm=mmx
+cvtpi2pd    66 0f 2a/xmm +rm=mmx
+cvtsi2ss    f3 0f 2a/xmm +rm=reg
+cvtsi2sd    f2 0f 2a/xmm +rm=reg
+vcvtsi2ss   vp f3 0f 2a/xmm +rm=reg +vexvz
+vcvtsd2si   vp f2 0f 2a/xmm +rm=reg +vexvz
+
+cvtps2pi    np 0f 2d/mmx +rm=xmm
+cvtpd2pi    66 0f 2d/mmx +rm=xmm
+cvtss2si    f3 0f 2d/xmm +rm=reg
+cvtsd2si    f2 0f 2d/reg +rm=xmm
+vcvtss2si   vp f3 0f 2d/xmm +rm=reg +vexvz
+vcvtsd2si   vp f2 0f 2d/reg +rm=xmm +vexvz
+
+cvttps2pi   np 0f 2c/mmx +rm=xmm
+cvttpd2pi   66 0f 2c/mmx +rm=xmm
+cvttss2si   f3 0f 2c/reg +rm=xmm
+cvttsd2si   f2 0f 2c/reg +rm=xmm
+vcvttss2si  vp f3 0f 2c/reg +rm=xmm +vexvz
+vcvttsd2si  vp f2 f2 0f 2c/reg +rm=xmm +vexvz
+
+cwd         99 @ds16
+cdq         99 @ds32
+cqo         99 @ds64
+
+daa         27 @mcl
+das         2f @mcl
+
+dec         fe/1 +w
+dec         ff/1
+dec         48+reg @mcl
+
+div         f6/6 +w
+div         f7/6
+
+divps       np 0f 5e/xmm
+divpd       66 0f 5e/xmm
+divss       f3 0f 5e/xmm
+divsd       f2 0f 5e/xmm
+vdivps      vp np 0f 5e/xmm
+vdivpd      vp 66 0f 5e/xmm
+vdivss      vp f3 0f 5e/xmm
+vdivsd      vp f2 0f 5e/xmm
+
+dpps        66 0f 3a 40/xmm imm8
+dppd        66 0f 3a 41/xmm imm8
+vdpps       vp 66 0f 3a 40/xmm imm8
+vdppd       vp 66 0f 3a 41/xmm imm8
+
+emms        np 0f 77
+
+endbr64     f3 0f 1e fa
+endbr32     f3 0f 1e fb
+
+enter       c8 imm16imm8
+
+extractps   66 0f 3a 17/xmm +d +rm=reg
+vextractps  vp 66 0f 3a 17/xmm +d +rm=reg
+
+fxsave      np 0f ae/0
+fxrstor     np 0f ae/1
+
+haddpd      66 0f 7c/xmm
+haddps      f2 0f 7c/xmm
+vhaddpd     vp 66 0f 7c/xmm
+vhaddps     vp f2 0f 7c/xmm
+
+hlt         f4
+
+hsubpd      66 0f 7d/xmm
+hsubps      f2 0f 7d/xmm
+vhsubpd     vp 66 0f 7d/xmm
+vhsubps     vp f2 0f 7d/xmm
+
+idiv        f6/7 +w
+idiv        f7/7
+
+imul        f6/5 +w
+imul        f7/5
+imul        0f af/reg
+imul        6b/reg imm8
+imul        69/reg imm
+
+in          e4 imm8 +w +rx=reg0
+in          e5 imm8 +rx=reg0
+in          ec +w +rx=reg0
+in          ed +rx=reg0
+
+inc         fe/0 +w
+inc         ff/0
+inc         40+reg @mcl
+
+insb        6c +ds8 +rep
+insw        6d @ds16 +rep
+insd        6d @ds32 +rep
+insq        6d @ds64 +rep
+
+insertps    66 0f 3a 21/xmm imm8
+insertps    vp 66 0f 3a 21/xmm imm8
+
+int3        cc
+int         cd imm8
+into        ce
+int1        f1
+
+invd        0f 08
+invlpg      0f 01/7 @moda
+
+iret        cf @ds16
+iretd       cf @ds32
+iretq       cf @ds64
+
+jo          70 rel8
+jno         71 rel8
+jb          72 rel8
+jae         73 rel8
+jz          74 rel8
+jnz         75 rel8
+jbe         76 rel8
+ja          77 rel8
+js          78 rel8
+jns         79 rel8
+jp          7a rel8
+jnp         7b rel8
+jl          7c rel8
+jge         7d rel8
+jle         7e rel8
+jg          7f rel8
+
+jcxz        e3 rel8 @mcl @as16
+jecxz       e3 rel8 @as32
+jrcxz       e3 rel8 @m64 @as64
+
+jo          0f 80 rel
+jno         0f 81 rel
+jb          0f 82 rel
+jae         0f 83 rel
+jz          0f 84 rel
+jnz         0f 85 rel
+jbe         0f 86 rel
+ja          0f 87 rel
+js          0f 88 rel
+jns         0f 89 rel
+jp          0f 8a rel
+jnp         0f 8b rel
+jl          0f 8c rel
+jge         0f 8d rel
+jle         0f 8e rel
+jg          0f 8f rel
+
+jmp         eb rel8
+jmp         e9 rel
+jmp         ff/4
+jmp         ea far
+jmp         ff/5 +far
+
+lahf        9f @mcl
+
+lar         0f 02/reg
+
+lddqu       f2 0f f0/xmm
+vlddqu      vp f2 0f f0/xmm +vexvz
+
+ldmxcsr     np 0f ae/2
+vldmxcsr    vp np 0f ae/2 +vexvz
+
+lds         c5/reg @mcl +far
+les         c4/reg @mcl +far
+lss         0f b2/reg +far
+lfs         0f b4/reg +far
+lgs         0f b5/reg +far
+
+lea         8d/reg
+
+leave       c9
+
+# lfence np 0f ae e8
+
+lgdt        0f 01/2
+lidt        0f 01/3
+
+lldt        0f 00/2 +ds16
+lmsw        0f 01/6 +ds16
+
+lodsb       ac +ds8 +rep
+lodsw       ad @ds16 +rep
+lodsd       ad @ds32 +rep
+lodsq       ad @ds64 +rep
+
+loop        e2 rel8
+loopz       e1 rel8
+loopnz      e0 rel8
+
+lsl         0f 03/reg +ds16
+ltr         0f 00/3 +ds16
+
+lzcnt       f3 0f bd/reg
+
+maskmovdqu  66 0f f7/xmm
+maskmovq    np 0f f7/mmx
+vmaskmovdqu vp 66 0f f7/xmm +vexvz
+
+maxps       np 0f 5f/xmm
+maxpd       66 0f 5f/xmm
+maxss       f3 0f 5f/xmm
+maxsd       f2 0f 5f/xmm
+vmaxps      vp np 0f 5f/xmm
+vmaxpd      vp 66 0f 5f/xmm
+vmaxss      vp f3 0f 5f/xmm
+vmaxsd      vp f2 0f 5f/xmm
+
+mfence      np 0f ae f0
+
+minps       np 0f 5d/xmm
+minpd       66 0f 5d/xmm
+minss       f3 0f 5d/xmm
+minsd       f2 0f 5d/xmm
+vminps      vp np 0f 5d/xmm
+vminpd      vp 66 0f 5d/xmm
+vminss      vp f3 0f 5d/xmm
+vminsd      vp f2 0f 5d/xmm
+
+monitor 0f 01 c3
+
+mov         88/reg +d +w
+mov         89/reg +d
+mov         8a/reg +w
+mov         8b/reg
+mov         8c/sreg +d +rm=reg
+mov         8e/sreg +rm=reg
+mov         a0 rel8 +d +rx=reg0
+mov         a1 rel +d +rx=reg0
+mov         a2 rel8 +rx=reg0
+mov         a3 rel +rx=reg0
+mov         b0+reg imm8 +w
+mov         b8+reg immr
+mov         c6/0 imm8 +w
+mov         c7/0 imm
+
+mov         0f 20/reg +rm=creg
+mov         0f 21/reg +rm=dreg
+mov         0f 22/creg +rm=reg
+mov         0f 23/dreg +rm=reg
+
+movaps      np 0f 28/xmm
+movapd      66 0f 28/xmm
+vmovaps     vp np 0f 28/xmm +vexvz
+vmovapd     vp 66 0f 28/xmm +vexvz
+
+movaps      np 0f 29/xmm +d
+movapd      66 0f 29/xmm +d
+vmovaps     vp np 0f 29/xmm +vexvz +d
+vmovapd     vp 66 0f 29/xmm +vexvz +d
+
+movbe       0f 38 f0/reg
+movbe       0f 38 f1/reg +d
+
+movq        np 0f 6f/mmx
+movq        np 0f 7f/mmx +d
+movq        f3 0f 7e/xmm
+movq        66 0f d6/xmm +d
+vmovq       vp 66 0f 6e/xmm @vexw1 +vexvz
+vmovq       vp 66 0f 7e/xmm @vexw1 +d +vexvz
+
+movd        np 0f 6e/mmx
+movd        np 0f 7e/mmx +d
+movd        66 0f 6e/xmm
+movd        66 0f 7e/xmm +d
+vmovd       vp 66 0f 6e/xmm @vexw0 +vexvz
+vmovd       vp 66 0f 7e/xmm @vexw0 +d +vexvz
+
+movddup     f2 0f 12/xmm
+vmovddup    vp f2 0f 12/xmm +vexvz
+
+movdqa      66 0f 6f/xmm
+movdqu      f3 0f 6f/xmm
+vmovdqa     vp 66 0f 6f/xmm +vexvz
+vmovdqu     vp f3 0f 6f/xmm +vexvz
+
+movdqa      66 0f 7f/xmm +d
+movdqu      f3 0f 7f/xmm +d
+vmovdqa     vp 66 0f 7f/xmm +d +vexvz
+vmovdqu     vp f3 0f 7f/xmm +d +vexvz
+
+movdq2q     f2 0f d6/mmx +rm=xmm
+
+movhlps     np 0f 12/xmm @mod11
+vmovhlps    vp np 0f 12/xmm @mod11
+
+movlps      np 0f 12/xmm @moda
+movlpd      66 0f 12/xmm @moda
+vmovlps     vp np 0f 12/xmm @moda
+vmovlpd     vp 66 0f 12/xmm @moda
+
+movlps      np 0f 13/xmm @moda +d +vexvz
+movlpd      66 0f 13/xmm @moda +d +vexvz
+vmovlpd     vp np 0f 13/xmm @moda +d +vexvz
+vmovlpd     vp 66 0f 13/xmm @moda +d +vexvz
+
+movlhps     np 0f 16/xmm @mod11
+vmovlhps    vp np 0f 16/xmm @mod11
+
+movhps      np 0f 16/xmm @moda +rm=reg
+movhpd      66 0f 16/xmm @moda +rm=reg
+vmovhps     vp np 0f 16/xmm @moda +rm=reg
+vmovhpd     vp 66 0f 16/xmm @moda +rm=reg
+
+movhps      np 0f 17/xmm +d @moda +rm=reg
+movhpd      66 0f 17/xmm +d @moda +rm=reg
+vmovhps     vp np 0f 17/xmm +d @moda +rm=reg +vexvz
+vmovhpd     vp 66 0f 17/xmm +d @moda +rm=reg +vexvz
+
+movmskps    np 0f 50/reg +rm=xmm
+movmskpd    66 0f 50/reg +rm=xmm
+vmovmskpd   vp np 0f 50/reg +rm=xmm +vexvz
+vmovmskpd   vp 66 0f 50/reg +rm=xmm +vexvz
+
+movntdqa    66 0f 38 2a/xmm
+vmovntdqa   vp 66 0f 38 2a/xmm +vexvz
+
+movntdq     66 0f 38 e7/xmm
+vmovntdq    vp 66 0f 38 e7/xmm +vexvz
+
+movnti      np 0f c3/reg +d
+
+movntps     np 0f 2b/xmm +d
+movntpd     66 0f 2b/xmm +d
+vmovntps    vp np 0f 2b/xmm +d +vexvz
+vmovntpd    vp 66 0f 2b/xmm +d +vexvz
+
+movntq      np 0f e7/mmx @moda +d +ds64
+
+movq2dq     f3 0f d6/xmm @moda
+
+movsb       a4 +ds8 +rep
+movsw       a5 @ds16 +rep
+movsd       a5 @ds32 +rep
+movsq       a5 @ds64 +rep
+
+movss       f3 0f 10/xmm
+movsd       f2 0f 10/xmm
+vmovss      vp f3 0f 10/xmm
+vmovsd      vp f2 0f 10/xmm
+
+vmovss      f3 0f 11/xmm
+movsd       f2 0f 11/xmm +d
+vmovss      vp f3 0f 11/xmm +d +vexvz
+vmovsd      vp f2 0f 11/xmm +d +vexvz
+
+movshdup    f3 0f 16/xmm
+vmovshdup   vp f3 0f 16/xmm +vexvz
+
+movsldup    f3 0f 12/xmm
+vmovsldup   vp f3 0f 12/xmm +vexvz
+
+movzx       0f b6/reg
+movzx       0f b7/reg
+movsx       0f be/reg
+movsx       0f bf/reg
+movsxd      63/reg @m64
+
+movups      np 0f 10/xmm
+movupd      66 0f 10/xmm
+vmovups     vp np 0f 10/xmm +vexvz
+vmovupd     vp 66 0f 10/xmm +vexvz
+
+movups      np 0f 11/xmm +d
+movupd      66 0f 11/xmm +d
+vmovups     vp np 0f 11/xmm +d +vexvz
+vmovupd     vp 66 0f 11/xmm +d +vexvz
+
+mpsadbw     66 0f 3a 42/xmm +imm8
+vmpsadbw    vp 66 0f 3a 42/xmm +imm8
+
+mul         f6/4 +w
+mul         f7/4
+
+mulps       np 0f 59/xmm
+mulpd       66 0f 59/xmm
+mulss       f3 0f 59/xmm
+mulsd       f2 0f 59/xmm
+vmulps      vp np 0f 59/xmm
+vmulpd      vp 66 0f 59/xmm
+vmulss      vp f3 0f 59/xmm
+vmulsd      vp f2 0f 59/xmm
+
+mwait       0f 01 c9
+
+neg         f6/3 +w
+neg         f7/3
+
+# nop         90
+nop         0f 1f/0
+
+not         f6/2 +w
+not         f7/2
+
+or          0c imm8 +rx=reg0 +w
+or          0d imm +rx=reg0
+or          80/1 imm8 +w
+or          81/1 imm
+or          83/1 imm8
+or          08/reg +d +w
+or          09/reg +d
+or          0a/reg +w
+or          0b/reg
+
+orps        np 0f 56/xmm
+orpd        66 0f 56/xmm
+vorps       vp np 0f 56/xmm
+vorpd       vp 66 0f 56/xmm
+
+out         e6 imm8 +w +rx=reg0
+out         e7 imm8 +rx=reg0
+out         ee +w
+out         ef
+
+outsb       6e +ds8 +rep
+outsw       6f @ds16 +rep
+outsd       6f @ds32 +rep
+outsd       6f @ds64 +ds32 +rep
+
+pabsb       np 0f 38 1c/mmx
+pabsw       np 0f 38 1d/mmx
+pabsd       np 0f 38 1e/mmx
+pabsb       66 0f 38 1c/xmm
+pabsw       66 0f 38 1d/xmm
+pabsd       66 0f 38 1e/xmm
+vpabsb      vp 66 0f 38 1c/xmm +vexvz
+vpabsw      vp 66 0f 38 1d/xmm +vexvz
+vpabsd      vp 66 0f 38 1e/xmm +vexvz
+
+packsswb    np 0f 63/mmx
+packssdw    np 0f 6b/mmx
+packsswb    66 0f 63/xmm
+packssdw    66 0f 6b/xmm
+vpacksswb   vp 66 0f 63/xmm
+vpackssdw   vp 66 0f 6b/xmm
+
+packusdw    66 0f 38 2b/xmm
+vpackusdw   vp 66 0f 38 2b/xmm
+
+packuswb    np 0f 67/mmx
+packuswb    66 0f 67/xmm
+vpackuswb   vp 66 0f 67/xmm
+
+paddb       np 0f fc/mmx
+paddw       np 0f fd/mmx
+paddd       np 0f fe/mmx
+paddq       np 0f d4/mmx
+paddb       66 0f fc/xmm
+paddw       66 0f fd/xmm
+paddd       66 0f fe/xmm
+paddq       66 0f d4/xmm
+vpaddb      vp 66 0f fc/xmm
+vpaddw      vp 66 0f fd/xmm
+vpaddd      vp 66 0f fe/xmm
+vpaddq      vp 66 0f d4/xmm
+
+paddsb      np 0f ec/mmx
+paddsb      66 0f ec/xmm
+paddsw      np 0f ed/mmx
+paddsw      66 0f ed/xmm
+vpaddsb     vp 66 0f ec/xmm
+vpaddsw     vp 66 0f ed/xmm
+
+paddusb     np 0f dc/mmx
+paddusb     66 0f dc/xmm
+vpaddusb    vp 66 0f dc/xmm
+paddusw     np 0f dd/mmx
+paddusb     66 0f dd/xmm
+vpaddusb    vp 66 0f dd/xmm
+
+palignr     np 0f 3a 0f/mmx
+palignr     66 0f 3a 0f/xmm
+vpalignr    vp 66 0f 3a 0f/xmm
+
+pand        np 0f db/mmx
+pand        66 0f db/xmm
+vpand       vp 66 0f db/xmm
+
+pandn       np 0f df/mmx
+pandn       66 0f df/xmm
+vpandn      vp 66 0f df/xmm
+
+# pause f3 90
+
+pavgb       np 0f e0/mmx
+pavgb       66 0f e0/xmm
+vpavgb      vp 66 0f e0/xmm
+pavgb       np 0f e3/mmx
+pavgb       66 0f e3/xmm
+vpavgb      vp 66 0f e3/xmm
+
+pblendvb    66 0f 38 10/xmm
+vpblendbv   vp 66 0f 3a 4c xmmimm @vexw0
+
+pblendw     66 0f 3a 0e/xmm imm8
+vpblendw    vp 66 0f 3a 0e/xmm imm8
+
+pclmuldq    66 0f 3a 44/xmm imm8
+vpclmuldq   vp 66 0f 3a 44/xmm imm8
+
+pcmpeqb     np 0f 74/mmx
+pcmpeqb     66 0f 74/xmm
+vpcmpeqb    vp 66 0f 74/xmm
+pcmpeqw     np 0f 75/mmx
+pcmpeqw     66 0f 75/xmm
+vpcmpeqw    vp 66 0f 75/xmm
+pcmpeqd     np 0f 76/mmx
+pcmpeqd     66 0f 76/xmm
+vpcmpeqd    vp 66 0f 76/xmm
+
+pcmpeqq     66 0f 38 29/xmm
+vpcmpeqq    vp 66 0f 38 29/xmm
+
+pcmpestrm   66 0f 3a 60/xmm imm8
+pcmpestri   66 0f 3a 61/xmm imm8
+vpcmpestrm  vp 66 0f 3a 60/xmm imm8
+vpcmpestri  vp 66 0f 3a 61/xmm imm8
+
+pcmpgtb     np 0f 64/mmx
+pcmpgtb     66 0f 64/xmm
+vpcmpgtb    vp 66 0f 64/xmm
+pcmpgtw     np 0f 65/mmx
+pcmpgtw     66 0f 65/xmm
+vpcmpgtw    vp 66 0f 65/xmm
+pcmpgtd     np 0f 66/mmx
+pcmpgtd     66 0f 66/xmm
+vpcmpgtd    vp 66 0f 66/xmm
+pcmpgtq     66 0f 38 37/xmm
+vpcmpgtq    vp 66 0f 38 37/xmm
+
+pcmpistrm   66 0f 3a 62/xmm imm8
+pcmpistri   66 0f 3a 63/xmm imm8
+vpcmpistrm  vp 66 0f 3a 62/xmm imm8
+vpcmpistri  vp 66 0f 3a 63/xmm imm8
+
+pextrb      66 0f 3a 14/xmm imm8 +w +d +rm=reg
+pextrd      66 0f 3a 16/xmm imm8 +rm=reg
+pextrq      66 0f 3a 16/xmm imm8 @ds64 +rm=reg
+vpextrb     vp 66 0f 3a 14/xmm imm8 @vexw0 +vexvz +w +d +rm=reg
+vpextrd     vp 66 0f 3a 16/xmm imm8 @vexw0 +vexvz +rm=reg
+vpextrq     vp 66 0f 3a 16/xmm imm8 @vexw1 @ds64 +vexvz +rm=reg
+
+pextrw      np 0f c5/mmx imm8
+pextrw      66 0f c5/xmm imm8
+pextrw      66 0f 3a 15/xmm imm8 +ds16
+vpextrw     vp 66 0f c5/xmm imm8 @vexw0 +vexvz
+vpextrw     vp 66 0f 3a 15/xmm imm8 @vexw0 +vexvz +ds16
+
+phaddw      np 0f 38 01/mmx +ds16
+phaddw      np 0f 38 02/mmx +ds32
+phaddw      66 0f 38 01/xmm +ds16
+phaddw      66 0f 38 02/xmm +ds32
+vphaddw     vp 66 0f 38 01/xmm +ds16
+vphaddw     vp 66 0f 38 02/xmm +ds32
+
+phaddsw     np 0f 38 03/mmx +ds16
+phaddsw     66 0f 38 03/xmm +ds16
+vphaddsw    vp 66 0f 38 03/xmm +ds16
+
+phminposuw  66 0f 38 41/xmm
+vphminposuw vp 66 0f 38 41/xmm +vexvz
+
+phsubw      np 0f 38 05/mmx +ds16
+phsubw      np 0f 38 06/mmx +ds32
+phsubw      66 0f 38 05/xmm +ds16
+phsubw      66 0f 38 06/xmm +ds32
+vphsubw     vp 66 0f 38 05/xmm +ds16
+vphsubw     vp 66 0f 38 06/xmm +ds32
+
+phsubsw     np 0f 38 07/mmx +ds16
+phsubsw     66 0f 38 07/xmm +ds16
+vphsubsw    vp 66 0f 38 07/xmm +ds16
+
+pinsrb      66 0f 3a 20/xmm imm8 +rm=reg +w
+pinsrd      66 0f 3a 22/xmm imm8 @dn64 +rm=reg
+pinsrq      66 0f 3a 22/xmm imm8 @ds64 +rm=reg
+vpinsrb     vp 66 0f 3a 20/xmm imm8 @vexw0 +rm=reg +w
+vpinsrd     vp 66 0f 3a 22/xmm imm8 @vexw0 +rm=reg
+vpinsrq     vp 66 0f 3a 22/xmm imm8 @vexw1 +rm=reg
+
+pinsrw      np 0f c4/mmx imm8 +rm=reg
+pinsrw      66 0f c4/xmm imm8 +rm=reg
+vpinsrw     vp 66 0f c4/xmm imm8 +rm=reg
+
+pmaddubsw   np 0f 38 04/mmx
+pmaddubsw   66 0f 38 04/xmm
+vpmaddubsw  vp 66 0f 38 04/xmm
+
+pmaddwd     np 0f f5/mmx
+pmaddwd     66 0f f5/xmm
+pmaddwd     vp 66 0f f5/xmm
+
+pmaxsw      np 0f ee/mmx
+pmaxsw      66 0f ee/xmm
+pmaxsb      66 0f 38 3c/xmm
+pmaxsd      66 0f 38 3d/xmm
+vpmaxsw     vp 66 0f ee/xmm
+vpmaxsb     vp 66 0f 38 3c/xmm
+vpmaxsd     vp 66 0f 38 3d/xmm
+
+pmaxub      np 0f de/mmx
+pmaxub      66 0f de/xmm
+pmaxuw      66 0f 38 3e/xmm
+pmaxud      66 0f 38 3f/xmm
+vpmaxub     vp 66 0f de/xmm
+vpmaxuw     vp 66 0f 38 3e/xmm
+vpmaxud     vp 66 0f 38 3f/xmm
+
+pminsw      np 0f ea/mmx
+pminsb      66 0f 38 38/mmx
+pminsd      66 0f 38 39/xmm
+pminsw      66 0f ea/xmm
+vpminsb     vp 66 0f 38 38/mmx
+vpminsd     vp 66 0f 38 39/xmm
+vpminsw     vp 66 0f ea/xmm
+
+pminub      np 0f da/mmx
+pminub      66 0f da/xmm
+pminuw      66 0f 38 3a/xmm
+vpminub     vp 66 0f da/xmm
+vpminuw     vp 66 0f 38 3a/xmm
+
+pminud      66 0f 38 3b/xmm
+vpminud     vp 66 0f 38 3b/xmm
+
+pmovmskb    np 0f d7/mmx
+pmovmskb    66 0f d7/xmm
+
+pmovsxbw    66 0f 38 20/xmm +ds64
+pmovsxbd    66 0f 38 21/xmm +ds32
+pmovsxbq    66 0f 38 22/xmm +ds16
+pmovsxwd    66 0f 38 23/xmm +ds64
+pmovsxwq    66 0f 38 24/xmm +ds32
+pmovsxdq    66 0f 38 25/xmm +ds64
+vpmovsxbw   vp 66 0f 38 20/xmm +ds64 +vexvz
+vpmovsxbd   vp 66 0f 38 21/xmm +ds32 +vexvz
+vpmovsxbq   vp 66 0f 38 22/xmm +ds16 +vexvz
+vpmovsxwd   vp 66 0f 38 23/xmm +ds64 +vexvz
+vpmovsxwq   vp 66 0f 38 24/xmm +ds32 +vexvz
+vpmovsxdq   vp 66 0f 38 25/xmm +ds64 +vexvz
+
+pmovzxbw    66 0f 38 30/xmm +ds64
+pmovzxbd    66 0f 38 31/xmm +ds32
+pmovzxbq    66 0f 38 32/xmm +ds16
+pmovzxwd    66 0f 38 33/xmm +ds64
+pmovzxwq    66 0f 38 34/xmm +ds32
+pmovzxdq    66 0f 38 35/xmm +ds64
+vpmovzxbw   vp 66 0f 38 30/xmm +ds64 +vexvz
+vpmovzxbd   vp 66 0f 38 31/xmm +ds32 +vexvz
+vpmovzxbq   vp 66 0f 38 32/xmm +ds16 +vexvz
+vpmovzxwd   vp 66 0f 38 33/xmm +ds64 +vexvz
+vpmovzxwq   vp 66 0f 38 34/xmm +ds32 +vexvz
+vpmovzxdq   vp 66 0f 38 35/xmm +ds64 +vexvz
+
+pmuldq      66 0f 38 28/xmm
+vpmuldq     vp 66 0f 38 28/xmm
+
+pmulhrsw    np 0f 38 0b/mmx
+pmulhrsw    66 0f 38 0b/xmm
+vpmulhrsw   vp 66 0f 38 0b/xmm
+
+pmulhuw     np 0f e4/mmx
+pmulhuw     66 0f e4/xmm
+vpmulhuw    vp 66 0f e4/xmm
+
+pmulhw      np 0f e5/mmx
+pmulhw      66 0f e5/xmm
+vpmulhw     vp 66 0f e5/xmm
+
+pmulld      66 0f 38 40/xmm
+vpmulld     vp 66 0f 38 40/xmm
+
+pmullw      np 0f d5/mmx
+pmullw      66 0f d5/xmm
+vpmullw     vp 66 0f d5/xmm
+
+pmuludq     np 0f f4/mmx
+pmuludq     66 0f f4/xmm
+pmuludq     vp 66 0f f4/xmm
+
+pop         8f/0 @mcl
+pop         8f/0 @m64 +ds64
+pop         58+reg @mcl
+pop         58+reg @m64 +ds64
+pop         07 +rx=sreg0
+pop         17 +rx=sreg2
+pop         1f +rx=sreg3
+pop         0f a1 +rx=sreg4
+pop         0f a9 +rx=sreg5
+
+popa        61 @as16
+popad       61 @as32
+
+popcnt      f3 0f b8/reg
+
+popf        9d @as16
+popfd       9d @as32
+popfq       9d @as64
+
+por         np 0f eb/mmx
+por         66 0f eb/xmm
+vpor        vp 66 0f eb/xmm
+
+prefetcht0   0f 18/1 @moda +w
+prefetcht1   0f 18/2 @moda +w
+prefetcht2   0f 18/3 @moda +w
+prefetchtnta 0f 18/0 @moda +w
+prefetchw    0f 0d/1 @moda +w
+
+psadbw       np 0f f6/mmx
+psadbw       66 0f f6/xmm
+vpsadbw      vp 66 0f f6/xmm
+
+pshufb       np 0f 38 00/mmx
+pshufb       66 0f 38 00/xmm
+vpshufb      vp 66 0f 38 00/xmm
+
+pshufw       np 0f 70/mmx imm8
+pshufd       66 0f 70/xmm imm8
+pshufhw      f3 0f 70/xmm imm8
+pshuflw      f2 0f 70/xmm imm8
+vpshufd      vp 66 0f 70/xmm imm8 +vexvz
+vpshufhw     vp f3 0f 70/xmm imm8 +vexvz
+vpshuflw     vp f2 0f 70/xmm imm8 +vexvz
+
+psignb       np 0f 38 08/mmx
+psignw       np 0f 38 09/mmx
+psignd       np 0f 38 0a/mmx
+psignb       66 0f 38 08/xmm
+psignw       66 0f 38 09/xmm
+psignd       66 0f 38 0a/xmm
+vpsignb      vp 66 0f 38 08/xmm
+vpsignw      vp 66 0f 38 09/xmm
+vpsignd      vp 66 0f 38 0a/xmm
+
+pslldq       66 0f 73/7 +rm=xmm imm8
+vpslldq      vp 66 0f 73/7 +rm=xmm imm8
+
+psllw        np 0f f1/mmx
+pslld        np 0f f2/mmx
+psllq        np 0f f3/mmx
+psllw        np 0f 71/6 imm8 +rm=mmx
+pslld        np 0f 72/6 imm8 +rm=mmx
+psllq        np 0f 73/6 imm8 +rm=mmx
+
+psllw        66 0f f1/xmm
+pslld        66 0f f2/xmm
+psllq        66 0f f3/xmm
+psllw        66 0f 71/6 imm8 +rm=xmm
+pslld        66 0f 72/6 imm8 +rm=xmm
+psllq        66 0f 73/6 imm8 +rm=xmm
+
+vpsllw       vp 66 0f f1/xmm
+vpslld       vp 66 0f f2/xmm
+vpsllq       vp 66 0f f3/xmm
+vpsllw       vp 66 0f 71/6 imm8 +rm=xmm
+vpslld       vp 66 0f 72/6 imm8 +rm=xmm
+vpsllq       vp 66 0f 73/6 imm8 +rm=xmm
+
+psraw        np 0f e1/mmx
+psrad        np 0f e2/mmx
+psraw        np 0f 71/4 imm8 +rm=mmx
+psrad        np 0f 72/4 imm8 +rm=mmx
+
+psraw        66 0f e1/xmm
+psrad        66 0f e2/xmm
+psraw        66 0f 71/4 imm8 +rm=xmm
+psrad        66 0f 72/4 imm8 +rm=xmm
+
+vpsraw       vp 66 0f e1/xmm
+vpsrad       vp 66 0f e2/xmm
+vpsraw       vp 66 0f 71/4 imm8 +rm=xmm
+vpsrad       vp 66 0f 72/4 imm8 +rm=xmm
+
+psrldq       66 0f 73/3 imm8 +d
+vpsrldq      vp 66 0f 73/3 imm8 +d
+
+psrlw        np 0f d1/mmx
+psrld        np 0f d2/mmx
+psrlq        np 0f d3/mmx
+psrlw        np 0f 71/2 imm8 +rm=mmx
+psrld        np 0f 72/2 imm8 +rm=mmx
+
+psrlw        66 0f d1/xmm
+psrld        66 0f d2/xmm
+psrlq        66 0f d3/xmm
+psrlw        66 0f 71/2 imm8 +rm=xmm
+psrld        66 0f 72/2 imm8 +rm=xmm
+
+vpsrlw       vp 66 0f d1/xmm
+vpsrld       vp 66 0f d2/xmm
+vpsrlq       vp 66 0f d3/xmm
+vpsrlw       vp 66 0f 71/2 imm8 +rm=xmm
+vpsrld       vp 66 0f 72/2 imm8 +rm=xmm
+
+psubb        np 0f f8/mmx
+psubw        np 0f f9/mmx
+psubd        np 0f fa/mmx
+psubq        np 0f fb/mmx
+psubb        66 0f f8/xmm
+psubw        66 0f f9/xmm
+psubd        66 0f fa/xmm
+psubq        66 0f fb/xmm
+vpsubb       vp 66 0f f8/xmm
+vpsubw       vp 66 0f f9/xmm
+vpsubd       vp 66 0f fa/xmm
+vpsubq       vp 66 0f fb/xmm
+
+psubsb       np 0f e8/mmx
+psubsw       np 0f e9/mmx
+psubsb       66 0f e8/xmm
+psubsw       66 0f e9/xmm
+vpsubsb      vp 66 0f e8/xmm
+vpsubsw      vp 66 0f e9/xmm
+
+psubusb      np 0f d8/mmx
+psubusw      np 0f d9/mmx
+psubusb      66 0f d8/xmm
+psubusw      66 0f d9/xmm
+vpsubusb     vp 66 0f d8/xmm
+vpsubusw     vp 66 0f d9/xmm
+
+ptest        66 0f 38 17/xmm
+vptest       vp 66 0f 38 17/xmm
+
+ptwrite      f3 0f ae/4 @m64
+ptwrite      f3 0f ae/4 @mcl +ds32
+
+punpckldq    np 0f 62/mmx
+punpckhbw    np 0f 68/mmx
+punpckhwd    np 0f 69/mmx
+punpckhdq    np 0f 6a/mmx
+punpckhqdq   np 0f 6d/mmx
+punpckldq    66 0f 62/xmm
+punpckhbw    66 0f 68/xmm
+punpckhwd    66 0f 69/xmm
+punpckhdq    66 0f 6a/xmm
+punpckhqdq   66 0f 6d/xmm
+vpunpckldq   vp 66 0f 62/xmm
+punpckhbw    vp 66 0f 68/xmm
+punpckhwd    vp 66 0f 69/xmm
+punpckhdq    vp 66 0f 6a/xmm
+punpckhqdq   vp 66 0f 6d/xmm
+
+push         ff/6 @mcl
+push         ff/6 @m64 +ds64
+push         50+reg @mcl
+push         50+reg @m64 +ds64
+push         6a imm8
+push         68 imm
+push         06 +rx=sreg0
+push         0e +rx=sreg1
+push         16 +rx=sreg2
+push         1e +rx=sreg3
+push         0f a0 +rx=sreg4
+push         0f a8 +rx=sreg5
+
+pusha        60 @mcl @ds16
+pushad       60 @mcl @ds32
+
+pushf        9c @ds16
+pushf        9c @mcl @ds32
+pushf        9c @m64
+
+pxor         np 0f ef/mmx
+pxor         66 0f ef/xmm
+vpxor        vp 66 0f ef/xmm
+
+rol          c0/0 +w imm8
+rol          c1/0 imm8
+rol          d0/0 +w
+rol          d1/0
+rol          d2/0 +w +rx=reg1
+rol          d3/0 +rx=reg1
+
+ror          c0/1 +w imm8
+ror          c1/1 imm8
+ror          d0/1 +w
+ror          d1/1
+ror          d2/1 +w +rx=reg1
+ror          d3/1 +rx=reg1
+
+rcl          c0/2 +w imm8
+rcl          c1/2 imm8
+rcl          d0/2 +w
+rcl          d1/2
+rcl          d2/2 +w +rx=reg1
+rcl          d3/2 +rx=reg1
+
+rcr          c0/3 +w imm8
+rcr          c1/3 imm8
+rcr          d0/3 +w
+rcr          d1/3
+rcr          d2/3 +w +rx=reg1
+rcr          d3/3 +rx=reg1
+
+sal          c0/4 +w imm8
+sal          c1/4 imm8
+sal          d0/4 +w
+sal          d1/4
+sal          d2/4 +w +rx=reg1
+sal          d3/4 +rx=reg1
+
+shr          c0/5 +w imm8
+shr          c1/5 imm8
+shr          d0/5 +w
+shr          d1/5
+shr          d2/5 +w +rx=reg1
+shr          d3/5 +rx=reg1
+
+sar          c0/7 +w imm8
+sar          c1/7 imm8
+sar          d0/7 +w
+sar          d1/7
+sar          d2/7 +w +rx=reg1
+sar          d3/7 +rx=reg1
+
+rcpps        np 0f 53/xmm
+rcpss        f3 0f 53/xmm
+vrcpps       vp np 0f 53/xmm
+vrcpss       vp f3 0f 53/xmm
+
+rdfsbase     f3 0f ae/0
+rdgsbase     f3 0f ae/1
+
+rdmsr        0f 32
+
+rdpid        f3 0f c7/7
+
+# rdpkru       np 0f 01 ee
+
+rdpmc        0f 33
+
+# rdrand       NFx 0f c7/6
+# rdseed       NFx 0f c7/7
+
+rdtsc        0f 31
+
+# rdtscp       0f 01 f9
+
+ret          c3
+ret          cb +far
+ret          c2 imm16
+ret          ca imm16 +far
+
+# rorx         vp f2 0f 3a/reg imm8 @vexw0
+
+roundps      66 0f 3a 08/xmm imm8
+roundpd      66 0f 3a 09/xmm imm8
+roundss      66 0f 3a 0a/xmm imm8
+roundsd      66 0f 3a 0b/xmm imm8
+vroundps     vp 66 0f 3a 08/xmm imm8 +vexvz
+vroundpd     vp 66 0f 3a 09/xmm imm8 +vexvz
+vroundss     vp 66 0f 3a 0a/xmm imm8 +vexvz
+vroundsd     vp 66 0f 3a 0b/xmm imm8 +vexvz
+
+rsm          0f aa
+
+rsqrtps      np 0f 52/xmm
+rsqrtss      f3 0f 52/xmm
+vrsqrtps     vp np 0f 52/xmm +vexvz
+vrsqrtss     vp f3 0f 52/xmm +vexvz
+
+# rstorssp     f3 0f 01/5 @moda
+
+sahf         9e @mcl
+
+sbb          1c imm8 +w
+sbb          1d imm
+sbb          80/3 imm8 +w
+sbb          81/3 imm
+sbb          83/3 imm8
+sbb          18/reg +d +w
+sbb          19/reg +d
+sbb          1a/reg +w
+sbb          1b/reg
+
+scasb        ae +ds8 +rep
+scasw        ae @ds16 +rep
+scasd        ae @ds32 +rep
+scasq        ae @ds64 +rep
+
+seto         0f 90 rel8
+setno        0f 91 rel8
+setb         0f 92 rel8
+setae        0f 93 rel8
+setz         0f 94 rel8
+setnz        0f 95 rel8
+setbe        0f 96 rel8
+seta         0f 97 rel8
+sets         0f 98 rel8
+setns        0f 99 rel8
+setp         0f 9a rel8
+setnp        0f 9b rel8
+setl         0f 9c rel8
+setge        0f 9d rel8
+setle        0f 9e rel8
+setg         0f 9f rel8
+
+sgdt         0f 01/0 @moda
+
+shld         0f a4/reg +d imm8
+shld         0f a5/reg +d
+
+shrd         0f ac/reg +d imm8
+shrd         0f ad/reg +d
+
+shufps       np 0f c6/xmm imm8
+shufpd       66 0f c6/xmm imm8
+vshufps      vp np 0f c6/xmm imm8
+vshufpd      vp 66 0f c6/xmm imm8
+
+sidt         0f 01/1 @moda
+sldt         0f 00/0 @moda +ds16
+smsw         0f 01/4 @moda
+
+sqrtps       np 0f 51/xmm
+sqrtpd       66 0f 51/xmm
+sqrtss       f3 0f 51/xmm
+sqrtsd       f2 0f 51/xmm
+vsqrtps      vp np 0f 51/xmm
+vsqrtpd      vp 66 0f 51/xmm
+vsqrtss      vp f3 0f 51/xmm
+vsqrtsd      vp f2 0f 51/xmm
+
+std          fd
+sti          fb
+
+stmxcsr      np 0f ae/3 @moda
+vstmxcsr     vp np 0f ae/3 @moda +vexvz
+
+stosb        aa +ds8 +rep
+stosw        ab @ds16 +rep
+stosd        ab @ds32 +rep
+stosq        ab @ds64 +rep
+
+str          0f 00/1 @moda
+
+sub          2c imm8 +w +rx=reg0
+sub          2d imm +rx=reg0
+sub          80/5 imm8 +w
+sub          81/5 imm
+sub          83/5 imm8
+sub          28/reg +d +w
+sub          29/reg +d
+sub          2a/reg +w
+sub          2b/reg
+
+subps        np 0f 5c/xmm
+subpd        66 0f 5c/xmm
+subss        f3 0f 5c/xmm
+subsd        f2 0f 5c/xmm
+vsubps       vp np 0f 5c/xmm
+vsubpd       vp 66 0f 5c/xmm
+vsubss       vp f3 0f 5c/xmm
+vsubsd       vp f2 0f 5c/xmm
+
+# swapgs       0f 01 f8
+
+syscall      0f 05 @m64
+sysret       0f 07 @m64
+sysenter     0f 34
+sysexit      0f 35
+
+test         a8 imm8 +w +rx=reg0
+test         a9 imm +rx=reg0
+test         f6/0 imm8 +w
+test         f7/0 imm
+test         84/reg +d +w
+test         85/reg +d
+
+tzcnt        f3 0f bc/reg
+
+ucomiss      np 0f 2e/xmm
+ucomisd      66 0f 2e/xmm
+vucomiss     vp np 0f 2e/xmm +vexvz
+vucomisd     vp 66 0f 2e/xmm +vexvz
+
+ud0          0f ff/reg
+ud1          0f b9/reg
+ud2          0f 0b
+
+umonitor     f3 0f ae/6
+
+unpckhps     np 0f 15/xmm
+unpckhpd     66 0f 15/xmm
+vunpckhps    vp np 0f 15/xmm
+vunpckhpd    vp 66 0f 15/xmm
+
+unpcklps     np 0f 14/xmm
+unpcklpd     66 0f 14/xmm
+vunpcklps    vp np 0f 14/xmm
+vunpcklpd    vp 66 0f 14/xmm
+
+vbroadcastss vp 66 0f 38 18/xmm @vexw0 +vexvz
+vbroadcastsd vp 66 0f 38 19/xmm @vexw0 +vexvz
+
+verr         0f 00/4
+verw         0f 00/5
+
+vextractf128 vp 66 0f 3a 19/xmm imm8 @vexw0
+vextracti128 vp 66 0f 3a 39/xmm imm8 @vexw0
+
+vinsertf128  vp 66 0f 3a 18/xmm imm8 @vexw0
+
+vmaskmovps   vp 66 0f 38 2c/xmm @vexw0
+vmaskmovpd   vp 66 0f 38 2d/xmm @vexw0
+vmaskmovps   vp 66 0f 38 2e/xmm @vexw0 +d
+vmaskmovpd   vp 66 0f 38 2f/xmm @vexw0 +d
+
+vpblendd     vp 66 0f 3a 02/xmm imm8 @vexw0
+
+vpbroadcastb vp 66 0f 38 78/xmm imm8 @vexw0
+vpbroadcastw vp 66 0f 38 79/xmm imm8 @vexw0
+vpbroadcastd vp 66 0f 38 58/xmm imm8 @vexw0
+vpbroadcastd vp 66 0f 38 59/xmm imm8 @vexw0
+vpbc..i128   vp 66 0f 38 5a/xmm imm8 @vexw0
+
+vperm2f128   vp 66 0f 3a 06/xmm imm8 @vexw0
+vperm2i128   vp 66 0f 3a 46/xmm imm8 @vexw0
+vpermd       vp 66 0f 38 36/xmm @vexw0
+vpermilps    vp 66 0f 38 0c/xmm @vexw0
+vpermilpd    vp 66 0f 38 0d/xmm @vexw0
+vpermilps    vp 66 0f 38 04/xmm imm8 @vexw0
+vpermilpd    vp 66 0f 38 05/xmm imm8 @vexw0
+vpermpd      vp 66 0f 3a 01/xmm imm8 @vexw1
+vpermps      vp 66 0f 38 16/xmm imm8 @vexw0
+vpermq       vp 66 0f 3a 00/xmm imm8 @vexw1
+
+vpmaskmovd   vp 66 0f 38 8c/xmm @vexw0
+vpmaskmovq   vp 66 0f 38 8c/xmm @vexw1
+vpmaskmovd   vp 66 0f 38 8e/xmm @vexw0 +d
+vpmaskmovq   vp 66 0f 38 8e/xmm @vexw1 +d
+
+vpsllvd      vp 66 0f 38 47/xmm @vexw0
+vpsllvq      vp 66 0f 38 47/xmm @vexw1
+
+vpsravd      vp 66 0f 38 46/xmm @vexw0
+
+vpsrlvd      vp 66 0f 38 45/xmm @vexw0
+vpsrlvq      vp 66 0f 38 45/xmm @vexw1
+
+vtestpd      vp 66 0f 38 0e/xmm @vexw0 +vexvz
+vtestpd      vp 66 0f 38 0f/xmm @vexw0 +vexvz
+
+vzeroall     vp np 0f 77 @vexw0
+vzeroupper   vp np 0f 77 @vexw1
+
+wbinvd      0f 09
+wbnoinvd    f3 0f 09
+
+wrfsbase    f3 0f ae/2 @mod11
+wrgsbase    f3 0f ae/3 @mod11
+wrmsr       0f 30
+wrpkru      np 0f 01 ef
+
+xadd        0f c0/reg +d +w
+xadd        0f c1/reg +d
+
+xchg        90+reg +rx=reg0
+xchg        86/reg +w
+xchg        87/reg
+
+# xgetbv      np 0f 01 d0
+
+xlatb       d7
+
+xor         34 imm8 +rx=reg0 +w
+xor         35 imm +rx=reg0
+xor         80/6 imm8 +w
+xor         81/6 imm
+xor         83/6 imm8
+xor         30/reg +d +w
+xor         31/reg +d
+xor         32/reg +w
+xor         33/reg
+
+xorps       np 0f 57/xmm
+xorpd       66 0f 57/xmm
+vxorps      vp np 0f 57/xmm
+vxorpd      vp 66 0f 57/xmm
+
+xsave       np 0f ae/4 @dn64 @moda
+xsave64     np 0f ae/4 @ds64 @moda
+xrstor      np 0f ae/5 @dn64 @moda
+xrstor64    np 0f ae/5 @ds64 @moda
