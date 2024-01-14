@@ -601,11 +601,11 @@ rx_operand_b :: proc(vex_l, rex_b: bool, ds: Size, rxt: Reg_Set, rxi: u8) -> Ope
         return Reg { rxt, ds, rxi }
     } else if rxt == .Xmm {
         rxi := rxi
-        size := ds
+        size := Size.Size_128
         if vex_l {
             size = .Size_256
         }
-        return Reg { rxt, ds, rxi }
+        return Reg { rxt, size, rxi }
     } else {
         return Reg { rxt, default_size_for_reg_kind(rxt), rxi }
     }
@@ -620,11 +620,11 @@ rx_operand_r :: proc(vex_l, rex_b: bool, ds: Size, rxt: Reg_Set, rxi: u8) -> Ope
         return Reg { rxt, ds, rxi }
     } else if rxt == .Xmm {
         rxi := rxi
-        size := ds
+        size := Size.Size_128
         if vex_l {
             size = .Size_256
         }
-        return Reg { rxt, ds, rxi }
+        return Reg { rxt, size, rxi }
     } else {
         return Reg { rxt, default_size_for_reg_kind(rxt), rxi }
     }
