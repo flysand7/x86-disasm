@@ -63,6 +63,7 @@ pre_decode :: proc(cpu: CPU_Mode, bytes: []u8) -> (int, table.Encoding, Error) {
         }
         vex_p = true
         b1 := bytes[idx+1]
+        op_pfx = .Opcode_0f
         switch b1 & 0b11 {
             case 0b01: ds_pfx = .Prefix_66
             case 0b10: ds_pfx = .Prefix_F3
@@ -77,9 +78,9 @@ pre_decode :: proc(cpu: CPU_Mode, bytes: []u8) -> (int, table.Encoding, Error) {
         b1 := bytes[idx+1]
         b2 := bytes[idx+2]
         switch b1 & 0b11111 {
+            case 0b00001: op_pfx = .Opcode_0f
             case 0b00010: op_pfx = .Opcode_0f38
             case 0b00011: op_pfx = .Opcode_0f3a
-            case 0b00001: op_pfx = .Opcode_0f
             case: return idx, {}, .Trunc
         }
         switch b2 & 0b11 {
@@ -284,9 +285,9 @@ decode :: proc(cpu: CPU_Mode, bytes: []u8, encoding: table.Encoding) -> (Inst, b
         vex_l = ((b2>>2)&0b11)!=0
         rex_w ||= vex_w
         switch b1 & 0b11111 {
+            case 0b00001: op_pfx = .Opcode_0f
             case 0b00010: op_pfx = .Opcode_0f38
             case 0b00011: op_pfx = .Opcode_0f3a
-            case 0b00001: op_pfx = .Opcode_0f
         }
         switch b2 & 0b11 {
             case 0b01: ds_pfx = .Prefix_66
