@@ -9,6 +9,7 @@ COLOR_RESET :: "\e[0m"
 COLOR_R :: "\e[38;5;210m"
 COLOR_G :: "\e[38;5;114m"
 COLOR_B :: "\e[38;5;105m"
+COLOR_Y :: "\e[38;5;215m"
 COLOR_GREY :: "\e[38;5;242m"
 
 @(private)
