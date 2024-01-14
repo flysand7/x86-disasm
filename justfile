@@ -9,7 +9,7 @@ build-cli: generate
     odin build . -o:none -debug
 
 build-cli-release: generate
-    odin build . -o:aggressive -microarch:x86-64-v4
+    odin build . -o:aggressive
 
 time-cli: generate build-cli
     time ./x86-disasm x86-disasm > /dev/null
