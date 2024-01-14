@@ -27,15 +27,15 @@ inst_print_intel :: proc(inst: Inst, w: io.Writer, colors := true) {
         switch op in operand {
             case Mem_Short:
                 fmt.wprintf(w, COLOR_Y+"short "+COLOR_RESET)
-                print_color_int(w, COLOR_B, cast(i64) op.disp, colors)
+                print_color_int(w, COLOR_B, cast(i64) op.disp, true, colors)
             case Mem_Near:
                 fmt.wprintf(w, COLOR_Y+"%s"+COLOR_RESET+" [", mem_size_name(op.size))
-                print_color_int(w, COLOR_B, cast(i64) op.offs, colors)
+                print_color_int(w, COLOR_B, cast(i64) op.offs, true, colors)
                 fmt.wprintf(w, "]")
             case Mem_Far:
-                fmt_int(w, op.seg)
+                fmt_int(w, op.seg, false)
                 fmt.wprintf(w, ":[")
-                print_color_int(w, COLOR_B, cast(i64) op.offs, colors)
+                print_color_int(w, COLOR_B, cast(i64) op.offs, true, colors)
                 fmt.wprintf(w, "]")
             case Mem:
                 fmt.wprintf(w, COLOR_Y+"%s "+COLOR_RESET, mem_size_name(op.size))
@@ -53,11 +53,11 @@ inst_print_intel :: proc(inst: Inst, w: io.Writer, colors := true) {
                     print_color_string(w, COLOR_G, reg_name(op.index), colors)
                 }
                 if op.disp != 0 {
-                    print_color_int(w, COLOR_B, cast(i64) op.disp, colors)
+                    print_color_int(w, COLOR_B, cast(i64) op.disp, true, colors)
                 }
                 fmt.wprintf(w, "]")
             case Reg:      print_color_string(w, COLOR_G, reg_name(op), colors)
-            case Imm:      print_color_int(w, COLOR_B, op.value, colors)
+            case Imm:      print_color_int(w, COLOR_B, op.value, true, colors)
         }
     }
     fmt.wprintf(w, "\n")

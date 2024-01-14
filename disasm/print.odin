@@ -13,23 +13,26 @@ COLOR_Y :: "\e[38;5;215m"
 COLOR_GREY :: "\e[38;5;242m"
 
 @(private)
-fmt_int :: proc(w: io.Writer, #any_int hex: i64) {
-    sign_ch := '+'
+fmt_int :: proc(w: io.Writer, #any_int hex: i64, force_sign: bool) {
+    sign_ch := ""
     hex_abs := hex
+    if force_sign {
+        sign_ch = "+"
+    }
     if hex < 0 {
-        sign_ch = '-'
+        sign_ch = "-"
         hex_abs = -hex
     }
     if hex_abs < 10 {
-        fmt.wprintf(w, "%c%d", sign_ch, hex_abs)
+        fmt.wprintf(w, "%s%d", sign_ch, hex_abs)
     } else if hex_abs <= auto_cast max(u8) {
-        fmt.wprintf(w, "%c0x%02x", sign_ch, hex_abs)
+        fmt.wprintf(w, "%s0x%02x", sign_ch, hex_abs)
     } else if hex_abs <= auto_cast max(u16) {
-        fmt.wprintf(w, "%c0x%04x", sign_ch, hex_abs)
+        fmt.wprintf(w, "%s0x%04x", sign_ch, hex_abs)
     } else if hex_abs <= auto_cast max(u32) {
-        fmt.wprintf(w, "%c0x%08x", sign_ch, hex_abs)
+        fmt.wprintf(w, "%s0x%08x", sign_ch, hex_abs)
     } else {
-        fmt.wprintf(w, "%c0x%016x", sign_ch, hex_abs)
+        fmt.wprintf(w, "%s0x%016x", sign_ch, hex_abs)
     }
 }
 
@@ -81,11 +84,11 @@ print_color_string :: proc(w: io.Writer, color: string, str: string, colors: boo
     }
 }
 
-print_color_int :: proc(w: io.Writer, color: string, str: i64, colors: bool) {
+print_color_int :: proc(w: io.Writer, color: string, str: i64, force_sign, colors: bool) {
     if colors {
         fmt.wprint(w, color, sep="")
     }
-    fmt_int(w, str)
+    fmt_int(w, str, force_sign)
     if colors {
         fmt.wprint(w, COLOR_RESET, sep="")
     }
