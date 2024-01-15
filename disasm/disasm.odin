@@ -4,20 +4,20 @@ import "core:fmt"
 import "table"
 import "generated_table"
 
-Error :: enum {
+Error :: enum i32 {
     None,
     Trunc, // An valid encoding may have been found if more bytes were given.
     No_Encoding, // An encoding could not be found for given bytes.
     Invalid, // An encoding was valid up until a point where an invalid field was detected.
 }
 
-CPU_Mode :: enum {
+CPU_Mode :: enum i32 {
     Mode_16,
     Mode_32,
     Mode_64,
 }
 
-cpu_mode_to_size :: proc(mode: CPU_Mode) -> Size {
+cpu_mode_to_size :: proc "contextless" (mode: CPU_Mode) -> Size {
     return cast(Size) (u8(mode)+2)
 }
 
@@ -25,7 +25,7 @@ cpu_mode_to_size :: proc(mode: CPU_Mode) -> Size {
     Scans the byte range corresponding to a single instruction.
     Returns the length of the byte range.
 */
-pre_decode :: proc(cpu: CPU_Mode, bytes: []u8) -> (int, table.Encoding, Error) {
+pre_decode :: proc "contextless" (cpu: CPU_Mode, bytes: []u8) -> (int, table.Encoding, Error) {
     idx := 0
     as_pfx := false
     ds_pfx := table.Data_Prefix.Prefix_Np
@@ -221,7 +221,7 @@ pre_decode :: proc(cpu: CPU_Mode, bytes: []u8) -> (int, table.Encoding, Error) {
     return idx+eop_len, encoding, .None
 }
 
-decode :: proc(cpu: CPU_Mode, bytes: []u8, encoding: table.Encoding) -> (Inst, bool) {
+decode :: proc "contextless" (cpu: CPU_Mode, bytes: []u8, encoding: table.Encoding) -> (Inst, bool) {
     ds_pfx := table.Data_Prefix.Prefix_Np
     as_pfx := false
     idx := 0
@@ -325,7 +325,6 @@ decode :: proc(cpu: CPU_Mode, bytes: []u8, encoding: table.Encoding) -> (Inst, b
     has_modrm := false
     modrm := u8(0)
     encoding := encoding
-    assert(.Rx_Ext not_in table.encoding_flags(encoding))
     if table.encoding_mod_kind(encoding) != .None {
         has_modrm = true
         modrm = bytes[idx]
@@ -368,7 +367,6 @@ decode :: proc(cpu: CPU_Mode, bytes: []u8, encoding: table.Encoding) -> (Inst, b
             return {}, false
         }
     }
-    assert(.Is_Slice not_in table.encoding_flags(encoding), "Found encoding was a slice..?")
     inst := Inst {
         mnemonic = generated_table.string_table[table.encoding_mnemonic_idx(encoding)],
         length = len(bytes),
@@ -500,7 +498,7 @@ decode :: proc(cpu: CPU_Mode, bytes: []u8, encoding: table.Encoding) -> (Inst, b
     return inst, true
 }
 
-rm_operand :: proc(buf: []u8, e: table.Encoding, as, ds: Size, modrm: u8) -> (Operand, int) {
+rm_operand :: proc "contextless" (buf: []u8, e: table.Encoding, as, ds: Size, modrm: u8) -> (Operand, int) {
     mod := modrm>>6
     rm := modrm&0b111
     rmt := table.encoding_rm_type(e)
@@ -592,7 +590,7 @@ rm_operand :: proc(buf: []u8, e: table.Encoding, as, ds: Size, modrm: u8) -> (Op
     }
 }
 
-rx_operand_b :: proc(vex_l, rex_b: bool, ds: Size, rxt: Reg_Set, rxi: u8) -> Operand {
+rx_operand_b :: proc "contextless" (vex_l, rex_b: bool, ds: Size, rxt: Reg_Set, rxi: u8) -> Operand {
     if rxt == .Reg {
         rxi := rxi
         if rex_b {
@@ -611,7 +609,7 @@ rx_operand_b :: proc(vex_l, rex_b: bool, ds: Size, rxt: Reg_Set, rxi: u8) -> Ope
     }
 }
 
-rx_operand_r :: proc(vex_l, rex_b: bool, ds: Size, rxt: Reg_Set, rxi: u8) -> Operand {
+rx_operand_r :: proc "contextless" (vex_l, rex_b: bool, ds: Size, rxt: Reg_Set, rxi: u8) -> Operand {
     if rxt == .Reg {
         rxi := rxi
         if rex_b {
@@ -630,11 +628,11 @@ rx_operand_r :: proc(vex_l, rex_b: bool, ds: Size, rxt: Reg_Set, rxi: u8) -> Ope
     }
 }
 
-vex_operand :: proc(vex_l: bool, vex_v: u8) -> Operand {
+vex_operand :: proc "contextless" (vex_l: bool, vex_v: u8) -> Operand {
     return Reg { .Xmm, vex_l? .Size_256 : .Size_128, 15-vex_v }
 }
 
-default_size_for_reg_kind :: proc(s: Reg_Set) -> Size {
+default_size_for_reg_kind :: proc "contextless" (s: Reg_Set) -> Size {
     switch s {
         case .Bndreg: return .Size_8  // TODO
         case .Creg:   return .Size_8  // TODO
@@ -643,8 +641,7 @@ default_size_for_reg_kind :: proc(s: Reg_Set) -> Size {
         case .Sreg:   return .Size_16
         case .Mmx:    return .Size_64 // TODO
         case .Extras: unreachable()
-        case .Reg, .Xmm:
-            panic("GPRs and XMMs dont have default size")
+        case .Reg, .Xmm: unreachable()
     }
     unreachable()
 }

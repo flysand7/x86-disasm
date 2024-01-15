@@ -11,6 +11,12 @@ build-cli: generate
 build-cli-release: generate
     odin build . -o:aggressive -disable-assert
 
+build-lib: generate
+    odin build . -o:none -debug -out -build-mode:object
+
+build-lib-release: generate
+    odin build . -o:aggressive -disable-assert -build-mode:object
+
 time-cli: generate build-cli-release
     hyperfine -w 16 "./x86-disasm ./x86-disasm -no-color" "objdump -M intel -d -j .text ./x86-disasm" --output pipe
 

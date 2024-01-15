@@ -1,10 +1,14 @@
 package disasm_table
 
-ENABLE_DEBUG_ASSERT :: #config(ENABLE_DEBUG_ASSERT, true)
-
-@(disabled=!ENABLE_DEBUG_ASSERT)
-dbg_assert :: proc(c: bool, s := "") {
-    assert(c, s)
+Size :: enum u8 {
+    Default  = 0,
+    Size_8   = 1,
+    Size_16  = 2,
+    Size_32  = 3,
+    Size_64  = 4,
+    Size_128 = 5,
+    Size_256 = 6,
+    Size_512 = 7,
 }
 
 Mod :: enum {
@@ -96,12 +100,10 @@ FLG_Line :: distinct u16
     +------+--------------+---------------+
       1 bit      2 bits         2 bits
 */
-make_pfx_line :: proc(vex: bool, dp: Data_Prefix, opp: Opcode_Prefix) -> u8 {
+make_pfx_line :: proc "contextless" (vex: bool, dp: Data_Prefix, opp: Opcode_Prefix) -> u8 {
     vx := cast(u8) vex
     dp := cast(u8) dp
     op := cast(u8) opp
-    dbg_assert(dp<4, "Data prefix is bad")
-    dbg_assert(op<4, "Opcode prefix is bad")
     return auto_cast (op | dp<<2 | vx<<4)
 }
 
@@ -118,7 +120,7 @@ make_pfx_line :: proc(vex: bool, dp: Data_Prefix, opp: Opcode_Prefix) -> u8 {
     field specifies whether VEX.W=0 is allowed and bit 1 specifies whether
     VEX.W=1 is allowed.
 */
-make_cst_line :: proc(
+make_cst_line :: proc "contextless" (
     vex_w: u8,
     mod_kind: Mod_Kind,
     mod:  bit_set[Mod],
@@ -141,7 +143,7 @@ make_cst_line :: proc(
     return auto_cast (addr | data<<3 | cpu<<6 | mod<<8 | vex_w<<12 | mod_kind<<14)
 }
 
-make_cst_line_specific :: proc(
+make_cst_line_specific :: proc "contextless" (
     vex_w: bool,
     mod:   bit_set[Mod],
     cpu:   Size,
@@ -157,9 +159,6 @@ make_cst_line_specific :: proc(
     cpu_i := cast(u16) (u8(1) << (u8(cpu)-3))
     data  := cast(u16) (u8(1) << (u8(data)-2))
     addr  := cast(u16) (u8(1) << (u8(addr)-2))
-    dbg_assert(cpu_i<1<<3)
-    dbg_assert(data<1<<3)
-    dbg_assert(addr<1<<3)
     return auto_cast (addr | data<<3 | cpu_i<<6 | mod<<8 | vex_w<<12)
 }
 
@@ -182,7 +181,7 @@ make_cst_line_specific :: proc(
     rxi - index of register specified by RX
         - if mod/rm extends the opcode, holds the extension bytes
  */
- make_rmx_line :: proc(rmm: b8, rmt, rxt: Reg_Set, rms, rxs: Size, rxi: u8) -> RMX_Line {
+ make_rmx_line :: proc "contextless" (rmm: b8, rmt, rxt: Reg_Set, rms, rxs: Size, rxi: u8) -> RMX_Line {
     rmm := cast(u16) rmm
     rmt := cast(u16) rmt
     rms := cast(u16) rms
@@ -205,14 +204,11 @@ make_cst_line_specific :: proc(
     ds - data size override.
     flg - encoding flags.
 */
-make_flg_line :: proc(
+make_flg_line :: proc "contextless" (
     ds:  Size,
     flg: bit_set[Encoding_Flags; u8],
     eop: Extra_Operand_Kind,
 ) -> (FLG_Line) {
-    dbg_assert(cast(int) ds < 1<<3)
-    dbg_assert(len(Encoding_Flags) <= 8)
-    dbg_assert(cast(int) eop < 1<<5)
     ds := cast(u16) ds
     flg := cast(u16) transmute(u8) flg
     eop := cast(u16) eop
@@ -220,7 +216,7 @@ make_flg_line :: proc(
 }
 
 @(private)
-flg_set :: proc(f: FLG_Line, bit: Encoding_Flags) -> FLG_Line {
+flg_set :: proc "contextless" (f: FLG_Line, bit: Encoding_Flags) -> FLG_Line {
     rest := u16(f)
     flags := transmute(bit_set[Encoding_Flags; u16]) cast(u16) (f & 0b11111111)
     flags += {bit}
@@ -228,43 +224,41 @@ flg_set :: proc(f: FLG_Line, bit: Encoding_Flags) -> FLG_Line {
 }
 
 @(private)
-flg_isset :: proc(f: FLG_Line, bit: Encoding_Flags) -> bool {
+flg_isset :: proc "contextless" (f: FLG_Line, bit: Encoding_Flags) -> bool {
     flags := transmute(bit_set[Encoding_Flags; u16]) cast(u16) (f & 0b11111111)
     return bit in flags
 }
 
-encoding_slice_index :: proc(e: Encoding) -> (u16) {
-    dbg_assert(.Is_Slice in encoding_flags(e), "Trying to get slice index of non-slice encoding")
+encoding_slice_index :: proc "contextless" (e: Encoding) -> (u16) {
     return e.mnemonic
 }
 
-encoding_mnemonic_idx :: proc(e: Encoding) -> u16 {
-    dbg_assert(.Is_Slice not_in encoding_flags(e), "Trying to get mnemonic of slice encoding")
+encoding_mnemonic_idx :: proc "contextless" (e: Encoding) -> u16 {
     return e.mnemonic
 }
 
-encoding_cst_mask :: proc(e: Encoding) -> u16 {
+encoding_cst_mask :: proc "contextless" (e: Encoding) -> u16 {
     return u16(e.cst_line) & (1<<14-1)
 }
 
-cst_mask :: proc(c: CST_Line) -> u16 {
+cst_mask :: proc "contextless" (c: CST_Line) -> u16 {
     return u16(c) & (1<<14-1)
 }
 
-encoding_mod_kind :: proc(e: Encoding) -> Mod_Kind {
+encoding_mod_kind :: proc "contextless" (e: Encoding) -> Mod_Kind {
     return cast(Mod_Kind) ((u16(e.cst_line)>>14) & 0b11)
 }
 
 @(private)
-cst_mod_kind :: proc(c: CST_Line) -> Mod_Kind {
+cst_mod_kind :: proc "contextless" (c: CST_Line) -> Mod_Kind {
     return cast(Mod_Kind) ((u16(c)>>14) & 0b11)
 }
 
-encoding_mods :: proc(cl: CST_Line) -> bit_set[Mod] {
+encoding_mods :: proc "contextless" (cl: CST_Line) -> bit_set[Mod] {
     return transmute(bit_set[Mod]) ((u8(cl)>>8)&0b1111)
 }
 
-encoding_rm_size :: proc(e: Encoding, mod: u8, ds: Size) -> Size {
+encoding_rm_size :: proc "contextless" (e: Encoding, mod: u8, ds: Size) -> Size {
     rmm := (e.rmx_line >> 15) != 0
     rms := cast(Size) ((e.rmx_line >> 9) & 0b111)
     if rms == .Default || (rmm && mod == 0b11) {
@@ -273,7 +267,7 @@ encoding_rm_size :: proc(e: Encoding, mod: u8, ds: Size) -> Size {
     return rms
 }
 
-encoding_rx_size :: proc(e: Encoding, ds: Size) -> Size {
+encoding_rx_size :: proc "contextless" (e: Encoding, ds: Size) -> Size {
     rxs := cast(Size) ((e.rmx_line >> 3) & 0b111)
     if rxs == .Default {
         return ds
@@ -281,19 +275,19 @@ encoding_rx_size :: proc(e: Encoding, ds: Size) -> Size {
     return rxs
 }
 
-encoding_rm_type :: proc(e: Encoding) -> Reg_Set {
+encoding_rm_type :: proc "contextless" (e: Encoding) -> Reg_Set {
     return cast(Reg_Set) ((e.rmx_line >> 12) & 0b111)
 }
 
-encoding_rx_type :: proc(e: Encoding) -> Reg_Set {
+encoding_rx_type :: proc "contextless" (e: Encoding) -> Reg_Set {
     return cast(Reg_Set) ((e.rmx_line >> 6) & 0b111)
 }
 
-encoding_rx :: proc(e: Encoding) -> u8 {
+encoding_rx :: proc "contextless" (e: Encoding) -> u8 {
     return cast(u8) (e.rmx_line & 0b111)
 }
 
-encoding_modrm :: proc(e: Encoding) -> (u8, u8, u8) {
+encoding_modrm :: proc "contextless" (e: Encoding) -> (u8, u8, u8) {
     mod := cast(u8) ((u16(e.cst_line)>>12) & 0b11)
     rx := cast(u8) (e.rmx_line & 0b111)
     rm := cast(u8) ((e.rmx_line >> 3) & 0b111)
@@ -301,35 +295,24 @@ encoding_modrm :: proc(e: Encoding) -> (u8, u8, u8) {
 }
 
 @(private)
-rmx_rm :: proc(r: RMX_Line) -> (u8) {
+rmx_rm :: proc "contextless" (r: RMX_Line) -> (u8) {
     rm := cast(u8) ((r >> 3) & 0b111)
     return rm
 }
 
 
-encoding_data_override :: proc(e: Encoding) -> Size {
+encoding_data_override :: proc "contextless" (e: Encoding) -> Size {
     return cast(Size) ((e.flg_line>>8) & 0b111)
 }
 
-encoding_flags :: proc(e: Encoding) -> bit_set[Encoding_Flags; u8] {
+encoding_flags :: proc "contextless" (e: Encoding) -> bit_set[Encoding_Flags; u8] {
     return transmute(bit_set[Encoding_Flags; u8]) cast(u8) (e.flg_line & 0b1111111)
 }
 
-encoding_extra_op :: proc(e: Encoding) -> Extra_Operand_Kind {
+encoding_extra_op :: proc "contextless" (e: Encoding) -> Extra_Operand_Kind {
     return cast(Extra_Operand_Kind) ((e.flg_line >> 11) & 0b11111)
 }
 
-Size :: enum u8 {
-    Default  = 0,
-    Size_8   = 1,
-    Size_16  = 2,
-    Size_32  = 3,
-    Size_64  = 4,
-    Size_128 = 5,
-    Size_256 = 6,
-    Size_512 = 7,
-}
-
-size_to_bytes :: proc(s: Size) -> int {
+size_to_bytes :: proc "contextless" (s: Size) -> int {
     return cast(int) (1<<(cast(uint)s - 1))
 }

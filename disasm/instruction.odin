@@ -57,7 +57,7 @@ Inst_Flags :: bit_set[enum{
     Repnz,
     Lock,
     Bnd,
-}]
+}; u8]
 
 Inst :: struct {
     mnemonic:  string,
@@ -68,8 +68,7 @@ Inst :: struct {
     flags:     Inst_Flags,
 }
 
-add_operand :: proc(inst: ^Inst, operand: Operand) {
-    assert(inst.op_count != len(inst.op))
+add_operand :: proc "contextless" (inst: ^Inst, operand: Operand) {
     inst.op[inst.op_count] = operand
     inst.op_count += 1
 }
