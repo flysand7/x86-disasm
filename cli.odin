@@ -32,6 +32,23 @@ Ctx :: struct {
     print_flavor: Print_Flavor,
 }
 
+HELP_STRING :: `x86 disasm - an x86 disassembler
+Usage:
+    x86-disasm [options] <file>
+
+Options:
+    -format:<format>    Override the file format detection. Try '-format:?'
+    -flavor:<flavor>    Disassembly flavor. Either 'intel' or 'att'.
+    -function:<name>    Only disassemble a function by the given name.
+    -force-no-syns      Treat object formats as if they don't have a symbol table.
+    -no-color           Do not produce colored output.
+
+    -print-all          Use this in case the disassembler dies with an error.
+                        will print every line of disassembly to stdout one by one
+                        (slow) but makes the context of the error clearer.
+
+`
+
 main :: proc() {
     ctx := Ctx {
         color = true,
@@ -51,7 +68,7 @@ main :: proc() {
                 fmt.println("    -format:raw16  16-bit raw binary file")
                 fmt.println("    -format:raw32  32-bit raw binary file")
                 fmt.println("    -format:raw64  64-bit raw binary file")
-                os.exit(0)
+                os.exit(2)
             }
             switch format {
                 case "elf64":
@@ -76,7 +93,7 @@ main :: proc() {
                 fmt.println("Available flavors:")
                 fmt.println("    -format:intel  Intel-style syntax")
                 fmt.println("    -format:raw64  AT&T-style syntax")
-                os.exit(0)
+                os.exit(2)
             }
             switch flavor {
                 case "intel": ctx.print_flavor = .Intel
@@ -91,6 +108,9 @@ main :: proc() {
             ctx.force_no_syms = true
         } else if arg == "-print-all" {
             ctx.print_all = true
+        } else if arg == "-h" || arg == "-help" || arg == "--help" {
+            fmt.printf("%s\n", HELP_STRING)
+            os.exit(2)
         } else if arg[0] == '-' {
             fmt.eprintf("Unknown option: %s\n", arg)
             os.exit(2)
