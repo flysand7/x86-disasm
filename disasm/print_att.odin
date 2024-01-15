@@ -40,9 +40,8 @@ inst_print_att :: proc(inst: Inst, w: io.Writer, colors := true) {
                 print_color_int(w, COLOR_B, cast(i64) op.offs, false, colors)
             case Mem_Far:
                 fmt_int(w, op.seg, false)
-                fmt.wprintf(w, ":[")
+                fmt.wprintf(w, ":")
                 print_color_int(w, COLOR_B, cast(i64) op.offs, false, colors)
-                fmt.wprintf(w, "]")
             case Mem:
                 if needs_data_suffix {
                     fmt.wprintf(w, COLOR_Y+"%s "+COLOR_RESET, mem_size_name(op.size))
