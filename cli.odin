@@ -286,14 +286,14 @@ disasm_print_bytes :: proc(ctx: ^Ctx, w: io.Writer, addr: uintptr, bytes: []u8) 
             return false
         }
         fmt.wprintf(w, "  %012x ", addr)
-        fmt.wprintf(w, "\e[38;5;242m")
+        fmt.wprint(w, "\e[38;5;242m")
         for b in b[:inst_len] {
-            fmt.wprintf(w, "%02x", b)
+            fmt.wprint(w, "%02x", b)
         }
         for i in 0 ..< 16-inst_len {
-            fmt.wprintf(w, "  ")
+            fmt.wprint(w, "  ")
         }
-        fmt.wprintf(w, "\e[0m")
+        fmt.wprint(w, "\e[0m")
         if ctx.print_flavor == .Intel {
             disasm.inst_print_intel(inst, w, ctx.color)
         } else {
