@@ -288,7 +288,7 @@ disasm_print_bytes :: proc(ctx: ^Ctx, w: io.Writer, addr: uintptr, bytes: []u8) 
         fmt.wprintf(w, "  %012x ", addr)
         fmt.wprint(w, "\e[38;5;242m")
         for b in b[:inst_len] {
-            fmt.wprint(w, "%02x", b)
+            fmt.wprintf(w, "%02x", b)
         }
         for i in 0 ..< 16-inst_len {
             fmt.wprint(w, "  ")
