@@ -30,7 +30,12 @@ Ctx :: struct {
     function: Maybe(string),
     filename: string,
     print_all: bool,
+    print_timings: bool,
     print_flavor: Print_Flavor,
+    instruction_count: int,
+    pre_decode_duration: time.Duration,
+    decode_duration: time.Duration,
+    total_duration: time.Duration,
 }
 
 HELP_STRING :: `x86 disasm - an x86 disassembler
@@ -44,9 +49,11 @@ Options:
     -force-no-syns      Treat object formats as if they don't have a symbol table.
     -no-color           Do not produce colored output.
 
+Less common options:
     -print-all          Use this in case the disassembler dies with an error.
                         will print every line of disassembly to stdout one by one
                         (slow) but makes the context of the error clearer.
+    -print-timings      Print the timings of disassembly.
 
 `
 
@@ -109,6 +116,8 @@ main :: proc() {
             ctx.force_no_syms = true
         } else if arg == "-print-all" {
             ctx.print_all = true
+        } else if arg == "-print-timings" {
+            ctx.print_timings = true
         } else if arg == "-h" || arg == "-help" || arg == "--help" {
             fmt.printf("%s\n", HELP_STRING)
             os.exit(2)
@@ -207,6 +216,22 @@ disasm_file :: proc(ctx: ^Ctx, bytes: []u8) {
             disasm_elf(ctx, text_bytes, symtab, strtab)
         } else {
             disasm_elf_raw(ctx, text_bytes, text.addr)
+        }
+        if ctx.print_timings {
+            fmt.printf("Timings:\n")
+            fmt.printf("  Instruction count: %v\n", ctx.instruction_count)
+            fmt.printf("  Pre-decode time: %v (%f ips)\n",
+                ctx.pre_decode_duration,
+                f64(ctx.instruction_count) / (f64(ctx.pre_decode_duration)/f64(1_000_000_000)),
+            )
+            fmt.printf("  Decode time:     %v (%f ips)\n",
+                ctx.decode_duration,
+                f64(ctx.instruction_count) / (f64(ctx.decode_duration)/f64(1_000_000_000)),
+            )
+            fmt.printf("  Total time:      %v (%f ips)\n",
+                ctx.total_duration,
+                f64(ctx.instruction_count) / (f64(ctx.total_duration)/f64(1_000_000_000)),
+            )
         }
     }
 }
@@ -312,7 +337,9 @@ disasm_print_bytes :: proc(ctx: ^Ctx, s: ^disasm.Stream, addr: uintptr, bytes: [
     addr := addr
     defer disasm.stream_flush(s)
     for {
+        start_time := time.now()
         inst_len, inst_enc, inst_err := disasm.pre_decode(.Mode_64, b)
+        ctx.pre_decode_duration += time.diff(start_time, time.now())
         if inst_err == .Trunc {
             fmt.eprintf("Error(%012x): Failed to pre-decode instruction\n", addr)
             print_disasm_failure_ctx(b, inst_len)
@@ -326,7 +353,9 @@ disasm_print_bytes :: proc(ctx: ^Ctx, s: ^disasm.Stream, addr: uintptr, bytes: [
             print_disasm_failure_ctx(b, inst_len)
             return false
         }
+        decode_start_time := time.now()
         inst, inst_ok := disasm.decode(.Mode_64, b[:inst_len], inst_enc)
+        ctx.decode_duration += time.diff(decode_start_time, time.now())
         if !inst_ok {
             fmt.eprintf("Error(%012x): Failed to disassemble instruction: Error finding an encoding matching constraints\n", addr)
             print_disasm_failure_ctx(b, inst_len, false)
@@ -355,11 +384,14 @@ disasm_print_bytes :: proc(ctx: ^Ctx, s: ^disasm.Stream, addr: uintptr, bytes: [
             disasm.inst_print_att(s, inst, ctx.color)
         }
         if inst_len == len(b) {
-            return true
+            break
         }
         b = b[inst_len:]
         addr += cast(uintptr) inst_len
+        ctx.total_duration += time.diff(start_time, time.now())
+        ctx.instruction_count += 1
     }
+    return true
 }
 
 print_disasm_failure_ctx :: proc(b: []u8, off: int, highlight := false) {
