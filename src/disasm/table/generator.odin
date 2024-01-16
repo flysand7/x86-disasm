@@ -8,7 +8,7 @@ import "core:os"
 
 PACKAGE_NAME :: "disasm_generated_table"
 SRC_PATH :: "./data/table.txt"
-DST_PATH :: "./disasm/generated_table/table.odin"
+DST_PATH :: "./src/disasm/generated_table/table.odin"
 
 IND1 :: "    "
 IND2 :: "        "

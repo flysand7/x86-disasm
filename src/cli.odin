@@ -1,7 +1,7 @@
 package disasm_cli
 
 import "disasm"
-import "formats/elf"
+import "elf"
 
 import "core:fmt"
 import "core:os"
