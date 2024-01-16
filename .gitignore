@@ -15,6 +15,9 @@ test/
 /ols.json
 /.vscode
 
+# Valgrind
+/vgcore.*
+
 # Binaries
 *.bin
 *.o
