@@ -7,6 +7,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+    #define x86_extern extern "C"
+#else
+    #define x86_extern extern
+#endif
+
 /*
     The generic sizing of various operands or memory.
     The value X86_Size_Default is used internally and
@@ -259,8 +265,11 @@ enum X86_Disasm_Error {
     out_size - the size of pre-decoded instruction.
 
     Returns an error, if pre-decoding phase failed to decode an instruction.
+
+    Thread-safety: safe, but beware that the offset to the next instruction
+    is unknown.
 */
-extern X86_Disasm_Error x86_disasm_pre_decode(
+x86_extern X86_Disasm_Error x86_disasm_pre_decode(
     X86_CPU_Mode cpu_mode,
     size_t buf_len,
     uint8_t *buf,
@@ -277,12 +286,102 @@ extern X86_Disasm_Error x86_disasm_pre_decode(
     encoding - the encoding handle returned by x86_disasm_pre_decode.
     out_instruction - the instruction output.
 
-    This function is fully thread-safe.
+    Thread-safety: safe.
 */
-extern bool x86_disasm_decode(
+x86_extern bool x86_disasm_decode(
     X86_CPU_Mode cpu_mode,
     size_t buf_len,
     uint8_t *buf,
     uint64_t encoding,
     X86_Inst *out_instruction
 );
+
+
+/*
+    The printing API
+    x86-disasm library has some built-in functions for printing instructions
+    into text streams. These functions are not thread-safe.
+*/
+
+/*
+    Buffered output for instruction printing. You can create one of these bad
+    boys and have the instruction printing into your string builder or other
+    thing to speed up the output to stdout.
+
+    ctx - user data for instruction 
+    procedure - The procedure that is called upon flushing the stream/overflowing
+        the internal buffer.
+    _buf, _buf_idx - internal data for statekeeping for the buffered output.
+        Don't touch these ones.
+    
+    The parameters to the procedure:
+        ctx - the context of the stream (same as X86_Stream's)
+        buf_len - the length of the character buffer (non-zero).
+        buf - the character buffer.
+*/
+struct X86_Stream typedef X86_Stream;
+struct X86_Stream {
+	void (*procedure)(void *ctx, size_t buf_len, char *buf);
+	void *ctx;
+    char _buf[1024];
+    intptr_t _buf_idx;
+};
+
+/*
+    Flush the data from the internal buffers of the stream to the user procedure.
+    Make sure to call this function after the printing to the stream has been
+    finished.
+    
+    Thread-safety: not thread safe.
+*/
+x86_extern void x86_stream_flush(X86_Stream *s);
+
+/*
+    Write a string to the buffered stream.
+
+    str_len - the length of the string.
+    str - the string to print to the stream.
+    
+    Thread-safety: not thread safe.
+*/
+x86_extern void x86_stream_write_str(X86_Stream *s, size_t str_len, char *str);
+
+/*
+    Write an integer to the buffered stream, in decimal format.
+
+    number - the number to print.
+    force_sign - force the plus sign in case the number is positive.
+    
+    Thread-safety: not thread safe.
+*/
+x86_extern void x86_stream_write_int(X86_Stream *s, int64_t number, int32_t force_sign);
+
+/*
+    Write an integer to the buffered stream, in hexadecimal format.
+
+    number - the number to print.
+    pad - pad the output to N characters with zeroes.
+    
+    Thread-safety: not thread safe.
+*/
+x86_extern void x86_stream_write_hex(X86_Stream *s, int64_t number, intptr_t pad);
+
+/*
+    Write an instruction in Intel-flavored assembly into the output buffer.
+
+    inst - pointer to instruction to print.
+    colors - whether to print ansi codes for colored output.
+    
+    Thread-safety: not thread safe.
+*/
+x86_extern void x86_stream_write_inst_intel(X86_Stream *s, X86_Inst *inst, int32_t colors);
+
+/*
+    Write an instruction in AT&T-flavored assembly into the output buffer.
+
+    inst - pointer to instruction to print.
+    colors - whether to print ansi codes for colored output.
+    
+    Thread-safety: not thread safe.
+*/
+x86_extern void x86_stream_write_inst_att(X86_Stream *s, X86_Inst *inst, int32_t colors);
