@@ -53,10 +53,10 @@ print_color_string :: proc "contextless" (s: ^Stream, color: string, str: string
 print_color_int :: proc "contextless" (s: ^Stream, color: string, i: i64, force_sign, colors: bool) {
     if colors {
         stream_write_str(s, color)
-        stream_write_int(s, i, force_sign)
+        fmt_int(s, i, force_sign)
         stream_write_str(s, COLOR_RESET)
     } else {
-        stream_write_int(s, i, force_sign)
+        fmt_int(s, i, force_sign)
     }
 }
 
