@@ -1,7 +1,6 @@
 package disasm
 
 import "core:fmt"
-import "core:io"
 import "table"
 import "generated_table"
 
@@ -13,7 +12,7 @@ COLOR_Y :: "\e[38;5;215m"
 COLOR_GREY :: "\e[38;5;242m"
 
 @(private)
-fmt_int :: proc(w: io.Writer, #any_int hex: i64, force_sign: bool) {
+fmt_int :: proc "contextless" (s: ^Stream, #any_int hex: i64, force_sign: bool) {
     sign_ch := ""
     hex_abs := hex
     if force_sign {
@@ -24,15 +23,40 @@ fmt_int :: proc(w: io.Writer, #any_int hex: i64, force_sign: bool) {
         hex_abs = -hex
     }
     if hex_abs < 10 {
-        fmt.wprintf(w, "%s%d", sign_ch, hex_abs)
-    } else if hex_abs <= auto_cast max(u8) {
-        fmt.wprintf(w, "%s0x%02x", sign_ch, hex_abs)
-    } else if hex_abs <= auto_cast max(u16) {
-        fmt.wprintf(w, "%s0x%04x", sign_ch, hex_abs)
-    } else if hex_abs <= auto_cast max(u32) {
-        fmt.wprintf(w, "%s0x%08x", sign_ch, hex_abs)
+        stream_write_str(s, sign_ch)
+        stream_write_int(s, hex_abs, force_sign)
     } else {
-        fmt.wprintf(w, "%s0x%016x", sign_ch, hex_abs)
+        pad := 2
+        if hex_abs <= auto_cast max(u16) {
+            pad = 4
+        } else if hex_abs <= auto_cast max(u32) {
+            pad = 8
+        } else {
+            pad = 16
+        }
+        stream_write_str(s, sign_ch)
+        stream_write_str(s, "0x")
+        stream_write_hex(s, hex_abs, pad)
+    }
+}
+
+print_color_string :: proc "contextless" (s: ^Stream, color: string, str: string, colors: bool) {
+    if colors {
+        stream_write_str(s, color)
+        stream_write_str(s, str)
+        stream_write_str(s, COLOR_RESET)
+    } else {
+        stream_write_str(s, str)
+    }
+}
+
+print_color_int :: proc "contextless" (s: ^Stream, color: string, i: i64, force_sign, colors: bool) {
+    if colors {
+        stream_write_str(s, color)
+        stream_write_int(s, i, force_sign)
+        stream_write_str(s, COLOR_RESET)
+    } else {
+        stream_write_int(s, i, force_sign)
     }
 }
 
@@ -62,7 +86,7 @@ encoding_print :: proc(e: table.Encoding) {
     fmt.println("}")
 }
 
-reg_name :: proc(r: Reg) -> string {
+reg_name :: proc "contextless" (r: Reg) -> string {
     name := reg_names[r.kind][r.size][r.idx]
     if len(name) == 0 {
         return "(bad reg)"
@@ -70,28 +94,8 @@ reg_name :: proc(r: Reg) -> string {
     return name
 }
 
-mem_size_name :: proc(s: Size) -> string {
+mem_size_name :: proc "contextless" (s: Size) -> string {
     return mem_sizes[s]
-}
-
-print_color_string :: proc(w: io.Writer, color: string, str: string, colors: bool) {
-    if colors {
-        fmt.wprint(w, color, sep="")
-    }
-    fmt.wprintf(w, "%s", str)
-    if colors {
-        fmt.wprint(w, COLOR_RESET, sep="")
-    }
-}
-
-print_color_int :: proc(w: io.Writer, color: string, str: i64, force_sign, colors: bool) {
-    if colors {
-        fmt.wprint(w, color, sep="")
-    }
-    fmt_int(w, str, force_sign)
-    if colors {
-        fmt.wprint(w, COLOR_RESET, sep="")
-    }
 }
 
 @(private="file")

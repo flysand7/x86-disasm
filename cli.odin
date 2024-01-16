@@ -6,6 +6,7 @@ import "formats/elf"
 import "core:fmt"
 import "core:os"
 import "core:strings"
+import "core:runtime"
 import "core:slice"
 import "core:time"
 import "core:io"
@@ -123,6 +124,7 @@ main :: proc() {
         fmt.eprintf("Unable to read file: %s\n", ctx.filename)
         os.exit(1)
     }
+    saved_ctx = context
     disasm_file(&ctx, bytes)
 }
 
@@ -209,36 +211,52 @@ disasm_file :: proc(ctx: ^Ctx, bytes: []u8) {
     }
 }
 
+saved_ctx: runtime.Context
+
+stream_from_builder :: proc(b: ^strings.Builder) -> disasm.Stream {
+    return {
+        data = b,
+        procedure = proc "c" (ctx: rawptr, buf_len: int, buf: [^]u8) {
+            context = saved_ctx
+            builder := cast(^strings.Builder) ctx
+            strings.write_bytes(builder, buf[:buf_len])
+        },
+    }
+}
+
 disasm_raw :: proc(ctx: ^Ctx, bytes: []u8) {
     if !ctx.print_all {
         builder := strings.builder_make()
-        writer := strings.to_writer(&builder)
-        disasm_print_bytes(ctx, writer, 0, bytes)
+        stream := stream_from_builder(&builder)
+        disasm_print_bytes(ctx, &stream, 0, bytes)
         fmt.println(strings.to_string(builder))
     } else {
-        disasm_print_bytes(ctx, os.stream_from_handle(os.stdout), 0, bytes)
+        stream := disasm.make_stdout_stream()
+        disasm_print_bytes(ctx, &stream, 0, bytes)
+
     }
 }
 
 disasm_elf_raw :: proc(ctx: ^Ctx, bytes: []u8, addr: uintptr) {
     if !ctx.print_all {
         builder := strings.builder_make()
-        writer := strings.to_writer(&builder)
-        disasm_print_bytes(ctx, writer, addr, bytes)
+        stream := stream_from_builder(&builder)
+        disasm_print_bytes(ctx, &stream, addr, bytes)
         fmt.println(strings.to_string(builder))
     } else {
-        disasm_print_bytes(ctx, os.stream_from_handle(os.stdout), addr, bytes)
+        stream := disasm.make_stdout_stream()
+        disasm_print_bytes(ctx, &stream, addr, bytes)
     }
 }
 
 disasm_elf :: proc(ctx: ^Ctx, text_bytes: []u8, symtab: []elf.Sym, strtab: []u8) {
-    builder: strings.Builder
-    writer: io.Writer
+    builder := strings.Builder {}
+    stream := disasm.Stream {}
     if !ctx.print_all {
         builder = strings.builder_make()
-        writer = strings.to_writer(&builder)
+        stream = stream_from_builder(&builder)
     } else {
-        writer = os.stream_from_handle(os.stdout)
+        stream = disasm.make_stdout_stream()
     }
     symtab := slice.filter(symtab, proc(sym: elf.Sym) -> bool {
         type, _ := elf.symbol_info(sym)
@@ -266,10 +284,18 @@ disasm_elf :: proc(ctx: ^Ctx, text_bytes: []u8, symtab: []elf.Sym, strtab: []u8)
         sym_size := cast(int) sym.size
         sym_offs_lo := sym_addr - start_addr
         sym_offs_hi := sym_addr - start_addr + sym_size
-        fmt.wprintf(writer, "\e[38;5;33m<%s>:\e[0m\n", sym_name)
+        if ctx.color {
+            disasm.stream_write_str(&stream, "\e[38;5;33m")
+        }
+        disasm.stream_write_str(&stream, "<")
+        disasm.stream_write_str(&stream, sym_name)
+        disasm.stream_write_str(&stream, ">:\n")
+        if ctx.color {
+            disasm.stream_write_str(&stream, "\e[0m")
+        }
         if !disasm_print_bytes(
             ctx,
-            writer,
+            &stream,
             cast(uintptr) sym_addr,
             text_bytes[sym_offs_lo:sym_offs_hi],
         ) {
@@ -281,9 +307,10 @@ disasm_elf :: proc(ctx: ^Ctx, text_bytes: []u8, symtab: []elf.Sym, strtab: []u8)
     }
 }
 
-disasm_print_bytes :: proc(ctx: ^Ctx, w: io.Writer, addr: uintptr, bytes: []u8) -> bool {
+disasm_print_bytes :: proc(ctx: ^Ctx, s: ^disasm.Stream, addr: uintptr, bytes: []u8) -> bool {
     b := bytes
     addr := addr
+    defer disasm.stream_flush(s)
     for {
         inst_len, inst_enc, inst_err := disasm.pre_decode(.Mode_64, b)
         if inst_err == .Trunc {
@@ -305,19 +332,27 @@ disasm_print_bytes :: proc(ctx: ^Ctx, w: io.Writer, addr: uintptr, bytes: []u8) 
             print_disasm_failure_ctx(b, inst_len, false)
             return false
         }
-        fmt.wprintf(w, "  %012x ", addr)
-        fmt.wprint(w, "\e[38;5;242m")
-        for b in b[:inst_len] {
-            fmt.wprintf(w, "%02x", b)
+        disasm.stream_write_str(s, "  ")
+        disasm.stream_write_hex(s, addr, 12)
+        disasm.stream_write_str(s, " ")
+        chars: [32]u8 = ' '
+        if ctx.color {
+            disasm.stream_write_str(s, "\e[38;5;242m")
         }
-        for i in 0 ..< 16-inst_len {
-            fmt.wprint(w, "  ")
+        hex := "0123456789abcdef"
+        for b, i in b[:min(inst_len,15)] {
+            chars[2*i+0] = hex[b%16]
+            chars[2*i+1] = hex[b/16]
         }
-        fmt.wprint(w, "\e[0m")
+        disasm.stream_write_str(s, transmute(string) chars[:])
+        if ctx.color {
+            disasm.stream_write_str(s, "\e[0m")
+        }
+        disasm.stream_write_str(s, " ")
         if ctx.print_flavor == .Intel {
-            disasm.inst_print_intel(inst, w, ctx.color)
+            disasm.inst_print_intel(s, inst, ctx.color)
         } else {
-            disasm.inst_print_att(inst, w, ctx.color)
+            disasm.inst_print_att(s, inst, ctx.color)
         }
         if inst_len == len(b) {
             return true

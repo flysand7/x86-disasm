@@ -11,7 +11,7 @@ Reg :: struct {
     idx:  u8,
 }
 
-reg_present :: proc(r: Reg) -> bool {
+reg_present :: proc "contextless" (r: Reg) -> bool {
     return r.size != .Default
 }
 
