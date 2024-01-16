@@ -335,20 +335,22 @@ disasm_elf :: proc(ctx: ^Ctx, text_bytes: []u8, symtab: []elf.Sym, strtab: []u8)
 disasm_print_bytes :: proc(ctx: ^Ctx, s: ^disasm.Stream, addr: uintptr, bytes: []u8) -> bool {
     b := bytes
     addr := addr
-    defer disasm.stream_flush(s)
     for {
         start_time := time.now()
         inst_len, inst_enc, inst_err := disasm.pre_decode(.Mode_64, b)
         ctx.pre_decode_duration += time.diff(start_time, time.now())
         if inst_err == .Trunc {
+            disasm.stream_flush(s)
             fmt.eprintf("Error(%012x): Failed to pre-decode instruction\n", addr)
             print_disasm_failure_ctx(b, inst_len)
             return false
         } else if inst_err == .No_Encoding {
+            disasm.stream_flush(s)
             fmt.eprintf("Error(%012x): Failed to find an encoding for instruction\n", addr)
             print_disasm_failure_ctx(b, inst_len)
             return false
         } else if inst_err == .Invalid {
+            disasm.stream_flush(s)
             fmt.eprintf("Error(%012x): Instruction encoding was found invalid\n", addr)
             print_disasm_failure_ctx(b, inst_len)
             return false
@@ -357,6 +359,7 @@ disasm_print_bytes :: proc(ctx: ^Ctx, s: ^disasm.Stream, addr: uintptr, bytes: [
         inst, inst_ok := disasm.decode(.Mode_64, b[:inst_len], inst_enc)
         ctx.decode_duration += time.diff(decode_start_time, time.now())
         if !inst_ok {
+            disasm.stream_flush(s)
             fmt.eprintf("Error(%012x): Failed to disassemble instruction: Error finding an encoding matching constraints\n", addr)
             print_disasm_failure_ctx(b, inst_len, false)
             return false
@@ -391,6 +394,7 @@ disasm_print_bytes :: proc(ctx: ^Ctx, s: ^disasm.Stream, addr: uintptr, bytes: [
         ctx.total_duration += time.diff(start_time, time.now())
         ctx.instruction_count += 1
     }
+    disasm.stream_flush(s)
     return true
 }
 
