@@ -1189,11 +1189,13 @@ punpckldq    66 0f 62/xmm
 punpckhbw    66 0f 68/xmm
 punpckhwd    66 0f 69/xmm
 punpckhdq    66 0f 6a/xmm
+punpcklqdq   66 0f 6c/xmm
 punpckhqdq   66 0f 6d/xmm
 vpunpckldq   vp 66 0f 62/xmm
 punpckhbw    vp 66 0f 68/xmm
 punpckhwd    vp 66 0f 69/xmm
 punpckhdq    vp 66 0f 6a/xmm
+vpunpcklqdq  vp 66 0f 6c/xmm
 punpckhqdq   vp 66 0f 6d/xmm
 
 push         ff/6 @mcl
