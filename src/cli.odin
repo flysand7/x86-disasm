@@ -241,8 +241,8 @@ disasm_print_bytes :: proc(ctx: ^Ctx, s: ^disasm.Stream, addr: uintptr, bytes: [
         }
         hex := "0123456789abcdef"
         for b, i in b[:min(inst_len,15)] {
-            chars[2*i+0] = hex[b%16]
-            chars[2*i+1] = hex[b/16]
+            chars[2*i+0] = hex[b/16]
+            chars[2*i+1] = hex[b%16]
         }
         disasm.stream_write_str(s, transmute(string) chars[:])
         if ctx.color {
