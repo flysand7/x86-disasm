@@ -14,6 +14,7 @@ import "core:io"
 Obj_Format :: enum {
     Detect,
     Raw,
+    Hex,
     Elf,
 }
 
@@ -76,6 +77,9 @@ main :: proc() {
                 fmt.println("    -format:raw16  16-bit raw binary file")
                 fmt.println("    -format:raw32  32-bit raw binary file")
                 fmt.println("    -format:raw64  64-bit raw binary file")
+                fmt.println("    -format:hex6  16-bit raw hex file")
+                fmt.println("    -format:hex2  32-bit raw hex file")
+                fmt.println("    -format:hex4  64-bit raw hex file")
                 os.exit(2)
             }
             switch format {
@@ -93,6 +97,15 @@ main :: proc() {
                     ctx.cpu = .Mode_32
                 case "raw64":
                     ctx.format = .Raw
+                    ctx.cpu = .Mode_64
+                case "hex16":
+                    ctx.format = .Hex
+                    ctx.cpu = .Mode_16
+                case "hex32":
+                    ctx.format = .Hex
+                    ctx.cpu = .Mode_32
+                case "hex64":
+                    ctx.format = .Hex
                     ctx.cpu = .Mode_64
             }
         } else if strings.has_prefix(arg, "-flavor:") {
@@ -166,6 +179,8 @@ disasm_file :: proc(ctx: ^Ctx, bytes: []u8) {
         disasm_raw(ctx, bytes)
     } else if ctx.format == .Elf {
         disasm_elf_file(ctx, bytes)
+    } else if ctx.format == .Hex {
+        disasm_hex(ctx, bytes)
     }
     if ctx.print_timings {
         fmt.printf("Timings:\n")
@@ -182,19 +197,6 @@ disasm_file :: proc(ctx: ^Ctx, bytes: []u8) {
             ctx.total_duration,
             f64(ctx.instruction_count) / (f64(ctx.total_duration)/f64(1_000_000_000)),
         )
-    }
-}
-
-disasm_raw :: proc(ctx: ^Ctx, bytes: []u8) {
-    if !ctx.print_all {
-        builder := strings.builder_make()
-        stream := stream_from_builder(&builder)
-        disasm_print_bytes(ctx, &stream, 0, bytes)
-        fmt.println(strings.to_string(builder))
-    } else {
-        stream := disasm.make_stdout_stream()
-        disasm_print_bytes(ctx, &stream, 0, bytes)
-
     }
 }
 
