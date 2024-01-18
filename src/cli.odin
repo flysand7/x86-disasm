@@ -185,17 +185,17 @@ disasm_file :: proc(ctx: ^Ctx, bytes: []u8) {
     if ctx.print_timings {
         fmt.printf("Timings:\n")
         fmt.printf("  Instruction count: %v\n", ctx.instruction_count)
-        fmt.printf("  Pre-decode time: %v (%f ips)\n",
+        fmt.printf("  Pre-decode time: %v (%v / instruction)\n",
             ctx.pre_decode_duration,
-            f64(ctx.instruction_count) / (f64(ctx.pre_decode_duration)/f64(1_000_000_000)),
+            ctx.pre_decode_duration / time.Duration(ctx.instruction_count),
         )
-        fmt.printf("  Decode time:     %v (%f ips)\n",
+        fmt.printf("  Decode time:     %v (%v / instruction)\n",
             ctx.decode_duration,
-            f64(ctx.instruction_count) / (f64(ctx.decode_duration)/f64(1_000_000_000)),
+            ctx.decode_duration / time.Duration(ctx.instruction_count),
         )
-        fmt.printf("  Total time:      %v (%f ips)\n",
+        fmt.printf("  Total time:      %v (%v / instruction)\n",
             ctx.total_duration,
-            f64(ctx.instruction_count) / (f64(ctx.total_duration)/f64(1_000_000_000)),
+            ctx.total_duration / time.Duration(ctx.instruction_count),
         )
     }
 }
