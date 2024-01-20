@@ -15,8 +15,12 @@ build-lib: generate
 build-lib-release: generate
     odin build src -out:x86-disasm -o:aggressive -disable-assert -build-mode:object
 
-time-cli: generate build-cli-release
+time-cli-objudmp: generate build-cli-release
     hyperfine -w 16 "./x86-disasm ./x86-disasm -no-color" "objdump -M intel -d -j .text ./x86-disasm" --output pipe
+
+time-cli-ndisasm: generate build-cli-release
+    tests/1million.py
+    hyperfine -w 16 "./x86-disasm tests/is-even.bin -no-color -format:raw64" "ndisasm -b64 tests/is-even.bin" --output pipe
 
 test-local: (prepare-disasm "./tests/local.asm") generate build-cli
     ./x86-disasm -format:raw64 ./temp/temp.out -print-all
