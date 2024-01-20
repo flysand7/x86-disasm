@@ -11,32 +11,32 @@ are welcome. See building section below.
 
 ## Features
 
-[x] Print using intel or AT&T syntax flavor.
-[x] Disassemble a function with a specific name.
-[x] Decoding can be parralelized.
+- [x] Print using intel or AT&T syntax flavor.
+- [x] Disassemble a function with a specific name.
+- [x] Decoding can be parralelized.
 
 ### Formats
 
-[x] Disassembling Raw files.
-[x] Disassembling Hex strings.
-[x] Disassembling ELF files (Linux).
-[ ] Disassembling COFF/PE files (Windows).
-[ ] Disassembling Mach-O files (Mac-OS).
+- [x] Disassembling Raw files.
+- [x] Disassembling Hex strings.
+- [x] Disassembling ELF files (Linux).
+- [ ] Disassembling COFF/PE files (Windows).
+- [ ] Disassembling Mach-O files (Mac-OS).
 
 ### Instruction sets
 
-[x] General purpose instructions.
-[x] SSE instructions.
-[x] SSE2 instructions.
-[x] SSE3 instructions.
-[x] SSSE3 instructions.
-[x] SSE4.1 instructions.
-[x] SSE4.2 instructions.
-[x] AVX instructions.
-[x] AVX2 instructions.
-[x] MPX instructions.
-[ ] FPU instructions.
-[ ] AVX512 instructions.
+- [x] General purpose instructions.
+- [x] SSE instructions.
+- [x] SSE2 instructions.
+- [x] SSE3 instructions.
+- [x] SSSE3 instructions.
+- [x] SSE4.1 instructions.
+- [x] SSE4.2 instructions.
+- [x] AVX instructions.
+- [x] AVX2 instructions.
+- [x] MPX instructions.
+- [ ] FPU instructions.
+- [ ] AVX512 instructions.
 
 ## Benchmarks
 
