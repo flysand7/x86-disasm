@@ -21,3 +21,5 @@ test/
 # Binaries
 *.bin
 *.o
+*.obj
+*.exe
