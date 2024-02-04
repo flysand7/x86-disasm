@@ -617,29 +617,29 @@ write_tables_to_dst :: proc(tc: ^Table_Contents) {
     for pfx_group, pfx_line in tc.encodings {
         fmt.fprintf(file, "@(private)\nprefix_table_%02d := []u64 {{\n", pfx_line)
         for op_group, opcode in pfx_group {
-            fmt.fprintf(file, IND1+"%#02x = %#016x,\n", opcode, transmute(u64) op_group)
+            fmt.fprintf(file, IND1+"%#.02x = %#.16x,\n", opcode, transmute(u64) op_group)
         }
         fmt.fprintf(file, "}}\n\n")
     }
     fmt.fprintf(file, "string_table := []string {{\n")
     for s, idx in tc.string_table {
-        fmt.fprintf(file, IND1+`%#04x = "%s",`+"\n", idx, s)
+        fmt.fprintf(file, IND1+`%#.04x = "%s",`+"\n", idx, s)
     }
     fmt.fprintf(file, "}}\n\n")
     fmt.fprintf(file, "rx_ext_table := [][8]u64 {{\n")
     for rx_ext, rx_idx in tc.rx_ext_table {
-        fmt.fprintf(file, IND1+"%#04x = [8]u64 {{\n", rx_idx)
+        fmt.fprintf(file, IND1+"%#.04x = [8]u64 {{\n", rx_idx)
         for rx in 0 ..< 8 {
-            fmt.fprintf(file, IND2+"%d = %#016x,\n", rx, transmute(u64) rx_ext[rx])
+            fmt.fprintf(file, IND2+"%d = %#.016x,\n", rx, transmute(u64) rx_ext[rx])
         }
         fmt.fprintf(file, IND1+"}},\n")
     }
     fmt.fprintf(file, "}}\n\n")
     fmt.fprintf(file, "slice_table := [][]u64 {{\n")
     for slc, slc_idx in tc.slice_table {
-        fmt.fprintf(file, IND1+"%#04x = []u64 {{\n", slc_idx)
+        fmt.fprintf(file, IND1+"%#.04x = []u64 {{\n", slc_idx)
         for enc, enc_idx in slc {
-            fmt.fprintf(file, IND2+"%d = %#016x,\n", enc_idx, transmute(u64) enc)
+            fmt.fprintf(file, IND2+"%d = %#.016x,\n", enc_idx, transmute(u64) enc)
         }
         fmt.fprintf(file, IND1+"}},\n")
     }

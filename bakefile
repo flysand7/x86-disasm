@@ -1,0 +1,78 @@
+
+func exe-file(path) {
+    return "${path}.exe"
+}
+
+func src-file(path) {
+    return "src/disasm/${path}"
+}
+
+let odin = exe-file('odin')
+let generated-table = src-file("generated_table/table.odin")
+let cli-exe = exe-file('x86-disasm')
+
+func table-recipe() {
+    let table-src = "data/table.txt"
+    let table-gen = src-file("table/generator.odin")
+    let table-typ = src-file("table/types.odin")
+    let gen-exe = exe-file('generator')
+    bake-recipe(
+        [
+            [odin, 'build', src-file('table/'), "-out:${gen-exe}", "-o:none", "-debug"],
+        ],
+        [table-gen, table-typ],
+        [gen-exe],
+    )
+    bake-recipe(
+        [
+            [gen-exe]
+        ],
+        [gen-exe, table-src],
+        [generated-table],
+    )
+}
+table-recipe()
+
+# TODO: once we have glob specifiers in tasks maybe these can be
+# cached too...
+func cli-recipe(odin-flags) {
+    bake-build([generated-table])
+    cmd([odin, 'build', "src", "-out:${cli-exe}"] + odin-flags)
+}
+
+func lib-recipe(odin-flags) {
+    bake-build([generated-table])
+    cmd([odin, 'build', "src", "-out:${cli-exe}", "-build-mode:object"] + odin-flags)
+}
+
+### CLI interface for the build script
+
+func is-release(args) {
+    let i = 0
+    for i != len(args) {
+        if args[i] == "-release" {
+            return true
+        }
+    }
+    return false
+}
+
+func 'cli' build-cli(args) {
+    print('Building cli.\n')
+    if is-release(args) {
+        cli-recipe([])
+    } else {
+        cli-recipe(['-o:none', '-debug'])
+    }
+}
+
+func 'cli' build-lib(args) {
+    print('Building lib.')
+    if is-release(args) {
+        lib-recipe([])
+    } else {
+        lib-recipe(['-o:none', '-debug'])
+    }
+}
+
+

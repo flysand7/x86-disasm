@@ -4,8 +4,9 @@
 !*.*
 !*/
 
-# Except the following:
-!justfile
+# Bakefiles:
+!bakefile
+*.bake-cache
 
 # Testing
 temp/
@@ -23,3 +24,4 @@ test/
 *.o
 *.obj
 *.exe
+*.pdb
