@@ -1,0 +1,24 @@
+# Ignore all extensionless files
+*
+!*/
+!*.*
+
+# Windows binaries
+*.exe
+*.obj
+*.ilk
+*.exp
+*.dll
+*.pdb
+
+# Linux binaries
+*.o
+*.a
+*.so
+
+# User-specific
+ols.json
+
+# Editor-specific
+.vscode/
+.sublime-workspace
