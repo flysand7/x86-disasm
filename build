@@ -1,0 +1,3 @@
+#!/bin/sh
+
+odin build x86_disasm -out:x86-disasm -debug

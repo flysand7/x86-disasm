@@ -3,6 +3,8 @@
 !*/
 !*.*
 
+!/build
+
 # Windows binaries
 *.exe
 *.obj
@@ -22,3 +24,6 @@ ols.json
 # Editor-specific
 .vscode/
 .sublime-workspace
+
+# Temp directory
+tmp/
