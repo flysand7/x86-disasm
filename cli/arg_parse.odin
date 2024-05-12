@@ -20,6 +20,7 @@ parse_args :: proc(args_str: []string) -> (args: [dynamic]string, options: map[s
             append(&args, arg_str)
             continue
         }
+        arg_str := arg_str[1:]
         colon_pos := strings.index_byte(arg_str, ':')
         if colon_pos == -1 {
             options[arg_str] = nil
