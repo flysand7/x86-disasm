@@ -13,6 +13,13 @@ is_pe :: proc(file_contents: []u8) -> bool {
     if header_magic != PE_SIGNATURE {
         return false
     }
+    if len(file_contents) < int(magic_offset) + size_of(u32) + size_of(File_Header) {
+        return false
+    }
+    file_header := (transmute(^File_Header) &bytes[magic_offset + size_of(u32)])^
+    if !(file_header.machine == .AMD64 || file_header.machine == .I386) {
+        return false
+    }
     return true
 }
 
@@ -21,7 +28,7 @@ is_coff :: proc(file_contents: []u8) -> bool {
     if len(file_contents) < size_of(File_Header) {
         return false
     }
-    file_header := cast(^File_Header) bytes
+    file_header := transmute(^File_Header) bytes
     // Note(flysand): COFF files do not have a magic number per se.
     // since this is a disassembler focusing on disassembling x86 code we will
     // just use the machine number as our magic number. Luckily for us this
@@ -35,4 +42,25 @@ is_coff :: proc(file_contents: []u8) -> bool {
         return true
     }
     return false
+}
+
+pe_machine_bitness :: proc(file_contents: []u8) -> int {
+    bytes := transmute([^]u8) raw_data(file_contents)
+    magic_offset := (transmute(^u32le) &bytes[PE_SIGNATURE_OFFSET])^
+    header := (transmute(^File_Header) &bytes[magic_offset + size_of(u32)])^
+    #partial switch header.machine {
+    case .AMD64: return 64
+    case .I386:  return 32
+    case: unreachable()
+    }
+}
+
+coff_machine_bitness :: proc(file_contents: []u8) -> int {
+    bytes := transmute([^]u8) raw_data(file_contents)
+    header := transmute(^File_Header) bytes
+    #partial switch header.machine {
+    case .AMD64: return 64
+    case .I386:  return 32
+    case: unreachable()
+    }
 }
