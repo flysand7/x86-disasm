@@ -1,4 +1,4 @@
-package arg_parse
+package cli
 
 import "core:strings"
 

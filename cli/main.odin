@@ -1,8 +1,7 @@
-package x86_disasm
+package cli
 
 import "core:fmt"
 import "core:os"
-import "cli"
 import "pe"
 
 HELP_TEMPLATE ::
@@ -18,7 +17,7 @@ verbose_print := false
 
 main :: proc() {
     mb_input_path := Maybe(string) {}
-    args, options := cli.parse_args(os.args[1:])
+    args, options := parse_args(os.args[1:])
     if len(args) == 0 {
         fmt.eprintfln(HELP_TEMPLATE, os.args[0])
         os.exit(2)

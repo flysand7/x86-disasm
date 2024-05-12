@@ -78,7 +78,7 @@ Optional_Header64 :: struct #packed {
 	size_of_headers:                u32le,
 	check_sum:                      u32le,
 	subsystem:                      Subsystem,
-	dll_characteristics:            DLL_Characteristics,
+	dll_characteristics:            bit_set[DLL_Characteristic; u16le],
 	size_of_stack_reserve:          u64le,
 	size_of_stack_commit:           u64le,
 	size_of_heap_reserve:           u64le,
