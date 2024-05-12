@@ -36,13 +36,6 @@ File_Format :: enum {
     Raw,
 }
 
-CPU_Mode :: enum {
-    Auto,
-    M16,
-    M32,
-    M64,
-}
-
 verbose_print := false
 
 main :: proc() {
@@ -77,15 +70,15 @@ main :: proc() {
             os.exit(2)
         }
     }
-    cpu_mode := cast(CPU_Mode) CPU_Mode.Auto
+    cpu_bits := 0
     if "cpu" in options {
         cpu_opt := options["cpu"]
         if cpu_str, ok := cpu_opt.(string); ok {
             switch cpu_str {
             case "auto":
-            case "16": cpu_mode = .M16
-            case "32": cpu_mode = .M32
-            case "64": cpu_mode = .M64
+            case "16": cpu_bits = 16
+            case "32": cpu_bits = 32
+            case "64": cpu_bits = 64
             }
         } else {
             fmt.eprintfln("Error: Unexpected key=value pair for CPU option. Use -cpu:<bits> syntax")
@@ -126,7 +119,7 @@ main :: proc() {
         os.exit(1)
     }
     // Detecting the CPU type.
-    if cpu_mode == .Auto {
+    if cpu_bits == 0 {
         if verbose_print {
             fmt.printfln("Detecting CPU mode from file type %v", input_file_format)
         }
@@ -135,23 +128,14 @@ main :: proc() {
             os.exit(1)
         }
         switch input_file_format {
-            case .COFF: cpu_mode = cpu_mode_from_bitness(pe.coff_machine_bitness(file_bytes))
-            case .PE:   cpu_mode = cpu_mode_from_bitness(pe.pe_machine_bitness(file_bytes))
+            case .COFF: cpu_bits = pe.coff_machine_bitness(file_bytes)
+            case .PE:   cpu_bits = pe.pe_machine_bitness(file_bytes)
             case .ELF:  unreachable()
             case .Raw:  unreachable()
             case .Auto: unreachable()
         }
         if verbose_print {
-            fmt.printfln("Detected CPU mode: %v", cpu_mode)
+            fmt.printfln("Detected CPU mode: %v", cpu_bits)
         }
-    }
-}
-
-cpu_mode_from_bitness :: proc(bits: int) -> CPU_Mode {
-    switch bits {
-        case 16: return .M16
-        case 32: return .M32
-        case 64: return .M64
-        case: unreachable()
     }
 }
