@@ -85,7 +85,8 @@ main :: proc() {
             fmt.printfln("Detecting file type for '%s'", input_path)
         }
         switch {
-        case pe.is_pe(file_bytes): input_file_format = .PE
+        case pe.is_pe(file_bytes):   input_file_format = .PE
+        case pe.is_coff(file_bytes): input_file_format = .COFF
         case: input_file_format = .Raw
         }
         if verbose_print {
