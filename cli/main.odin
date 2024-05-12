@@ -9,9 +9,26 @@ HELP_TEMPLATE ::
 Usage:
   %s <file> [options...]
 Options:
-  -help    Print a help message
-  -verbose Print verbose messages
+  -help
+      Print a help message
+  -verbose
+      Print verbose messages
+  -format:<format>
+      Specify the format of the input file. Options:
+        auto - Auto-detect a format (the default).
+        elf  - ELF file (Linux relocatable files, shared objects, executables)
+        pe   - PE file (Windows executables and shared objects)
+        coff - COFF file (Windows relocatable files)
+        raw  - Binary file containing assembly.
 `
+
+File_Format :: enum {
+    Auto,
+    ELF,
+    PE,
+    COFF,
+    Raw,
+}
 
 verbose_print := false
 
@@ -22,6 +39,7 @@ main :: proc() {
         fmt.eprintfln(HELP_TEMPLATE, os.args[0])
         os.exit(2)
     }
+    fmt.println(options)
     if "help" in options {
         fmt.printfln(HELP_TEMPLATE, os.args[0])
         os.exit(0)
@@ -29,17 +47,49 @@ main :: proc() {
     if "verbose" in options {
         verbose_print = true
     }
+    input_file_format := cast(File_Format) File_Format(.Auto)
+    if "format" in options {
+        format_opt := options["format"]
+        if format_str, ok := format_opt.(string); ok {
+            switch format_str {
+            case "auto":
+            case "elf":  input_file_format = .ELF
+            case "pe":   input_file_format = .PE
+            case "coff": input_file_format = .COFF
+            case "raw":  input_file_format = .Raw
+            case:
+                fmt.eprintfln("Unknown file format: %s", format_str)
+            }
+        } else {
+            fmt.eprintfln("Unexpected value for -format option. Use -format:<format> syntax")
+            os.exit(2)
+        }
+    }
+    // Reading the input file.
     input_path := args[0]
-    // TODO(flysand): This line contains a TOCTOU bug. We should be checking
-    // for error condition once we try to open a file and check if its a directory
-    // using a file handle.
-    if ! os.exists(input_path) {
-        fmt.printfln("Error: file does not exist: '%s'", input_path)
-        os.exit(0)
+    if verbose_print {
+        fmt.printfln("Trying to open the file '%s'", input_path)
     }
-    if os.is_dir(input_path) {
-        fmt.printfln("Error: cannot disassemble directory: '%s'", input_path)
-        os.exit(0)
+    file_bytes, file_bytes_ok := os.read_entire_file(input_path, allocator = context.allocator)
+    if !file_bytes_ok {
+        if os.is_dir(input_path) {
+            fmt.eprintfln("Error: cannot disassemble directory: '%s'", input_path)
+            os.exit(0)
+        } else {
+            fmt.eprintfln("Error: File does not exist: '%s'", input_path)
+        }    
     }
-    fmt.printfln("Disassembling %s", input_path)
+    // Detecting the file type.
+    if input_file_format == .Auto {
+        if verbose_print {
+            fmt.printfln("Detecting file type for '%s'", input_path)
+        }
+        switch {
+        case pe.is_pe(file_bytes): input_file_format = .PE
+        case: input_file_format = .Raw
+        }
+        if verbose_print {
+            fmt.printfln("Detected file type: '%v'", input_file_format)
+        }
+    }
 }
