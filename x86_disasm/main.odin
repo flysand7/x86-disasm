@@ -2,32 +2,36 @@ package x86_disasm
 
 import "core:fmt"
 import "core:os"
+import "cli"
 
 HELP ::
 `x86-disasm: An x86 disassembler.
-    x86-disasm <file> [options...]
+
+  %s <file> [options...]
+
 Options:
--help   Print a help message
+  -help   Print a help message
 `
 
 main :: proc() {
-    if len(os.args) <= 1 {
-        fmt.eprintfln(HELP)
-        os.exit(2)
-    }
     mb_input_path := Maybe(string) {}
-    for arg in os.args {
-        if arg == "-help" {
-            fmt.printfln(HELP)
-            os.exit(0)
-        } else {
-            mb_input_path = arg
-        }
-    }
-    if mb_input_path == nil {
-        fmt.eprintfln("Error: No input filename.")
+    args, options := cli.parse_args(os.args[1:])
+    if len(args) == 0 {
+        fmt.eprintfln(HELP, os.args[0])
         os.exit(2)
     }
-    input_path := mb_input_path.?
+    if "help" in options {
+        fmt.printfln(HELP, os.args[0])
+        os.exit(0)
+    }
+    input_path := args[0]
+    if ! os.exists(input_path) {
+        fmt.printfln("Error: file does not exist: '%s'", input_path)
+        os.exit(0)
+    }
+    if os.is_dir(input_path) {
+        fmt.printfln("Error: cannot disassemble directory: '%s'", input_path)
+        os.exit(0)
+    }
     fmt.printfln("Disassembling %s", input_path)
 }
