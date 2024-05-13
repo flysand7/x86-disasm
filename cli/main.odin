@@ -2,7 +2,7 @@ package cli
 
 import "core:fmt"
 import "core:os"
-import "pe"
+import "format"
 
 HELP_TEMPLATE ::
 `x86-disasm: An x86 disassembler.
@@ -26,6 +26,13 @@ Options:
         16   - A 16-bit CPU mode.
         32   - A 32-bit CPU mode.
         64   - A 64-bit CPU mode.
+  -section:<name>
+      Disassemble a specific section. If this option is not specified, then
+      .text (the default code section) is disassembled.
+  -function:<name>
+      Disassemble a specific function. If this option is not specified, then
+      the the entire section is disassembled. This option can not be used
+      together with -section option. 
 `
 
 File_Format :: enum {
@@ -34,6 +41,12 @@ File_Format :: enum {
     PE,
     COFF,
     Raw,
+}
+
+Disasm_Scope :: enum {
+    File,
+    Section,
+    Symbol,
 }
 
 verbose_print := false
@@ -70,18 +83,38 @@ main :: proc() {
             os.exit(2)
         }
     }
-    cpu_bits := 0
+    cpu_machine := format.Machine.Unknown
     if "cpu" in options {
         cpu_opt := options["cpu"]
         if cpu_str, ok := cpu_opt.(string); ok {
             switch cpu_str {
             case "auto":
-            case "16": cpu_bits = 16
-            case "32": cpu_bits = 32
-            case "64": cpu_bits = 64
+            case "16": cpu_machine = .X86_16
+            case "32": cpu_machine = .X86_32
+            case "64": cpu_machine = .X86_64
             }
         } else {
-            fmt.eprintfln("Error: Unexpected key=value pair for CPU option. Use -cpu:<bits> syntax")
+            fmt.eprintfln("Error: Unexpected key=value pair for -cpu option. Use -cpu:<bits> syntax")
+            os.exit(2)
+        }
+    }
+    mb_section := Maybe(string) {}
+    if "section" in options {
+        section_opt := options["section"]
+        if section_str, ok := section_opt.(string); ok {
+            mb_section = section_str
+        } else {
+            fmt.eprintfln("Error: Unexpected key=value pair for -section option. Use -section:<name> syntax")
+            os.exit(2)
+        }
+    }
+    mb_function := Maybe(string) {}
+    if "function" in options {
+        function_opt := options["function"]
+        if function_str, ok := function_opt.(string); ok {
+            mb_function = function_str
+        } else {
+            fmt.eprintfln("Error: Unexpected key=value pair for -function option. Use -function:<name> syntax")
             os.exit(2)
         }
     }
@@ -106,8 +139,8 @@ main :: proc() {
             fmt.printfln("Detecting file type for '%s'", input_path)
         }
         switch {
-        case pe.is_pe(file_bytes):   input_file_format = .PE
-        case pe.is_coff(file_bytes): input_file_format = .COFF
+        case format.is_pe(file_bytes):   input_file_format = .PE
+        case format.is_coff(file_bytes): input_file_format = .COFF
         case: input_file_format = .Raw
         }
         if verbose_print {
@@ -119,7 +152,8 @@ main :: proc() {
         os.exit(1)
     }
     // Detecting the CPU type.
-    if cpu_bits == 0 {
+    file: format.File
+    if cpu_machine == .Unknown {
         if verbose_print {
             fmt.printfln("Detecting CPU mode from file type %v", input_file_format)
         }
@@ -128,14 +162,50 @@ main :: proc() {
             os.exit(1)
         }
         switch input_file_format {
-            case .COFF: cpu_bits = pe.coff_machine_bitness(file_bytes)
-            case .PE:   cpu_bits = pe.pe_machine_bitness(file_bytes)
+            case .COFF: panic("COFF Not implemented")
+            case .PE:
+                generic_file, ok := format.pe_parse(file_bytes)
+                if !ok {
+                    fmt.eprintfln("Error: Bad PE file: '%s'", input_path)
+                    os.exit(1)
+                }
+                cpu_machine = file.machine
             case .ELF:  unreachable()
             case .Raw:  unreachable()
             case .Auto: unreachable()
         }
         if verbose_print {
-            fmt.printfln("Detected CPU mode: %v", cpu_bits)
+            fmt.printfln("Detected CPU mode: %v", cpu_machine)
         }
+    }
+    // Figuring out the what to disassemble.
+    scope := cast(Disasm_Scope) Disasm_Scope.File
+    section, section_ok := mb_section.?
+    function, function_ok := mb_function.?
+    if section_ok && input_file_format == .Raw {
+        fmt.eprintfln("Error: Cannot use -section option with -format:raw")
+        os.exit(2)
+    }
+    if !section_ok && input_file_format != .Raw {
+        section = ".text"
+        scope = .Section
+    }
+    if function_ok {
+        if input_file_format == .Raw {
+            fmt.eprintfln("Error: Cannot use -function option with -format:raw")
+            os.exit(2)
+        }
+        if section_ok {
+            fmt.eprintfln("Error: Cannot use -function option together with -section")
+            os.exit(2)
+        }
+        scope = .Symbol
+    }
+    disasm_bytes: []u8 = ---
+    switch scope {
+    case .File:
+        disasm_bytes = file_bytes
+    case .Section:
+    case .Symbol:
     }
 }
