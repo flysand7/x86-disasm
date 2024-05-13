@@ -2,35 +2,32 @@ package generic
 
 import "pe"
 
-
-is_pe :: proc(file_contents: []u8) -> bool {
+is_coff :: proc(file_contents: []u8) -> bool {
     bytes := transmute([^]u8) raw_data(file_contents)
-    if len(file_contents) < pe.PE_SIGNATURE_OFFSET + size_of(u32) {
+    if len(file_contents) < size_of(pe.File_Header) {
         return false
     }
-    magic_offset := (transmute(^u32le) &bytes[pe.PE_SIGNATURE_OFFSET])^
-    if len(file_contents) < int(magic_offset) + size_of(u32) {
-        return false
+    file_header := transmute(^pe.File_Header) bytes
+    // Note(flysand): COFF files do not have a magic number per se.
+    // since this is a disassembler focusing on disassembling x86 code we will
+    // just use the machine number as our magic number. Luckily for us this
+    // doesn't cause collision with any other file formats we're interested in
+    // even the 'raw' format, since both of the machine numbers we're looking
+    // at don't disassemble to a valid instruction.
+    // In case that isn't desired anyway, this tool provides '-format' option
+    // that allows to set the type 'raw' explicitly and avoid this unreliable
+    // COFF detection.
+    if file_header.machine == .AMD64 || file_header.machine == .I386 {
+        return true
     }
-    header_magic := (transmute(^u32le) &bytes[magic_offset])^
-    if header_magic != pe.PE_SIGNATURE {
-        return false
-    }
-    if len(file_contents) < int(magic_offset) + size_of(u32) + size_of(pe.File_Header) {
-        return false
-    }
-    file_header := (transmute(^pe.File_Header) &bytes[magic_offset + size_of(u32)])^
-    if !(file_header.machine == .AMD64 || file_header.machine == .I386) {
-        return false
-    }
-    return true
+    return false
 }
 
-pe_parse :: proc(file_contents: []u8) -> (File, bool) {
+
+coff_parse :: proc(file_contents: []u8) -> (File, bool) {
     // Find the COFF header.
     bytes := transmute([^]u8) raw_data(file_contents)
-    magic_offset := int((transmute(^u32le) &bytes[pe.PE_SIGNATURE_OFFSET])^)
-    file_header := transmute(^pe.File_Header) &bytes[magic_offset + size_of(u32)]
+    file_header := transmute(^pe.File_Header) &bytes[0]
     if .BYTES_REVERSED_HI in file_header.characteristics {
         return {}, false
     }
@@ -50,7 +47,7 @@ pe_parse :: proc(file_contents: []u8) -> (File, bool) {
         return {}, false
     }
     // Find the optional header.
-    opt_hdr_offs := magic_offset + size_of(u32) + size_of(pe.File_Header)
+    opt_hdr_offs := size_of(pe.File_Header)
     if len(file_contents) < opt_hdr_offs + opt_hdr_sz {
         return {}, false
     }
@@ -58,9 +55,9 @@ pe_parse :: proc(file_contents: []u8) -> (File, bool) {
     rva_base := u64(opt_hdr_base.base_of_code)
     // Find the string table.
     strtab_offs := symtab_offs + n_symbols*size_of(pe.COFF_Symbol)
-    strtab_sz := int((transmute(^u32le) &bytes[strtab_offs])^) - size_of(u32)
-    strtab := transmute([^]u8) &bytes[strtab_offs+size_of(u32)]
-    if strtab_offs != 0 && len(file_contents) < strtab_offs + size_of(u32) + strtab_sz {
+    strtab_sz := int((transmute(^u32le) &bytes[strtab_offs])^)
+    strtab := transmute([^]u8) &bytes[strtab_offs]
+    if strtab_offs != 0 && len(file_contents) < strtab_offs + strtab_sz {
         return {}, false
     }
     // Load sections.
@@ -118,14 +115,8 @@ pe_parse :: proc(file_contents: []u8) -> (File, bool) {
             }
         }
         symbol_name := transmute(string) symbol_name_arr[:nul_terminator_pos]
-        if symbol_name[0] == '/' {
-            if symtab_offs == 0 {
-                return {}, false
-            }
-            strtab_idx := 0
-            for d in symbol_name[1:] {
-                strtab_idx = strtab_idx*10 + int(d-'0')
-            }
+        if symbol.name_ref.zeroes == 0 {
+            strtab_idx := int(symbol.name_ref.offset)
             if strtab_idx >= strtab_sz {
                 return {}, false
             }
@@ -143,10 +134,10 @@ pe_parse :: proc(file_contents: []u8) -> (File, bool) {
         symbol_idx += 1+int(symbol.number_of_aux_symbols)
     }
     return File {
-        format = .PE,
+        format = .COFF,
         machine = generic_machine,
         sections = generic_sections[:],
         symbol = generic_symbols[:],
-        type = .Executable,
+        type = .Relocatable,
     }, true
 }

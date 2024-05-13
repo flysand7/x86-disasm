@@ -89,7 +89,7 @@ Optional_Header64 :: struct #packed {
 }
 
 // .debug section
-Debug_Directory_Entry :: struct {
+Debug_Directory_Entry :: struct #packed {
 	characteristics:     u32le,
 	time_date_stamp:     u32le,
 	major_version:       u16le,
@@ -215,7 +215,7 @@ Debug_Type :: enum u32le {
 	EX_DLLCHARACTERISTICS = 20, // Extended DLL characteristics bits.
 }
 
-Section_Header32 :: struct {
+Section_Header32 :: struct #packed {
 	name:                    [8]u8,
 	virtual_size:            u32le,
 	virtual_address:         u32le,
@@ -228,7 +228,7 @@ Section_Header32 :: struct {
 	characteristics:         Image_Scn_Characteristics,
 }
 
-Reloc :: struct {
+Reloc :: struct #packed {
 	virtual_address:    u32le,
 	symbol_table_index: u32le,
 	type:               Rel,
@@ -344,8 +344,14 @@ PE_CODE_VIEW_SIGNATURE_RSDS :: u32le(0x5344_5352)
 
 COFF_SYMBOL_SIZE :: 18
 
-COFF_Symbol :: struct {
-	name:                  [8]u8,
+COFF_Symbol :: struct #packed {
+	using _: struct #raw_union {
+		name:              [8]u8,
+		name_ref: struct {
+			zeroes: u32le,
+			offset: u32le,
+		}
+	},
 	value:                 u32le,
 	section_number:        i16le,
 	type:                  Image_Sym_Type,
@@ -361,7 +367,7 @@ COFF_Symbol :: struct {
 // number of relocations + line numbers, as well as COMDAT info. See
 // https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#auxiliary-format-5-section-definitions
 // for more on what's going on here.
-COFF_Symbol_Aux_Format5 :: struct {
+COFF_Symbol_Aux_Format5 :: struct #packed {
 	size:             u32le,
 	num_relocs:       u16le,
 	num_line_numbers: u16le,

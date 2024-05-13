@@ -162,7 +162,13 @@ main :: proc() {
             os.exit(1)
         }
         switch input_file_format {
-            case .COFF: panic("COFF Not implemented")
+            case .COFF:
+                generic_file, ok := format.coff_parse(file_bytes)
+                if !ok {
+                    fmt.eprintfln("Error: Bad COFF file: '%s'", input_path)
+                    os.exit(1)
+                }
+                cpu_machine = file.machine
             case .PE:
                 generic_file, ok := format.pe_parse(file_bytes)
                 if !ok {
