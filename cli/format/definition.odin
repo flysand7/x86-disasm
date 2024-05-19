@@ -39,4 +39,5 @@ Symbol :: struct {
     name: string,
     vaddr: u64,
     section_no: int,
+    bytes: []u8 `fmt:"-"`,
 }

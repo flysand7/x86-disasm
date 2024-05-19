@@ -453,3 +453,13 @@ Image_Sym_Class :: enum u8 {
 
 	END_OF_FUNCTION  = 255,
 }
+
+// .pdata table entry.
+Runtime_Function :: struct {
+	begin_addr: u32le,
+	end_addr: u32le,
+	_: struct #raw_union {
+		unwind_info_addr: u32le,
+		unwind_data: u32le,
+	},
+}

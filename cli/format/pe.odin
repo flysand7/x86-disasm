@@ -1,7 +1,7 @@
 package generic
 
 import "pe"
-
+import "core:slice"
 
 is_pe :: proc(file_contents: []u8) -> bool {
     bytes := transmute([^]u8) raw_data(file_contents)
@@ -100,6 +100,24 @@ pe_parse :: proc(file_contents: []u8) -> (File, bool) {
         }
         append(&generic_sections, generic_section)
     }
+    // Find .pdata and .text sections
+    pdata: []pe.Runtime_Function = nil
+    text: []u8 = nil
+    for section in generic_sections {
+        if section.name == ".pdata" {
+            pdata = slice.reinterpret(type_of(pdata), section.bytes)
+        } else if section.name == ".text" {
+            text = section.bytes
+        }
+    }
+    if text == nil {
+        return {}, false
+    }
+    if pdata == nil {
+        // TODO(flysand): If .pdata isn't present we need a backup plan
+        // where we 
+        return {}, false
+    }
     // Load symbols
     symbols_ptr := transmute([^]pe.COFF_Symbol) &bytes[symtab_offs]
     symbols := cast([]pe.COFF_Symbol) symbols_ptr[:n_symbols]
@@ -132,7 +150,7 @@ pe_parse :: proc(file_contents: []u8) -> (File, bool) {
             // TODO: Potential OOB on seeking for NUL-terminator.
             symbol_name = cast(string) transmute(cstring) &strtab[strtab_idx]
         }
-        if symbol.storage_class == .FUNCTION {
+        if symbol.type == .DTYPE_FUNCTION {
             generic_symbol := Symbol {
                 name = symbol_name,
                 section_no = int(symbol.section_number),
