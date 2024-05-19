@@ -151,8 +151,28 @@ main :: proc() {
         fmt.eprintfln("ELF files are not supported yet.")
         os.exit(1)
     }
-    // Detecting the CPU type.
+    // Parse the input file format.
     file: format.File
+    switch input_file_format {
+        case .COFF:
+            generic_file, ok := format.coff_parse(file_bytes)
+            if !ok {
+                fmt.eprintfln("Error: Bad COFF file: '%s'", input_path)
+                os.exit(1)
+            }
+            cpu_machine = file.machine
+        case .PE:
+            generic_file, ok := format.pe_parse(file_bytes)
+            if !ok {
+                fmt.eprintfln("Error: Bad PE file: '%s'", input_path)
+                os.exit(1)
+            }
+            cpu_machine = file.machine
+        case .ELF:  unreachable()
+        case .Raw:  unreachable()
+        case .Auto: unreachable()
+    }
+    // Detecting the CPU type.
     if cpu_machine == .Unknown {
         if verbose_print {
             fmt.printfln("Detecting CPU mode from file type %v", input_file_format)
@@ -160,25 +180,6 @@ main :: proc() {
         if input_file_format == .Raw {
             fmt.eprintfln("Error: CPU Mode detection doesn't work for files of type 'raw'. Please specify the CPU mode explicitly using -cpu option")
             os.exit(1)
-        }
-        switch input_file_format {
-            case .COFF:
-                generic_file, ok := format.coff_parse(file_bytes)
-                if !ok {
-                    fmt.eprintfln("Error: Bad COFF file: '%s'", input_path)
-                    os.exit(1)
-                }
-                cpu_machine = file.machine
-            case .PE:
-                generic_file, ok := format.pe_parse(file_bytes)
-                if !ok {
-                    fmt.eprintfln("Error: Bad PE file: '%s'", input_path)
-                    os.exit(1)
-                }
-                cpu_machine = file.machine
-            case .ELF:  unreachable()
-            case .Raw:  unreachable()
-            case .Auto: unreachable()
         }
         if verbose_print {
             fmt.printfln("Detected CPU mode: %v", cpu_machine)
