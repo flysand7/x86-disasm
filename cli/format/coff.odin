@@ -1,4 +1,4 @@
-package generic
+package format_generic
 
 import "pe"
 import "core:fmt"

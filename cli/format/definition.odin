@@ -1,4 +1,4 @@
-package generic
+package format_generic
 
 Format_Type :: enum {
     Unknown,
