@@ -95,7 +95,7 @@ pe_parse :: proc(file_contents: []u8) -> (File, bool) {
         section_size := int(section.virtual_size)
         generic_section := Section {
             name = section_name,
-            vaddr = rva_base + u64(section.virtual_address),
+            vaddr = u64(section.virtual_address),
             bytes = section_data[:section_size]
         }
         append(&generic_sections, generic_section)
@@ -154,7 +154,7 @@ pe_parse :: proc(file_contents: []u8) -> (File, bool) {
             generic_symbol := Symbol {
                 name = symbol_name,
                 section_no = int(symbol.section_number),
-                vaddr = rva_base + u64(symbol.value),
+                vaddr = u64(symbol.value),
             }
             append(&generic_symbols, generic_symbol)
         }
