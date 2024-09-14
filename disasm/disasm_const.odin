@@ -1,5 +1,17 @@
 package x86_disasm
 
+// For fields holding registers: The value that signifies the absense of
+// a register, i.e. the `None` value.
+REG_NONE :: u8(0xff)
+REG_AX :: u8(0b000)
+REG_CX :: u8(0b001)
+REG_DX :: u8(0b010)
+REG_BX :: u8(0b011)
+REG_SP :: u8(0b100)
+REG_BP :: u8(0b101)
+REG_SI :: u8(0b110)
+REG_DI :: u8(0b111)
+
 // Instruction prefixes.
 PREFIX_LOCK  :: u8(0xf0)
 PREFIX_REPNZ :: u8(0xf2)

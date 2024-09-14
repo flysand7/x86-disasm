@@ -3,6 +3,7 @@ package cli
 import "core:fmt"
 import "core:os"
 import "format"
+import "../disasm"
 
 HELP_TEMPLATE ::
 `x86-disasm: An x86 disassembler.
@@ -154,6 +155,7 @@ main :: proc() {
     // Parse the input file format.
     file: format.File
     switch input_file_format {
+        case .Raw:
         case .COFF:
             ok: bool
             file, ok = format.coff_parse(file_bytes)
@@ -171,7 +173,6 @@ main :: proc() {
             }
             cpu_machine = file.machine
         case .ELF:  unreachable()
-        case .Raw:  unreachable()
         case .Auto: unreachable()
     }
     // Detecting the CPU type.
@@ -232,5 +233,23 @@ main :: proc() {
     }
     if verbose_print {
         fmt.printfln("Disassembly start: %08x (%d bytes)", disasm_vaddr, len(disasm_bytes))
+    }
+    bytes := disasm_bytes
+    vaddr := disasm_vaddr
+    stdout := os.stream_from_handle(os.stdout)
+    for inst, sz in disasm.disasm_one(bytes) {
+        fmt.printf("%012x | ", vaddr)
+        for i in 0 ..<8 {
+            if i < sz {
+                fmt.printf("%02x", bytes[u64(i)])
+            } else {
+                fmt.printf("  ")
+            }
+        }
+        fmt.printf(" | ")
+        disasm.print_intel(stdout, inst) or_break
+        fmt.println()
+        bytes = bytes[sz:]
+        vaddr += u64(sz)
     }
 }

@@ -30,12 +30,12 @@ parse_args :: proc(args_str: []string) -> (args: [dynamic]string, options: map[s
         key_value := arg_str[colon_pos+1:]
         equals_pos := strings.index_byte(key_value, '=')
         if equals_pos == -1 {
-            options[arg_str] = key_value
+            options[option_name] = key_value
             continue
         }
         key := key_value[:equals_pos]
         value := key_value[equals_pos+1:]
-        options[arg_str] = Key_Value { key, value }
+        options[option_name] = Key_Value { key, value }
     }
     return args, options
 }
