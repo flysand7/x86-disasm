@@ -155,14 +155,16 @@ main :: proc() {
     file: format.File
     switch input_file_format {
         case .COFF:
-            generic_file, ok := format.coff_parse(file_bytes)
+            ok: bool
+            file, ok = format.coff_parse(file_bytes)
             if !ok {
                 fmt.eprintfln("Error: Bad COFF file: '%s'", input_path)
                 os.exit(1)
             }
             cpu_machine = file.machine
         case .PE:
-            generic_file, ok := format.pe_parse(file_bytes)
+            ok: bool
+            file, ok = format.pe_parse(file_bytes)
             if !ok {
                 fmt.eprintfln("Error: Bad PE file: '%s'", input_path)
                 os.exit(1)
@@ -209,10 +211,26 @@ main :: proc() {
         scope = .Symbol
     }
     disasm_bytes: []u8 = ---
+    disasm_vaddr: u64
     switch scope {
     case .File:
         disasm_bytes = file_bytes
     case .Section:
+        for file_section in file.sections {
+            if file_section.name == section {
+                disasm_bytes = file_section.bytes
+                disasm_vaddr = file_section.vaddr
+            }
+        }
     case .Symbol:
+        for file_symbol in file.symbol {
+            if file_symbol.name == function {
+                disasm_bytes = file_symbol.bytes
+                disasm_vaddr = file_symbol.vaddr
+            }
+        }
+    }
+    if verbose_print {
+        fmt.printfln("Disassembly start: %08x (%d bytes)", disasm_vaddr, len(disasm_bytes))
     }
 }
