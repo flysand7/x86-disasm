@@ -67,10 +67,10 @@ pe_parse :: proc(file_contents: []u8) -> (File, bool) {
     sections_ptr := transmute([^]pe.Section_Header32) &bytes[opt_hdr_offs + opt_hdr_sz]
     sections := cast([]pe.Section_Header32) sections_ptr[:n_sections]
     generic_sections := make([dynamic]Section)
-    for section in sections {
+    for &section in sections {
         nul_terminator_pos := 8
-        section_name_arr := section.name
-        for c, i in transmute([]u8) section_name_arr[:] {
+        section_name_arr := &section.name
+        for c, i in section_name_arr[:] {
             if c == 0 {
                 nul_terminator_pos = i
                 break
