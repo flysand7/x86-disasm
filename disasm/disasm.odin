@@ -30,10 +30,10 @@ RX_Op :: struct {
     reg: u8,
 }
 
-rx_gpreg16 :: proc(reg: u8) -> RX_Op {
+rx_gpreg :: proc(size: u8, reg: u8) -> RX_Op {
     return RX_Op {
         kind = .GPReg,
-        size = 2,
+        size = size,
         reg = reg,
     }
 }
@@ -41,6 +41,7 @@ rx_gpreg16 :: proc(reg: u8) -> RX_Op {
 RM_Op_Kind :: enum u8 {
     None,
     Mem_Addr16,
+    Mem_Addr32,
     GPReg,
 }
 
@@ -56,21 +57,32 @@ RM_Op :: struct {
     disp: i32,
 }
 
-rm_gpreg16 :: proc(reg: u8) -> RM_Op {
+rm_gpreg :: proc(size: u8, reg: u8) -> RM_Op {
     return RM_Op {
         kind = .GPReg,
-        size = 2,
+        size = size,
         reg = reg,
     }
 }
 
-rm_mem16_addr16 :: proc(base_reg: u8, index_reg: u8, disp: i32) -> RM_Op {
+rm_mem16 :: proc(size: u8, base_reg: u8, index_reg: u8, disp: i32) -> RM_Op {
     return RM_Op {
         kind = .Mem_Addr16,
         size = 2,
         base_reg = base_reg,
         index_reg = index_reg,
         scale = 1, // No scae in 16-bit addressing
+        disp = disp,
+    }
+}
+
+rm_mem32 :: proc(size: u8, base_reg: u8, index_reg: u8, scale: u8, disp: i32) -> RM_Op {
+    return RM_Op {
+        kind = .Mem_Addr32,
+        size = 4,
+        base_reg = base_reg,
+        index_reg = index_reg,
+        scale = scale,
         disp = disp,
     }
 }
@@ -95,11 +107,11 @@ EOP :: struct {
     hi: u64,
 }
 
-eop_imm16 :: proc(value: u16le) -> EOP {
+eop_imm :: proc(size: u8, value: u64) -> EOP {
     return EOP {
         kind = .Imm,
         size = 2,
-        lo = u64(value),
+        lo = value,
         hi = 0,
     }
 }
@@ -131,66 +143,79 @@ disasm_all :: proc(bytes: []u8) -> [dynamic]Instruction {
 
 import "core:fmt"
 
-disasm_one :: proc(bytes: []u8) -> (Instruction, int, bool) {
+disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
     if len(bytes) == 0 {
         return {}, 0, false
     }
-    idx := 0
+    ds := u8(2)
+    as := u8(2)
+    parse_prefixes: for {
+        switch bytes[idx] {
+        case PREFIX_ADDR: as = 4
+        case PREFIX_DATA: ds = 4
+        case: break parse_prefixes
+        }
+        idx += 1
+    }
     opcode := bytes[idx]
     idx += 1
     if opcode == 0x89 { // MOV r/m16,r16
-        if len(bytes[idx:]) < 1 {
-            return {}, 0, false
-        }
+        (len(bytes[idx:]) >= 1) or_return
         modrm := (cast(^ModRM_Byte) &bytes[idx])^
         idx += 1
-        rx_op, rm_op, modrm_len, ok := decode_modrm(bytes[idx:], modrm)
-        if !ok {
-            return {}, 0, false
-        }
+        rx_op, rm_op, modrm_len := decode_modrm(bytes[idx:], modrm, as, ds) or_return
         idx += modrm_len
-        res := Instruction {
+        res = Instruction {
             mnemonic = .Mov,
             flags = {.Direction_Bit},
             rx_op = rx_op,
             rm_op = rm_op,
         }
-        return res, idx, true
+        ok = true
+        return
     } else if opcode == 0x8b { // MOV r16,r/m16
-        if len(bytes[idx:]) < 1 {
-            return {}, 0, false
-        }
+        (len(bytes[idx:]) >= 1) or_return
         modrm := (cast(^ModRM_Byte) &bytes[idx])^
         idx += 1
-        rx_op, rm_op, modrm_len, ok := decode_modrm(bytes[idx:], modrm)
-        if !ok {
-            return {}, 0, false
-        }
+        rx_op, rm_op, modrm_len := decode_modrm(bytes[idx:], modrm, as, ds) or_return
         idx += modrm_len
-        res := Instruction {
+        res = Instruction {
             mnemonic = .Mov,
             rx_op = rx_op,
             rm_op = rm_op,
         }
-        return res, idx, true
+        ok = true
+        return
     } else if opcode & 0xf8 == 0xb8 { // MOV r16,imm16
-        if len(bytes[idx:]) < 2 {
-            return {}, 0, false
-        }
+        (len(bytes[idx:]) >= int(ds)) or_return
         r16 := opcode & 0x07
-        imm16 := (cast(^u16le) &bytes[idx])^
-        idx += 2
-        res := Instruction {
-            mnemonic = .Mov,
-            extra_op = eop_imm16(imm16),
-            rx_op = rx_gpreg16(r16)
+        imm: u64
+        switch ds {
+            case 2: imm = u64((cast(^u16le) &bytes[idx])^)
+            case 4: imm = u64((cast(^u32le) &bytes[idx])^)
+            case: panic("Unknown data size")
         }
-        return res, idx, true
+        idx += int(ds)
+        res = Instruction {
+            mnemonic = .Mov,
+            extra_op = eop_imm(ds, imm),
+            rx_op = rx_gpreg(ds, r16)
+        }
+        ok = true
+        return
     }
     return {}, 0, false
 }
 
-decode_modrm :: proc(bytes: []u8, modrm: ModRM_Byte) -> (RX_Op, RM_Op, int, bool) {
+decode_modrm :: proc(bytes: []u8, modrm: ModRM_Byte, as: u8, ds: u8) -> (RX_Op, RM_Op, int, bool) {
+    switch as {
+    case 2: return decode_modrm_addr16(bytes, modrm, ds)
+    case 4: return decode_modrm_addr32(bytes, modrm, ds)
+    }
+    panic("Unhandled addr size")
+}
+
+decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (RX_Op, RM_Op, int, bool) {
     Addr16_RM_Entry :: struct {
         base: u8,
         index: u8,
@@ -205,42 +230,90 @@ decode_modrm :: proc(bytes: []u8, modrm: ModRM_Byte) -> (RX_Op, RM_Op, int, bool
         { base = REG_BP, index = REG_NONE },
         { base = REG_BX, index = REG_NONE },
     }
-    rx_op := rx_gpreg16(modrm.rx)
-    rm_op: RM_Op = ---
+    rx_op := rx_gpreg(ds, modrm.rx)
     modrm_size := 0
+    // Early return on mod=0b11
     if modrm.mod == 0b11 {
-        rm_op = rm_gpreg16(modrm.rm)
-    } else {
-        entry := addr16_rm_table[modrm.rm]
-        base := entry.base
-        index := entry.index
-        disp := i32(0)
-        switch modrm.mod {
-        case 0b00:
-            if modrm.rm == 0b110 {
-                if len(bytes) < 2 {
-                    return {}, {}, 0, false
-                }
-                base = REG_NONE
-                index = REG_NONE
-                disp := cast(i32) ((cast(^i16le) &bytes[0])^)
-                modrm_size = 2
-            }
-        case 0b01:
-            if len(bytes) < 1 {
-                return {}, {}, 0, false
-            }
-            disp = cast(i32) ((cast(^i8) &bytes[0])^)
-            modrm_size = 1
-        case 0b10:
-            if len(bytes) < 2 {
-                return {}, {}, 0, false
-            }
-            disp = cast(i32) ((cast(^i16le) &bytes[0])^)
-            modrm_size = 2
-        }
-        rm_op = rm_mem16_addr16(base, index, disp)
+        rm_op := rm_gpreg(ds, modrm.rm)
+        return rx_op, rm_op, modrm_size, true
     }
+    entry := addr16_rm_table[modrm.rm]
+    base := entry.base
+    index := entry.index
+    // Find out displacement size
+    disp_size := 0
+    switch modrm.mod {
+    case 0b00:
+        if modrm.rm == 0b110 {
+            base = REG_NONE
+            index = REG_NONE
+            disp_size = 2
+        }
+    case 0b01: disp_size = 1
+    case 0b10: disp_size = 2
+    }
+    if len(bytes) < disp_size {
+        return {}, {}, 0, false
+    }
+    // Parse displacement
+    disp := i32(0)
+    if disp_size == 1 {
+        disp = cast(i32) ((cast(^i8) &bytes[modrm_size])^)
+    } else if disp_size == 2 {
+        disp = cast(i32) ((cast(^i16le) &bytes[modrm_size])^)
+    }
+    modrm_size += disp_size
+    rm_op := rm_mem16(ds, base, index, disp)
     return rx_op, rm_op, modrm_size, true
 }
 
+decode_modrm_addr32 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (RX_Op, RM_Op, int, bool) {
+    rx_op := rx_gpreg(ds, modrm.rx)
+    modrm_size := 0
+    // Early return on mod=0b11
+    if modrm.mod == 0b11 {
+        rm_op := rm_gpreg(ds, modrm.rm)
+        return rx_op, rm_op, modrm_size, true
+    }
+    // If mod is 0b100, base comes from sib, as well as index and scale
+    base := modrm.rm
+    index := REG_NONE
+    scale := u8(1)
+    if modrm.rm == 0b100 {
+        if len(bytes) < 2 {
+            return {}, {}, 0, false
+        }
+        sib := (cast(^SIB_Byte) &bytes[modrm_size])^
+        if sib.si != 0b100 {
+            scale = 1 << sib.ss
+            index = sib.si
+        }
+        base = sib.sb
+        modrm_size += 1
+    }
+    // Figure out the displacement size
+    disp_size := 0
+    switch modrm.mod {
+    case 0b00:
+        if base == 0b110 {
+            base = REG_NONE
+            index = REG_NONE
+            disp_size = 4
+        }
+    case 0b01: disp_size = 1
+    case 0b10: disp_size = 4
+    }
+    if len(bytes) < disp_size {
+        return {}, {}, 0, false
+    }
+    // Parse displacement
+    disp := i32(0)
+    if disp_size == 1 {
+        disp = cast(i32) ((cast(^i8) &bytes[modrm_size])^)
+    } else if disp_size == 4 {
+        disp = cast(i32) ((cast(^i32le) &bytes[modrm_size])^)
+    }
+    modrm_size += disp_size
+    rm_op := rm_mem32(ds, base, index, scale, disp)
+    return rx_op, rm_op, modrm_size, true
+}

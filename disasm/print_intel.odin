@@ -16,6 +16,18 @@ gpreg_name :: proc(size: u8, reg: u8) -> string {
         case REG_DI: return "di"
         case: panic("Unknown register name found")
         }
+    } else if size == 4 {
+        switch reg {
+        case REG_AX: return "eax"
+        case REG_CX: return "ecx"
+        case REG_DX: return "edx"
+        case REG_BX: return "ebx"
+        case REG_SP: return "esp"
+        case REG_BP: return "ebp"
+        case REG_SI: return "esi"
+        case REG_DI: return "edi"
+        case: panic("Unknown register name found")
+        }
     } else {
         panic("Registers of this size are not supported")
     }
@@ -35,18 +47,19 @@ print_intel_rm_op :: proc(w: io.Writer, rm: RM_Op) -> (err: io.Error) {
     case .None: unreachable()
     case .GPReg:
         io.write_string(w, gpreg_name(rm.size, rm.reg)) or_return
-    case .Mem_Addr16:
+    case .Mem_Addr16, .Mem_Addr32:
+        reg_size := u8(2) if rm.kind == .Mem_Addr16 else 4
         io.write_byte(w, '[')
         np := 0
         if rm.base_reg != REG_NONE {
-            io.write_string(w, gpreg_name(2, rm.base_reg)) or_return
+            io.write_string(w, gpreg_name(reg_size, rm.base_reg)) or_return
             np += 1
         }
         if rm.index_reg != REG_NONE {
             if np > 0 {
                 io.write_byte(w, '+') or_return
             }
-            io.write_string(w, gpreg_name(2, rm.index_reg)) or_return
+            io.write_string(w, gpreg_name(reg_size, rm.index_reg)) or_return
             np += 1
         }
         if rm.scale != 1 {
@@ -58,7 +71,11 @@ print_intel_rm_op :: proc(w: io.Writer, rm: RM_Op) -> (err: io.Error) {
             if np > 0 && rm.disp >= 0 {
                 io.write_byte(w, '+') or_return
             }
-            fmt.wprintf(w, "%#.4x", i16(rm.disp))
+            if rm.kind == .Mem_Addr16 {
+                fmt.wprintf(w, "%#.4x", i16(rm.disp))
+            } else {
+                fmt.wprintf(w, "%#.8x", rm.disp)
+            }
             np += 1
         }
         io.write_byte(w, ']')
@@ -72,10 +89,10 @@ print_intel_eop :: proc(w: io.Writer, eop: EOP) -> (err: io.Error) {
     case .None: unreachable()
     case .Imm:
         switch eop.size {
-        case 1: fmt.wprintf(w, "%#.4x", eop.lo)
+        case 1: fmt.wprintf(w, "%#.2x", eop.lo)
         case 2: fmt.wprintf(w, "%#.4x", eop.lo)
-        case 4: fmt.wprintf(w, "%#.4x", eop.lo)
-        case 8: fmt.wprintf(w, "%#.4x", eop.lo)
+        case 4: fmt.wprintf(w, "%#.8x", eop.lo)
+        case 8: fmt.wprintf(w, "%#.16x", eop.lo)
         case: panic("Unkown extra operand size")
         }
     }
