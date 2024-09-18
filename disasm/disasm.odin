@@ -65,10 +65,21 @@ rm_gpreg :: proc(size: u8, reg: u8) -> RM_Op {
     }
 }
 
+rm_disp :: proc(size: u8, disp: i32) -> RM_Op {
+    return RM_Op {
+        kind = .Mem_Addr32,
+        size = size,
+        base_reg = REG_NONE,
+        index_reg = REG_NONE,
+        scale = 1,
+        disp = disp,
+    }
+}
+
 rm_mem16 :: proc(size: u8, base_reg: u8, index_reg: u8, disp: i32) -> RM_Op {
     return RM_Op {
         kind = .Mem_Addr16,
-        size = 2,
+        size = size,
         base_reg = base_reg,
         index_reg = index_reg,
         scale = 1, // No scae in 16-bit addressing
@@ -79,7 +90,7 @@ rm_mem16 :: proc(size: u8, base_reg: u8, index_reg: u8, disp: i32) -> RM_Op {
 rm_mem32 :: proc(size: u8, base_reg: u8, index_reg: u8, scale: u8, disp: i32) -> RM_Op {
     return RM_Op {
         kind = .Mem_Addr32,
-        size = 4,
+        size = size,
         base_reg = base_reg,
         index_reg = index_reg,
         scale = scale,
@@ -159,36 +170,41 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
     }
     opcode := bytes[idx]
     idx += 1
+    has_modrm := false
+    has_imm := false
+    has_disp := false
+    implicit_rx := REG_NONE
+    opcode_rx := false
     if opcode == 0x89 { // MOV r/m16,r16
-        (len(bytes[idx:]) >= 1) or_return
-        modrm := (cast(^ModRM_Byte) &bytes[idx])^
-        idx += 1
-        rx_op, rm_op, modrm_len := decode_modrm(bytes[idx:], modrm, as, ds) or_return
-        idx += modrm_len
-        res = Instruction {
-            mnemonic = .Mov,
-            flags = {.Direction_Bit},
-            rx_op = rx_op,
-            rm_op = rm_op,
-        }
-        ok = true
-        return
+        has_modrm = true
     } else if opcode == 0x8b { // MOV r16,r/m16
+        has_modrm = true
+    } else if opcode & 0xf8 == 0xb8 { // MOV r16,imm16
+        opcode_rx = true
+        has_imm = true
+    } else if opcode == 0xa0 { // MOV AX, [disp]
+        implicit_rx = 0
+        has_disp = true
+    } else {
+        return
+    }
+    rx_op: RX_Op
+    rm_op: RM_Op
+    eop: EOP
+    if opcode_rx {
+        r := opcode & 0x07
+        rx_op = rx_gpreg(ds, r)
+    }
+    if has_modrm {
         (len(bytes[idx:]) >= 1) or_return
         modrm := (cast(^ModRM_Byte) &bytes[idx])^
         idx += 1
-        rx_op, rm_op, modrm_len := decode_modrm(bytes[idx:], modrm, as, ds) or_return
-        idx += modrm_len
-        res = Instruction {
-            mnemonic = .Mov,
-            rx_op = rx_op,
-            rm_op = rm_op,
-        }
-        ok = true
-        return
-    } else if opcode & 0xf8 == 0xb8 { // MOV r16,imm16
+        sz: int
+        rx_op, rm_op, sz = decode_modrm(bytes[idx:], modrm, as, ds) or_return
+        idx += sz
+    }
+    if has_imm {
         (len(bytes[idx:]) >= int(ds)) or_return
-        r16 := opcode & 0x07
         imm: u64
         switch ds {
             case 2: imm = u64((cast(^u16le) &bytes[idx])^)
@@ -196,15 +212,26 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
             case: panic("Unknown data size")
         }
         idx += int(ds)
-        res = Instruction {
-            mnemonic = .Mov,
-            extra_op = eop_imm(ds, imm),
-            rx_op = rx_gpreg(ds, r16)
-        }
-        ok = true
-        return
+        eop = eop_imm(ds, imm)
     }
-    return {}, 0, false
+    if has_disp {
+        (len(bytes[idx:]) >= int(ds)) or_return
+        disp: i32
+        switch as {
+            case 2: disp = i32((cast(^i16le) &bytes[idx])^)
+            case 4: disp = i32((cast(^i32le) &bytes[idx])^)
+            case: panic("Unknown data size")
+        }
+        idx += int(as)
+        rm_op = rm_disp(ds, disp)
+    }
+    res = Instruction {
+        mnemonic = .Mov,
+        rx_op = rx_op,
+        rm_op = rm_op,
+    }
+    ok = true
+    return
 }
 
 decode_modrm :: proc(bytes: []u8, modrm: ModRM_Byte, as: u8, ds: u8) -> (RX_Op, RM_Op, int, bool) {
