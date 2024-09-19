@@ -9,7 +9,7 @@ mov a0 disp #rx=0 #d #ds=8
 mov a1 disp #rx=0 #d
 mov a2 disp #rx=0 #ds=8
 mov a3 disp #rx=0
-mov b0+ imm +ds=8
+mov b0+ imm #ds=8
 mov b8+ imm
-mov c6/0 imm +ds=8
+mov c6/0 imm #ds=8
 mov c7/0 imm
