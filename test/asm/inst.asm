@@ -1,3 +1,3 @@
 bits 16
 
-mov ax, ds
+mov al, [0xeeff]

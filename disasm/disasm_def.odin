@@ -124,6 +124,7 @@ rm_op :: proc(kind: RM_Op_Kind, size: u8, reg: u8) -> RM_Op {
 
 rm_disp :: proc(size: u8, disp: i32) -> RM_Op {
     return RM_Op {
+        kind = .Mem_Addr_32,
         size = size,
         base_reg = REG_NONE,
         index_reg = REG_NONE,

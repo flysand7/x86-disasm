@@ -42,6 +42,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
     }
     modrm: Parsed_ModRM
     modrm_byte: ModRM_Byte
+    implicit_rm := false
     if stage1_entry.kind == .Mod_Rm || stage1_entry.kind == .Rx_Extend {
         (len(bytes[idx:]) >= 1) or_return
         modrm_byte = (cast(^ModRM_Byte) &bytes[idx])^
@@ -55,6 +56,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
         (len(bytes[idx:]) >= int(ds)) or_return
         imm: u64
         switch ds {
+            case 1: imm = u64((cast(^u8) &bytes[idx])^)
             case 2: imm = u64((cast(^u16le) &bytes[idx])^)
             case 4: imm = u64((cast(^u32le) &bytes[idx])^)
             case: panic("Unknown data size")
@@ -71,6 +73,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
             case: panic("Unknown data size")
         }
         idx += int(as)
+        implicit_rm = true
         modrm = Parsed_ModRM {
             size = as,
             base = REG_NONE,
@@ -97,6 +100,9 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
         case 4: rm = rm_mem32(ds, modrm.base, modrm.index, modrm.scale, modrm.disp)
         case: unreachable()
         }
+    }
+    if implicit_rm {
+        rm = rm_disp(ds, modrm.disp)
     }
     if stage1_entry.kind == .Rx_Embed || stage1_entry.kind == .None {
         if encoding.rx_value != REG_NONE {

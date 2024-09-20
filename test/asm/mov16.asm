@@ -1,58 +1,26 @@
 bits 16
 cpu 8086
 
-; Test 8-bit mov
+; Opcode 88
 mov al, ah
 mov ah, al
 mov al, bl
 mov al, bh
+mov ch, dh
+mov ch, cl
+mov bl, [bx+di]
+mov bl, [bp+si]
+mov bl, [bp+di]
+mov bl, [si]
+mov bl, [di]
+mov bl, [0xeeff]
+mov bl, [bx]
 
-; Test mov to itself
+; Opcode 89
 mov ax, ax
-mov cx, cx
-mov dx, dx
-mov bx, bx
-mov sp, sp
-mov bp, bp
-mov si, si
-mov di, di
-
-; Test AX <-> 16 bit
-mov ax, cx
-mov cx, ax
-mov ax, dx
-mov dx, ax
 mov ax, bx
 mov bx, ax
-mov ax, sp
-mov sp, ax
-mov ax, bp
-mov bp, ax
-mov ax, si
-mov si, ax
-mov ax, di
-mov di, ax
-
-; Some other 16 bit <-> 16 bit
-mov bx, cx
-mov cx, bx
-mov si, di
-mov di, si
-mov sp, bp
-mov bp, sp
-
-; Test 16 bit <- IMM
-mov ax, 0
-mov cx, 0
-mov dx, 0
-mov bx, 0
-mov sp, 0
-mov bp, 0
-mov si, 0
-mov di, 0
-
-; Test BX <- RM[mod=00]
-mov bx, [bx+si]
+mov cx, dx
 mov bx, [bx+di]
 mov bx, [bp+si]
 mov bx, [bp+di]
@@ -61,22 +29,70 @@ mov bx, [di]
 mov bx, [0xeeff]
 mov bx, [bx]
 
-; Test DX <- RM[mod=01]
-mov dx, [bx+si+0xef]
-mov dx, [bx+di+0xef]
-mov dx, [bp+si+0xef]
-mov dx, [bp+di+0xef]
-mov dx, [si+0xef]
-mov dx, [di+0xef]
-mov dx, [bp+0xef]
-mov dx, [bx+0xef]
+; Opcode 8a
+mov [bx+di], bl
+mov [bp+si], bl
+mov [bp+di], bl
+mov [si], bl
+mov [di], bl
+mov [0xeeff], bl
+mov [bx], bl
 
-; Test CX <- RM[mod=02]
-; mov ax, [bx+si+0xeffe]
-mov cx, [bx+di+0x4455]
-mov cx, [bp+si+0x4455]
-mov cx, [bp+di+0x4455]
-mov cx, [si+0x4455]
-mov cx, [di+0x4455]
-mov cx, [bp+0x4455]
-mov cx, [bx+0x4455]
+; Opcode 8b
+mov [bx+di], bx
+mov [bp+si], bx
+mov [bp+di], bx
+mov [si], bx
+mov [di], bx
+mov [0xeeff], bx
+mov [bx], bx
+
+; Opcode 8c
+mov ax, es
+mov ax, ds
+mov ax, ss
+mov ax, cs
+
+; Opcode 8e
+mov es, ax
+mov ds, ax
+mov ss, ax
+mov cs, ax
+
+; Opcodes a0..a3
+mov al, [0xeeff]
+mov ax, [0xeeff]
+mov [0xeeff], al
+mov [0xeeff], ax
+
+; Opcodes b0..b7
+mov al, -0xf
+mov cl, -0xf
+mov dl, -0xf
+mov bl, -0xf
+mov ah, +0xe
+mov ch, +0xe
+mov dh, +0xe
+mov bh, +0xe
+
+; Opcodes b8..bf
+mov ax, -0xf
+mov cx, -0xf
+mov dx, -0xf
+mov bx, -0xf
+mov sp, +0xe
+mov bp, +0xe
+mov si, +0xe
+mov di, +0xe
+
+; Opcode c6/0
+mov byte [bx+si], -0xf
+mov byte [bx+si+0x55aa], +0xe
+mov byte [bx+si], -0xf
+mov byte [bx+si+0x55aa], +0xe
+
+; Opcode c7/0
+mov word [bx+si], -0xf
+mov word [bx+si+0x55aa], +0xe
+mov word [bx+si], -0xf
+mov word [bx+si+0x55aa], +0xe

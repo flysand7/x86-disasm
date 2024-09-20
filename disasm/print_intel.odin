@@ -141,8 +141,8 @@ print_intel :: proc(w: io.Writer, inst: Instruction) -> (err: io.Error) {
         if inst.rx_op.kind != .None {
             if n > 0 {
                 io.write_byte(w, ',') or_return
-                io.write_byte(w, ' ') or_return
             }
+            io.write_byte(w, ' ') or_return
             print_intel_rx_op(w, inst.rx_op) or_return
             n += 1
         }
@@ -155,8 +155,8 @@ print_intel :: proc(w: io.Writer, inst: Instruction) -> (err: io.Error) {
         if inst.rm_op.kind != .None {
             if n > 0 {
                 io.write_byte(w, ',') or_return
-                io.write_byte(w, ' ') or_return
             }
+            io.write_byte(w, ' ') or_return
             print_intel_rm_op(w, inst.rm_op) or_return
             n += 1
         }
@@ -164,8 +164,8 @@ print_intel :: proc(w: io.Writer, inst: Instruction) -> (err: io.Error) {
     if inst.extra_op.kind != nil {
         if n > 0 {
             io.write_byte(w, ',') or_return
-            io.write_byte(w, ' ') or_return
         }
+        io.write_byte(w, ' ') or_return
         print_intel_eop(w, inst.extra_op) or_return
         n += 1
     }
