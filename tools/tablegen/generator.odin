@@ -2,6 +2,17 @@ package tablegen
 
 import "core:fmt"
 import "core:os"
+HELP_TEMPLATE ::
+
+`tablegen: Table generator tool for x86-disasm.
+Usage:
+  %s <table.txt> <output-dir> [options...]
+Options:
+  -help
+      Print a help message
+  -print
+      Print the parsed table to stdout.
+`
 
 print_flags :: proc(flags: bit_set[Table_Entry_Flag]) {
     if .D in flags {
@@ -38,13 +49,15 @@ print_table :: proc(table: []Table_Entry) {
 
 main :: proc() {
     if len(os.args) < 3 {
-        fmt.eprintfln("Error: invalid format")
-        fmt.eprintfln("   ./tablegen path/to/table.txt output/path/")
+        fmt.eprintfln(HELP_TEMPLATE, os.args[0])
         os.exit(1)
     }
     do_print_table := false
     for arg in os.args[3:] {
         switch arg {
+        case "-help":
+            fmt.printfln(HELP_TEMPLATE, os.args[0])
+            os.exit(0)
         case "-print": do_print_table = true
         }
     }
