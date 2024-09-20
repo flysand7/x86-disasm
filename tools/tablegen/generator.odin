@@ -16,6 +16,8 @@ Options:
       Print the parsed table to stdout.
   -print:<mnemonic>
       Print all entries of the parsed table for specified mnemonic.
+  -opcode:<byte>
+      Print all entries with the specified first opcode byte.
   -line:<number>
       Print the entry of the parsed table described on the specified line of
       the table.txt file.
@@ -23,6 +25,7 @@ Options:
 
 print_mnemonic := ""
 print_line := -1
+print_opcode := -1
 
 print_flags :: proc(flags: bit_set[Table_Entry_Flag]) {
     if .D in flags {
@@ -34,7 +37,8 @@ print_table :: proc(table: []Table_Entry) {
     for entry in table {
         line_matches := print_line == -1 || entry.src_line == print_line
         mnemonic_matches := print_mnemonic == "" || entry.mnemonic == print_mnemonic
-        if line_matches && mnemonic_matches {
+        opcode_matches := print_opcode == -1 || entry.opcode == u8(print_opcode)
+        if line_matches && mnemonic_matches && opcode_matches {
             fmt.printf("%s %.2x", entry.mnemonic, entry.opcode)
             #partial switch entry.encoding_kind {
             case .Mod_Rm:    fmt.printf("/")
@@ -92,7 +96,25 @@ main :: proc() {
             }
             print_line = parsed_line-1
         } else {
-            fmt.eprintfln("The -line option doesn't take a key-value pair")
+            fmt.eprintfln("Bad format: -line:<number>")
+            os.exit(2)
+        }
+    }
+    if "opcode" in options {
+        do_print_table = true
+        if opcode, ok := options["opcode"].(string); ok {
+            parsed_opcode, ok := strconv.parse_int(opcode, 16)
+            if !ok {
+                fmt.eprintfln("The -opcode option expects a hexadecimal number")
+                os.exit(2)
+            }
+            if parsed_opcode <= 0 || parsed_opcode > 0xff {
+                fmt.eprintfln("Opcode byte out of bounds")
+                os.exit(2)
+            }
+            print_opcode = parsed_opcode
+        } else {
+            fmt.eprintfln("Bad format: -opcode:<byte>")
             os.exit(2)
         }
     }
