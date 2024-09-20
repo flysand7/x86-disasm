@@ -90,7 +90,7 @@ main :: proc() {
                 fmt.eprintfln("The -line option expects a number")
                 os.exit(2)
             }
-            print_line = parsed_line
+            print_line = parsed_line-1
         } else {
             fmt.eprintfln("The -line option doesn't take a key-value pair")
             os.exit(2)
