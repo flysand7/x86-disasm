@@ -12,6 +12,13 @@ REG_BP :: u8(0b101)
 REG_SI :: u8(0b110)
 REG_DI :: u8(0b111)
 
+REG_ES :: u8(0)
+REG_CS :: u8(1)
+REG_SS :: u8(2)
+REG_DS :: u8(3)
+REG_FS :: u8(4)
+REG_GS :: u8(5)
+
 // Instruction prefixes.
 PREFIX_LOCK  :: u8(0xf0)
 PREFIX_REPNZ :: u8(0xf2)

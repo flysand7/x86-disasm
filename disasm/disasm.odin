@@ -26,9 +26,9 @@ RX_Op :: struct {
     reg: u8,
 }
 
-rx_gpreg :: proc(size: u8, reg: u8) -> RX_Op {
+rx_op :: proc(kind: RX_Op_Kind, size: u8, reg: u8) -> RX_Op {
     return RX_Op {
-        kind = .GPReg,
+        kind = kind,
         size = size,
         reg = reg,
     }
@@ -53,9 +53,9 @@ RM_Op :: struct {
     disp: i32,
 }
 
-rm_gpreg :: proc(size: u8, reg: u8) -> RM_Op {
+rm_op :: proc(kind: RM_Op_Kind, size: u8, reg: u8) -> RM_Op {
     return RM_Op {
-        kind = .GPReg,
+        kind = kind,
         size = size,
         reg = reg,
     }
@@ -63,7 +63,6 @@ rm_gpreg :: proc(size: u8, reg: u8) -> RM_Op {
 
 rm_disp :: proc(size: u8, disp: i32) -> RM_Op {
     return RM_Op {
-        kind = .Mem_Addr32,
         size = size,
         base_reg = REG_NONE,
         index_reg = REG_NONE,
@@ -74,7 +73,6 @@ rm_disp :: proc(size: u8, disp: i32) -> RM_Op {
 
 rm_mem16 :: proc(size: u8, base_reg: u8, index_reg: u8, disp: i32) -> RM_Op {
     return RM_Op {
-        kind = .Mem_Addr16,
         size = size,
         base_reg = base_reg,
         index_reg = index_reg,
@@ -85,7 +83,6 @@ rm_mem16 :: proc(size: u8, base_reg: u8, index_reg: u8, disp: i32) -> RM_Op {
 
 rm_mem32 :: proc(size: u8, base_reg: u8, index_reg: u8, scale: u8, disp: i32) -> RM_Op {
     return RM_Op {
-        kind = .Mem_Addr32,
         size = size,
         base_reg = base_reg,
         index_reg = index_reg,
@@ -168,23 +165,14 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
     idx += 1
     // Stage 1 decoding
     stage1_entry := stage1_table[opcode]
-    has_modrm := false
+    modrm: Parsed_Modrm
+    modrm_byte: ModRM_Byte
     if stage1_entry.kind == .Mod_Rm || stage1_entry.kind == .Rx_Extend {
-        has_modrm = true
-    }
-    rx_op: RX_Op
-    rm_op: RM_Op
-    if stage1_entry.kind == .Rx_Embed {
-        r := opcode & 0x07
-        rx_op = rx_gpreg(ds, r)
-    }
-    modrm: ModRM_Byte
-    if has_modrm {
         (len(bytes[idx:]) >= 1) or_return
-        modrm = (cast(^ModRM_Byte) &bytes[idx])^
+        modrm_byte = (cast(^ModRM_Byte) &bytes[idx])^
         idx += 1
         sz: int
-        rx_op, rm_op, sz = decode_modrm(bytes[idx:], modrm, as, ds) or_return
+        modrm, sz = decode_modrm(bytes[idx:], modrm_byte, as, ds) or_return
         idx += sz
     }
     eop: EOP
@@ -208,40 +196,70 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
             case: panic("Unknown data size")
         }
         idx += int(as)
-        rm_op = rm_disp(ds, disp)
+        modrm = Parsed_Modrm {
+            size = as,
+            base = REG_NONE,
+            index = REG_NONE,
+            scale = 1,
+            disp = disp,
+        }
     }
     // Stage 2 decoding
     encoding := Encoding {}
     if stage1_entry.kind == .Rx_Extend {
-        stage2_idx := rx_ext_table[stage1_entry.entry_idx][modrm.rx]
+        stage2_idx := rx_ext_table[stage1_entry.entry_idx][modrm_byte.rx]
         encoding = stage2_table[stage2_idx]
     } else {
         encoding = stage2_table[stage1_entry.entry_idx]
     }
+    rx: RX_Op
+    rm: RM_Op
+    if stage1_entry.kind == .Mod_Rm || stage1_entry.kind == .Rx_Extend {
+        rx = rx_op(encoding.rx_kind, ds, modrm_byte.rx)
+        switch modrm.size {
+        case 0: rm = rm_op(encoding.rm_kind, ds, modrm_byte.rm)
+        case 2: rm = rm_mem16(ds, modrm.base, modrm.index, modrm.disp)
+        case 4: rm = rm_mem32(ds, modrm.base, modrm.index, modrm.scale, modrm.disp)
+        case: unreachable()
+        }
+    }
     if stage1_entry.kind == .Rx_Embed || stage1_entry.kind == .None {
         if encoding.rx_value != REG_NONE {
-            rx_op = rx_gpreg(ds, encoding.rx_value)
+            rx = rx_op(encoding.rx_kind, ds, encoding.rx_value)
         }
+    }
+    flags: bit_set[Instruction_Flag]
+    if .D in encoding.flags {
+        flags += {.Direction_Bit}
     }
     res = Instruction {
         mnemonic = encoding.mnemonic,
-        rx_op = rx_op,
-        rm_op = rm_op,
+        flags = flags,
+        rx_op = rx,
+        rm_op = rm,
         extra_op = eop,
     }
     ok = true
     return
 }
 
-decode_modrm :: proc(bytes: []u8, modrm: ModRM_Byte, as: u8, ds: u8) -> (RX_Op, RM_Op, int, bool) {
+Parsed_Modrm :: struct {
+    size: u8, // if 0, base has register, other fields not used
+    base: u8,
+    index: u8,
+    scale: u8,
+    disp: i32,
+}
+
+decode_modrm :: proc(bytes: []u8, modrm: ModRM_Byte, as: u8, ds: u8) -> (Parsed_Modrm, int, bool) {
     switch as {
-    case 2: return decode_modrm_addr16(bytes, modrm, ds)
     case 4: return decode_modrm_addr32(bytes, modrm, ds)
+    case 2: return decode_modrm_addr16(bytes, modrm, ds)
     }
     panic("Unhandled addr size")
 }
 
-decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (RX_Op, RM_Op, int, bool) {
+decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_Modrm, int, bool) {
     Addr16_RM_Entry :: struct {
         base: u8,
         index: u8,
@@ -256,12 +274,14 @@ decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (RX_Op, R
         { base = REG_BP, index = REG_NONE },
         { base = REG_BX, index = REG_NONE },
     }
-    rx_op := rx_gpreg(ds, modrm.rx)
     modrm_size := 0
     // Early return on mod=0b11
     if modrm.mod == 0b11 {
-        rm_op := rm_gpreg(ds, modrm.rm)
-        return rx_op, rm_op, modrm_size, true
+        parsed := Parsed_Modrm {
+            size = 0,
+            base = modrm.rm,
+        }
+        return parsed, modrm_size, true
     }
     entry := addr16_rm_table[modrm.rm]
     base := entry.base
@@ -279,7 +299,7 @@ decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (RX_Op, R
     case 0b10: disp_size = 2
     }
     if len(bytes) < disp_size {
-        return {}, {}, 0, false
+        return {}, 0, false
     }
     // Parse displacement
     disp := i32(0)
@@ -289,17 +309,26 @@ decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (RX_Op, R
         disp = cast(i32) ((cast(^i16le) &bytes[modrm_size])^)
     }
     modrm_size += disp_size
-    rm_op := rm_mem16(ds, base, index, disp)
-    return rx_op, rm_op, modrm_size, true
+    // rm_op := rm_mem16(ds, base, index, disp)
+    parsed := Parsed_Modrm {
+        size = 2,
+        base = base,
+        index = index,
+        scale = 1,
+        disp = disp,
+    }
+    return parsed, modrm_size, true
 }
 
-decode_modrm_addr32 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (RX_Op, RM_Op, int, bool) {
-    rx_op := rx_gpreg(ds, modrm.rx)
+decode_modrm_addr32 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_Modrm, int, bool) {
     modrm_size := 0
     // Early return on mod=0b11
     if modrm.mod == 0b11 {
-        rm_op := rm_gpreg(ds, modrm.rm)
-        return rx_op, rm_op, modrm_size, true
+        parsed := Parsed_Modrm {
+            size = 0,
+            base = modrm.rm,
+        }
+        return parsed, modrm_size, true
     }
     // If mod is 0b100, base comes from sib, as well as index and scale
     base := modrm.rm
@@ -307,7 +336,7 @@ decode_modrm_addr32 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (RX_Op, R
     scale := u8(1)
     if modrm.rm == 0b100 {
         if len(bytes) < 2 {
-            return {}, {}, 0, false
+            return {}, 0, false
         }
         sib := (cast(^SIB_Byte) &bytes[modrm_size])^
         if sib.si != 0b100 {
@@ -330,7 +359,7 @@ decode_modrm_addr32 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (RX_Op, R
     case 0b10: disp_size = 4
     }
     if len(bytes) < disp_size {
-        return {}, {}, 0, false
+        return {}, 0, false
     }
     // Parse displacement
     disp := i32(0)
@@ -340,6 +369,12 @@ decode_modrm_addr32 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (RX_Op, R
         disp = cast(i32) ((cast(^i32le) &bytes[modrm_size])^)
     }
     modrm_size += disp_size
-    rm_op := rm_mem32(ds, base, index, scale, disp)
-    return rx_op, rm_op, modrm_size, true
+    parsed := Parsed_Modrm {
+        size  = 4,
+        base = base,
+        index = index,
+        scale = scale,
+        disp = disp,
+    }
+    return parsed, modrm_size, true
 }

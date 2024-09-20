@@ -3,6 +3,22 @@ package x86_disasm
 import "core:io"
 import "core:fmt"
 
+sreg_name :: proc(size: u8, reg: u8) -> string {
+    if size == 2 {
+        switch reg {
+        case REG_ES: return "es"
+        case REG_CS: return "cs"
+        case REG_SS: return "ss"
+        case REG_DS: return "ds"
+        case REG_FS: return "fs"
+        case REG_GS: return "gs"
+        case: panic("Unknown register name found")
+        }
+    } else {
+        panic("Registers of this size are not supported")
+    }
+}
+
 gpreg_name :: proc(size: u8, reg: u8) -> string {
     if size == 2 {
         switch reg {
@@ -35,8 +51,10 @@ gpreg_name :: proc(size: u8, reg: u8) -> string {
 
 print_intel_rx_op :: proc(w: io.Writer, rx: RX_Op) -> (err: io.Error) {
     assert(rx.kind != .None, "Function must be called with rx operand present")
-    if rx.kind == .GPReg {
-        io.write_string(w, gpreg_name(rx.size, rx.reg)) or_return
+    switch rx.kind {
+    case .None: panic("Unknown rx register kind")
+    case .GPReg: io.write_string(w, gpreg_name(rx.size, rx.reg)) or_return
+    case .SReg:  io.write_string(w, sreg_name(rx.size, rx.reg)) or_return
     }
     return nil
 }
@@ -102,7 +120,7 @@ print_intel_eop :: proc(w: io.Writer, eop: EOP) -> (err: io.Error) {
 print_intel :: proc(w: io.Writer, inst: Instruction) -> (err: io.Error) {
     io.write_string(w, mnemonic_names[inst.mnemonic]) or_return
     n := 0
-    if inst.flags >= {.Direction_Bit} {
+    if .Direction_Bit not_in inst.flags {
         if inst.rm_op.kind != .None {
             io.write_byte(w, ' ') or_return
             print_intel_rm_op(w, inst.rm_op) or_return
