@@ -1,6 +1,12 @@
 bits 16
 cpu 8086
 
+; Test 8-bit mov
+mov al, ah
+mov ah, al
+mov al, bl
+mov al, bh
+
 ; Test mov to itself
 mov ax, ax
 mov cx, cx

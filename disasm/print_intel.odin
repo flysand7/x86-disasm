@@ -20,7 +20,19 @@ sreg_name :: proc(size: u8, reg: u8) -> string {
 }
 
 gpreg_name :: proc(size: u8, reg: u8) -> string {
-    if size == 2 {
+    if size == 1 {
+        switch reg {
+        case REG_AX: return "al"
+        case REG_CX: return "cl"
+        case REG_DX: return "dl"
+        case REG_BX: return "bl"
+        case REG_SP: return "ah"
+        case REG_BP: return "ch"
+        case REG_SI: return "dh"
+        case REG_DI: return "bh"
+        case: panic("Unknown register name found")
+        }
+    } else if size == 2 {
         switch reg {
         case REG_AX: return "ax"
         case REG_CX: return "cx"

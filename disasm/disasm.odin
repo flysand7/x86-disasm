@@ -36,6 +36,10 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
     idx += 1
     // Stage 1 decoding
     stage1_entry := stage1_table[opcode]
+    (stage1_entry.entry_idx != 0) or_return
+    if stage1_entry.force_ds != DS_DEFAULT {
+        ds = stage1_entry.force_ds
+    }
     modrm: Parsed_ModRM
     modrm_byte: ModRM_Byte
     if stage1_entry.kind == .Mod_Rm || stage1_entry.kind == .Rx_Extend {
@@ -43,7 +47,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
         modrm_byte = (cast(^ModRM_Byte) &bytes[idx])^
         idx += 1
         sz: int
-        modrm, sz = decode_modrm(bytes[idx:], modrm_byte, as, ds) or_return
+        modrm, sz = decode_modrm(bytes[idx:], modrm_byte, as) or_return
         idx += sz
     }
     eop: EOP
@@ -122,15 +126,15 @@ Parsed_ModRM :: struct {
     disp: i32,
 }
 
-decode_modrm :: proc(bytes: []u8, modrm: ModRM_Byte, as: u8, ds: u8) -> (Parsed_ModRM, int, bool) {
+decode_modrm :: proc(bytes: []u8, modrm: ModRM_Byte, as: u8) -> (Parsed_ModRM, int, bool) {
     switch as {
-    case 4: return decode_modrm_addr32(bytes, modrm, ds)
-    case 2: return decode_modrm_addr16(bytes, modrm, ds)
+    case 4: return decode_modrm_addr32(bytes, modrm)
+    case 2: return decode_modrm_addr16(bytes, modrm)
     }
     panic("Unhandled addr size")
 }
 
-decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_ModRM, int, bool) {
+decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte) -> (Parsed_ModRM, int, bool) {
     Addr16_RM_Entry :: struct {
         base: u8,
         index: u8,
@@ -180,7 +184,6 @@ decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_M
         disp = cast(i32) ((cast(^i16le) &bytes[modrm_size])^)
     }
     modrm_size += disp_size
-    // rm_op := rm_mem16(ds, base, index, disp)
     parsed := Parsed_ModRM {
         size = 2,
         base = base,
@@ -191,7 +194,7 @@ decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_M
     return parsed, modrm_size, true
 }
 
-decode_modrm_addr32 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_ModRM, int, bool) {
+decode_modrm_addr32 :: proc(bytes: []u8, modrm: ModRM_Byte) -> (Parsed_ModRM, int, bool) {
     modrm_size := 0
     // Early return on mod=0b11
     if modrm.mod == 0b11 {

@@ -1,5 +1,7 @@
 package x86_disasm
 
+DS_DEFAULT :: u8(0xff)
+
 // For fields holding registers: The value that signifies the absense of
 // a register, i.e. the `None` value.
 REG_NONE :: u8(0xff)

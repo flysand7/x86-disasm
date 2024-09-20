@@ -12,12 +12,12 @@ Stage1_Encoding :: struct {
     kind: Encoding_Kind,
     entry_idx: int,
     eop: EOP_Kind,
+    force_ds: u8,
 }
 
 Encoding :: struct {
     mnemonic: string,
     flags: bit_set[Table_Entry_Flag],
-    force_ds: u8,
     rx_value: u8,
     rx_kind: RX_Kind,
     rm_kind: RM_Kind,
@@ -56,6 +56,7 @@ output_tables :: proc(table: []Table_Entry, filename: string) -> (bool) {
                     entry_idx = len(rx_extensions),
                     eop = entry.eop,
                     kind = entry.encoding_kind,
+                    force_ds = entry.force_ds,
                 }
                 append(&rx_extensions, [8]int {})
             }
@@ -67,12 +68,12 @@ output_tables :: proc(table: []Table_Entry, filename: string) -> (bool) {
                 entry_idx = len(stage2_encodings),
                 eop = entry.eop,
                 kind = entry.encoding_kind,
+                force_ds = entry.force_ds,
             }
         }
         append(&stage2_encodings, Encoding {
             mnemonic = entry.mnemonic,
             flags = entry.flags,
-            force_ds = entry.force_ds,
             rm_kind = entry.rm_kind,
             rx_kind = entry.rx_kind,
             rx_value = entry.rx_value,
@@ -103,6 +104,7 @@ output_tables :: proc(table: []Table_Entry, filename: string) -> (bool) {
             fmt.sbprintfln(&builder, TAB+TAB+"entry_idx = %d,", entry.entry_idx)
             fmt.sbprintfln(&builder, TAB+TAB+"eop = .%v,", entry.eop)
             fmt.sbprintfln(&builder, TAB+TAB+"kind = .%v,", entry.kind)
+            fmt.sbprintfln(&builder, TAB+TAB+"force_ds = %#.2x,", entry.force_ds)
             fmt.sbprintfln(&builder, TAB+"}},")
         }
     }
@@ -133,7 +135,6 @@ output_tables :: proc(table: []Table_Entry, filename: string) -> (bool) {
             fmt.sbprintf(&builder, ".D,")
         }
         fmt.sbprintfln(&builder, "}},")
-        fmt.sbprintfln(&builder, TAB+TAB+"force_ds = %#.2x,", entry.force_ds)
         fmt.sbprintfln(&builder, TAB+TAB+"rm_kind = .%v,", entry.rm_kind)
         fmt.sbprintfln(&builder, TAB+TAB+"rx_kind = .%v,", entry.rx_kind)
         fmt.sbprintfln(&builder, TAB+TAB+"rx_value = %#.2x,", entry.rx_value)

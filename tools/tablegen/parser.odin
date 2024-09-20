@@ -217,7 +217,7 @@ parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Table_Entry, o
                 rx_kind = parse_rx_kind(m.line_no, value) or_return
             }
         case "rm": rm_kind = parse_rm_kind(m.line_no, value) or_return
-        case "ds": ds = parse_int(m.line_no, value) or_return
+        case "ds": ds = (parse_int(m.line_no, value) or_return)/8
         }
     }
     if rm_kind == RM_Kind.None {

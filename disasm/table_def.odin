@@ -25,12 +25,12 @@ Stage1_Encoding :: struct {
     kind: Encoding_Kind,
     entry_idx: int,
     eop: Encoded_EOP_Kind,
+    force_ds: u8,
 }
 
 Encoding :: struct {
     mnemonic: Mnemonic,
     flags: bit_set[Encoding_Flag],
-    force_ds: u8,
     rx_value: u8,
     rx_kind: RX_Op_Kind,
     rm_kind: RM_Op_Kind,
