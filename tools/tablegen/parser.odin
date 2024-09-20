@@ -230,6 +230,7 @@ parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Table_Entry, o
     for opcode in start_opcode ..< end_opcode {
         rx_value = opcode - start_opcode
         entry := Table_Entry {
+            src_line = m.line_no,
             mnemonic = m.mnemonic,
             opcode = opcode,
             opcode_kind = m.opcode_kind,

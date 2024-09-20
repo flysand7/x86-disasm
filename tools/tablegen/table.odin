@@ -41,6 +41,7 @@ Opcode_Kind :: enum {
 }
 
 Table_Entry :: struct {
+    src_line: int,
     mnemonic: string,
     flags: bit_set[Table_Entry_Flag],
     force_ds: u8,
