@@ -1,15 +1,15 @@
 
-mov 88 /gr #ds=8
+mov 88 /gr +ds=8
 mov 89 /gr
-mov 8a /gr #d #ds=8
-mov 8b /gr #d
-mov 8c /gr #rx=sr
-mov 8e /gr #rx=sr #d
-mov a0 disp #rx=0 #d #ds=8
-mov a1 disp #rx=0 #d
-mov a2 disp #rx=0 #ds=8
-mov a3 disp #rx=0
-mov b0+ imm #ds=8
+mov 8a /gr +d +ds=8
+mov 8b /gr +d
+mov 8c /sr +rm=gr
+mov 8e /sr +rm=gr +d
+mov a0 disp +rx=0 +d +ds=8
+mov a1 disp +rx=0 +d
+mov a2 disp +rx=0 +ds=8
+mov a3 disp +rx=0
+mov b0+ imm +ds=8
 mov b8+ imm
-mov c6/0 imm #ds=8
+mov c6/0 imm +ds=8
 mov c7/0 imm
