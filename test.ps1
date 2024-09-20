@@ -8,7 +8,7 @@ nasm test/asm/mov16_32.asm -o tmp/bin/mov16_32
 ./build
 
 # Run the test files
-#./x86-disasm ./tmp/bin/mov16 -cpu:16
-./x86-disasm ./tmp/bin/mov16_32 -cpu:16
+./x86-disasm ./tmp/bin/mov16 -cpu:16
+# ./x86-disasm ./tmp/bin/mov16_32 -cpu:16
 
 

@@ -9,7 +9,7 @@ Marked_Entry :: struct {
     line_no: int,
     mnemonic: string,
     opcode: string,
-    opcode_kind: Opcode_Kind,
+    encoding_kind: Encoding_Kind,
     opcode_rx: bool,
     rx_spec: string,
     eop: string,
@@ -27,19 +27,19 @@ mark_fields :: proc(line_no: int, fields: []string) -> (Marked_Entry, bool) {
     idx += 1
     // Parse opcode byte
     opcode := fields[idx]
-    opcode_kind := Opcode_Kind.None
+    encoding_kind := Encoding_Kind.None
     opcode_rx := false
     if opcode[len(opcode)-1] == '+' {
         opcode_rx = true
         opcode = opcode[0:len(opcode)-1]
-        opcode_kind = .Rx_Embed
+        encoding_kind = .Rx_Embed
     }
     rx_spec := ""
     opcode_slash := strings.index_byte(opcode, '/')
     if opcode_slash != -1 {
         rx_spec = opcode[opcode_slash+1:]
         opcode = opcode[0:opcode_slash]
-        if opcode_kind != .None {
+        if encoding_kind != .None {
             fmt.eprintfln("Line %d: Cannot specify RX extend and RX embed in the same opcode", line_no)
             return {}, false
         }
@@ -51,13 +51,13 @@ mark_fields :: proc(line_no: int, fields: []string) -> (Marked_Entry, bool) {
             fmt.eprintfln("Line %d: Opcode RX needs to be a digit", line_no)
             return {}, false
         }
-        opcode_kind = .Rx_Extend
+        encoding_kind = .Rx_Extend
     }
     idx += 1
     // Parse mod/rm specification
     if idx < len(fields) && fields[idx][0] == '/' {
         rx_spec = fields[idx][1:]
-        if opcode_kind != .None {
+        if encoding_kind != .None {
             fmt.eprintfln("Line %d: Conflicting mod/rm behaviors", line_no)
             return {}, false
         }
@@ -69,7 +69,7 @@ mark_fields :: proc(line_no: int, fields: []string) -> (Marked_Entry, bool) {
             fmt.eprintfln("Line %d: Opcode RX needs to be adjacent to opcode", line_no)
             return {}, false
         }
-        opcode_kind = .Normal
+        encoding_kind = .Mod_Rm
         idx += 1
     }
     // Parse extra operand
@@ -112,7 +112,7 @@ mark_fields :: proc(line_no: int, fields: []string) -> (Marked_Entry, bool) {
         mnemonic = mnemonic,
         opcode = opcode,
         opcode_rx = opcode_rx,
-        opcode_kind = opcode_kind,
+        encoding_kind = encoding_kind,
         rx_spec = rx_spec,
         eop = eop,
         flags = flags,
@@ -160,7 +160,7 @@ parse_int :: proc(line_no: int, value: string) -> (u8, bool) {
 parse_rx_kind :: proc(line_no: int, rx_kind: string) -> (RX_Kind, bool) {
     switch rx_kind {
     case "":  return .None, true
-    case "gr": return .GPreg, true
+    case "gr": return .GPReg, true
     case "sr": return .SReg, true
     }
     fmt.eprintfln("Line %d: Unknown RX register kind (%s)", line_no, rx_kind)
@@ -170,7 +170,7 @@ parse_rx_kind :: proc(line_no: int, rx_kind: string) -> (RX_Kind, bool) {
 parse_rm_kind :: proc(line_no: int, rm_kind: string) -> (RM_Kind, bool) {
     switch rm_kind {
     case "": return .None, true
-    case "gr": return .GPreg, true
+    case "gr": return .GPReg, true
     }
     fmt.eprintfln("Line %d: Unknown RM register kind (%s)", line_no, rm_kind)
     return .None, false
@@ -178,7 +178,7 @@ parse_rm_kind :: proc(line_no: int, rm_kind: string) -> (RM_Kind, bool) {
 
 rx_to_rm :: proc(line_no: int, rx_kind: RX_Kind) -> (RM_Kind, bool) {
     #partial switch rx_kind {
-    case .GPreg: return .GPreg, true
+    case .GPReg: return .GPReg, true
     }
     fmt.eprintfln("Line %d: RX kind %v has no equivalent rm kind", line_no, rx_kind)
     return .None, false
@@ -195,7 +195,7 @@ parse_eop_kind :: proc(line_no: int, eop_kind: string) -> (EOP_Kind, bool) {
 }
 
 parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Table_Entry, ok: bool) {
-    rx_kind := RX_Kind.GPreg
+    rx_kind := RX_Kind.GPReg
     rm_kind := RM_Kind.None
     rx_value := REG_NONE
     if m.rx_spec != "" {
@@ -228,12 +228,12 @@ parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Table_Entry, o
     start_opcode := parse_byte(m.line_no, m.opcode) or_return
     end_opcode := start_opcode + (8 if m.opcode_rx else 1)
     for opcode in start_opcode ..< end_opcode {
-        rx_value = opcode - start_opcode
+        rx_value = opcode - start_opcode if m.opcode_rx else rx_value
         entry := Table_Entry {
             src_line = m.line_no,
             mnemonic = m.mnemonic,
             opcode = opcode,
-            opcode_kind = m.opcode_kind,
+            encoding_kind = m.encoding_kind,
             eop = eop_kind,
             rx_value = rx_value,
             rx_kind = rx_kind,

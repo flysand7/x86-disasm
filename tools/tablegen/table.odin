@@ -14,13 +14,13 @@ REG_DI :: u8(0b111)
 
 RX_Kind :: enum {
     None,
-    GPreg,
+    GPReg,
     SReg,
 }
 
 RM_Kind :: enum {
     None,
-    GPreg,
+    GPReg,
 }
 
 EOP_Kind :: enum {
@@ -33,11 +33,11 @@ Table_Entry_Flag :: enum {
     D,
 }
 
-Opcode_Kind :: enum {
+Encoding_Kind :: enum {
     None,
     Rx_Extend, // bb /[n]
     Rx_Embed,  // bb^
-    Normal,    // bb /rk
+    Mod_Rm,    // bb /rk
 }
 
 Table_Entry :: struct {
@@ -46,7 +46,7 @@ Table_Entry :: struct {
     flags: bit_set[Table_Entry_Flag],
     force_ds: u8,
     opcode: u8,
-    opcode_kind: Opcode_Kind,
+    encoding_kind: Encoding_Kind,
     eop: EOP_Kind,
     rx_value: u8, // Can be REG_NONE
     rx_kind: RX_Kind,

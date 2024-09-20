@@ -1,3 +1,3 @@
 bits 16
 
-mov ebx, [eax + ecx*2 + 0x11]
+mov ax, [0x55aa]

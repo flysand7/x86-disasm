@@ -8,7 +8,7 @@ HELP_TEMPLATE ::
 
 `tablegen: Table generator tool for x86-disasm.
 Usage:
-  %s <table.txt> <output-dir> [options...]
+  %s <table.txt> <output.odin> [options...]
 Options:
   -help
       Print a help message
@@ -36,14 +36,14 @@ print_table :: proc(table: []Table_Entry) {
         mnemonic_matches := print_mnemonic == "" || entry.mnemonic == print_mnemonic
         if line_matches && mnemonic_matches {
             fmt.printf("%s %.2x", entry.mnemonic, entry.opcode)
-            #partial switch entry.opcode_kind {
-            case .Normal:    fmt.printf("/")
+            #partial switch entry.encoding_kind {
+            case .Mod_Rm:    fmt.printf("/")
             case .Rx_Extend: fmt.printf("/%d", entry.rx_value)
             case .Rx_Embed:  fmt.printf("^%d", entry.rx_value)
             }
             fmt.printf(" rx=%v", entry.rx_kind)
             if entry.rx_value != REG_NONE {
-                if entry.opcode_kind == .Rx_Embed || entry.opcode_kind == .None {
+                if entry.encoding_kind == .Rx_Embed || entry.encoding_kind == .None {
                     fmt.printf("(%v)", entry.rx_value)
                 } 
             }
@@ -106,5 +106,8 @@ main :: proc() {
     table := parse_table(string(table_src))
     if do_print_table {
         print_table(table)
+    }
+    if !output_tables(table, out_path){
+        os.exit(1)
     }
 }

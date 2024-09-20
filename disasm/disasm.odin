@@ -6,11 +6,6 @@ CPU_Mode :: enum {
     Mode_64,
 }
 
-// TODO: will probably get generated from a table.
-Mnemonic :: enum {
-    Mov,
-}
-
 Instruction_Flag :: enum {
     // Swaps around RX and RM operands.
     // If not present, RM follows RX (intel syntax).
@@ -22,6 +17,7 @@ Instruction_Flag :: enum {
 RX_Op_Kind :: enum u8 {
     None,
     GPReg,
+    SReg,
 }
 
 RX_Op :: struct {
@@ -170,40 +166,29 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
     }
     opcode := bytes[idx]
     idx += 1
+    // Stage 1 decoding
+    stage1_entry := stage1_table[opcode]
     has_modrm := false
-    has_imm := false
-    has_disp := false
-    implicit_rx := REG_NONE
-    opcode_rx := false
-    if opcode == 0x89 { // MOV r/m16,r16
+    if stage1_entry.kind == .Mod_Rm || stage1_entry.kind == .Rx_Extend {
         has_modrm = true
-    } else if opcode == 0x8b { // MOV r16,r/m16
-        has_modrm = true
-    } else if opcode & 0xf8 == 0xb8 { // MOV r16,imm16
-        opcode_rx = true
-        has_imm = true
-    } else if opcode == 0xa0 { // MOV AX, [disp]
-        implicit_rx = 0
-        has_disp = true
-    } else {
-        return
     }
     rx_op: RX_Op
     rm_op: RM_Op
-    eop: EOP
-    if opcode_rx {
+    if stage1_entry.kind == .Rx_Embed {
         r := opcode & 0x07
         rx_op = rx_gpreg(ds, r)
     }
+    modrm: ModRM_Byte
     if has_modrm {
         (len(bytes[idx:]) >= 1) or_return
-        modrm := (cast(^ModRM_Byte) &bytes[idx])^
+        modrm = (cast(^ModRM_Byte) &bytes[idx])^
         idx += 1
         sz: int
         rx_op, rm_op, sz = decode_modrm(bytes[idx:], modrm, as, ds) or_return
         idx += sz
     }
-    if has_imm {
+    eop: EOP
+    if stage1_entry.eop == .Imm {
         (len(bytes[idx:]) >= int(ds)) or_return
         imm: u64
         switch ds {
@@ -214,7 +199,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
         idx += int(ds)
         eop = eop_imm(ds, imm)
     }
-    if has_disp {
+    if stage1_entry.eop == .Disp {
         (len(bytes[idx:]) >= int(ds)) or_return
         disp: i32
         switch as {
@@ -225,10 +210,24 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
         idx += int(as)
         rm_op = rm_disp(ds, disp)
     }
+    // Stage 2 decoding
+    encoding := Encoding {}
+    if stage1_entry.kind == .Rx_Extend {
+        stage2_idx := rx_ext_table[stage1_entry.entry_idx][modrm.rx]
+        encoding = stage2_table[stage2_idx]
+    } else {
+        encoding = stage2_table[stage1_entry.entry_idx]
+    }
+    if stage1_entry.kind == .Rx_Embed || stage1_entry.kind == .None {
+        if encoding.rx_value != REG_NONE {
+            rx_op = rx_gpreg(ds, encoding.rx_value)
+        }
+    }
     res = Instruction {
-        mnemonic = .Mov,
+        mnemonic = encoding.mnemonic,
         rx_op = rx_op,
         rm_op = rm_op,
+        extra_op = eop,
     }
     ok = true
     return
