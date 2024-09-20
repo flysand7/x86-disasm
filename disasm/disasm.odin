@@ -1,134 +1,5 @@
 package x86_disasm
 
-CPU_Mode :: enum {
-    Mode_16,
-    Mode_32,
-    Mode_64,
-}
-
-Instruction_Flag :: enum {
-    // Swaps around RX and RM operands.
-    // If not present, RM follows RX (intel syntax).
-    // If present, RX is follows RM (intel syntax).
-    // For AT&T syntax the ordering is reversed. 
-    Direction_Bit,
-}
-
-RX_Op_Kind :: enum u8 {
-    None,
-    GPReg,
-    SReg,
-}
-
-RX_Op :: struct {
-    kind: RX_Op_Kind,
-    size: u8,
-    reg: u8,
-}
-
-rx_op :: proc(kind: RX_Op_Kind, size: u8, reg: u8) -> RX_Op {
-    return RX_Op {
-        kind = kind,
-        size = size,
-        reg = reg,
-    }
-}
-
-RM_Op_Kind :: enum u8 {
-    None,
-    Mem_Addr16,
-    Mem_Addr32,
-    GPReg,
-}
-
-RM_Op :: struct {
-    kind: RM_Op_Kind,
-    size: u8,
-    using _: struct #raw_union {
-        reg: u8,
-        base_reg: u8,
-    },
-    index_reg: u8,
-    scale: u8,
-    disp: i32,
-}
-
-rm_op :: proc(kind: RM_Op_Kind, size: u8, reg: u8) -> RM_Op {
-    return RM_Op {
-        kind = kind,
-        size = size,
-        reg = reg,
-    }
-}
-
-rm_disp :: proc(size: u8, disp: i32) -> RM_Op {
-    return RM_Op {
-        size = size,
-        base_reg = REG_NONE,
-        index_reg = REG_NONE,
-        scale = 1,
-        disp = disp,
-    }
-}
-
-rm_mem16 :: proc(size: u8, base_reg: u8, index_reg: u8, disp: i32) -> RM_Op {
-    return RM_Op {
-        size = size,
-        base_reg = base_reg,
-        index_reg = index_reg,
-        scale = 1, // No scae in 16-bit addressing
-        disp = disp,
-    }
-}
-
-rm_mem32 :: proc(size: u8, base_reg: u8, index_reg: u8, scale: u8, disp: i32) -> RM_Op {
-    return RM_Op {
-        size = size,
-        base_reg = base_reg,
-        index_reg = index_reg,
-        scale = scale,
-        disp = disp,
-    }
-}
-
-VEX_Op :: struct {
-    kind: u8,
-    size: u8,
-    reg: u8,
-}
-
-EOP_Kind :: enum {
-    None,
-    Imm,
-}
-
-// At most a 16-byte value packed into two integers, so the values are split
-// into two 64-bit integers, hi and lo.
-EOP :: struct {
-    kind: EOP_Kind,
-    size: u8,
-    lo: u64,
-    hi: u64,
-}
-
-eop_imm :: proc(size: u8, value: u64) -> EOP {
-    return EOP {
-        kind = .Imm,
-        size = 2,
-        lo = value,
-        hi = 0,
-    }
-}
-
-Instruction :: struct {
-    mnemonic: Mnemonic,
-    flags: bit_set[Instruction_Flag],
-    rx_op: RX_Op,
-    rm_op: RM_Op,
-    vex_op: VEX_Op,
-    extra_op: EOP,
-}
-
 cpu_mode := CPU_Mode.Mode_16
 
 set_cpu_mode :: proc(mode: CPU_Mode) {
@@ -165,7 +36,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
     idx += 1
     // Stage 1 decoding
     stage1_entry := stage1_table[opcode]
-    modrm: Parsed_Modrm
+    modrm: Parsed_ModRM
     modrm_byte: ModRM_Byte
     if stage1_entry.kind == .Mod_Rm || stage1_entry.kind == .Rx_Extend {
         (len(bytes[idx:]) >= 1) or_return
@@ -196,7 +67,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
             case: panic("Unknown data size")
         }
         idx += int(as)
-        modrm = Parsed_Modrm {
+        modrm = Parsed_ModRM {
             size = as,
             base = REG_NONE,
             index = REG_NONE,
@@ -243,7 +114,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
     return
 }
 
-Parsed_Modrm :: struct {
+Parsed_ModRM :: struct {
     size: u8, // if 0, base has register, other fields not used
     base: u8,
     index: u8,
@@ -251,7 +122,7 @@ Parsed_Modrm :: struct {
     disp: i32,
 }
 
-decode_modrm :: proc(bytes: []u8, modrm: ModRM_Byte, as: u8, ds: u8) -> (Parsed_Modrm, int, bool) {
+decode_modrm :: proc(bytes: []u8, modrm: ModRM_Byte, as: u8, ds: u8) -> (Parsed_ModRM, int, bool) {
     switch as {
     case 4: return decode_modrm_addr32(bytes, modrm, ds)
     case 2: return decode_modrm_addr16(bytes, modrm, ds)
@@ -259,7 +130,7 @@ decode_modrm :: proc(bytes: []u8, modrm: ModRM_Byte, as: u8, ds: u8) -> (Parsed_
     panic("Unhandled addr size")
 }
 
-decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_Modrm, int, bool) {
+decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_ModRM, int, bool) {
     Addr16_RM_Entry :: struct {
         base: u8,
         index: u8,
@@ -277,7 +148,7 @@ decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_M
     modrm_size := 0
     // Early return on mod=0b11
     if modrm.mod == 0b11 {
-        parsed := Parsed_Modrm {
+        parsed := Parsed_ModRM {
             size = 0,
             base = modrm.rm,
         }
@@ -310,7 +181,7 @@ decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_M
     }
     modrm_size += disp_size
     // rm_op := rm_mem16(ds, base, index, disp)
-    parsed := Parsed_Modrm {
+    parsed := Parsed_ModRM {
         size = 2,
         base = base,
         index = index,
@@ -320,11 +191,11 @@ decode_modrm_addr16 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_M
     return parsed, modrm_size, true
 }
 
-decode_modrm_addr32 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_Modrm, int, bool) {
+decode_modrm_addr32 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_ModRM, int, bool) {
     modrm_size := 0
     // Early return on mod=0b11
     if modrm.mod == 0b11 {
-        parsed := Parsed_Modrm {
+        parsed := Parsed_ModRM {
             size = 0,
             base = modrm.rm,
         }
@@ -369,7 +240,7 @@ decode_modrm_addr32 :: proc(bytes: []u8, modrm: ModRM_Byte, ds: u8) -> (Parsed_M
         disp = cast(i32) ((cast(^i32le) &bytes[modrm_size])^)
     }
     modrm_size += disp_size
-    parsed := Parsed_Modrm {
+    parsed := Parsed_ModRM {
         size  = 4,
         base = base,
         index = index,

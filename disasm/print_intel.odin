@@ -65,8 +65,8 @@ print_intel_rm_op :: proc(w: io.Writer, rm: RM_Op) -> (err: io.Error) {
     case .None: unreachable()
     case .GPReg:
         io.write_string(w, gpreg_name(rm.size, rm.reg)) or_return
-    case .Mem_Addr16, .Mem_Addr32:
-        reg_size := u8(2) if rm.kind == .Mem_Addr16 else 4
+    case .Mem_Addr_16, .Mem_Addr_32:
+        reg_size := u8(2) if rm.kind == .Mem_Addr_16 else 4
         io.write_byte(w, '[')
         np := 0
         if rm.base_reg != REG_NONE {
@@ -89,7 +89,7 @@ print_intel_rm_op :: proc(w: io.Writer, rm: RM_Op) -> (err: io.Error) {
             if np > 0 && rm.disp >= 0 {
                 io.write_byte(w, '+') or_return
             }
-            if rm.kind == .Mem_Addr16 {
+            if rm.kind == .Mem_Addr_16 {
                 fmt.wprintf(w, "%#.4x", i16(rm.disp))
             } else {
                 fmt.wprintf(w, "%#.8x", rm.disp)
@@ -118,7 +118,7 @@ print_intel_eop :: proc(w: io.Writer, eop: EOP) -> (err: io.Error) {
 }
 
 print_intel :: proc(w: io.Writer, inst: Instruction) -> (err: io.Error) {
-    io.write_string(w, mnemonic_names[inst.mnemonic]) or_return
+    io.write_string(w, mnemonic_table[inst.mnemonic]) or_return
     n := 0
     if .Direction_Bit not_in inst.flags {
         if inst.rm_op.kind != .None {
