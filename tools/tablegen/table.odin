@@ -28,8 +28,9 @@ EOP_Kind :: enum {
     Imm,
     Imm8,
     Disp,
-    NDisp,
-    FDisp,
+    Addr,
+    SAddr,
+    FAddr,
 }
 
 Table_Entry_Flag :: enum {

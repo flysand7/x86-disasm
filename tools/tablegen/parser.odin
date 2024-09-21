@@ -222,8 +222,9 @@ parse_eop_kind :: proc(line_no: int, eop_kind: string) -> (EOP_Kind, bool) {
     case "imm": return .Imm, true
     case "imm8": return .Imm8, true
     case "disp": return .Disp, true
-    case "fdisp": return .FDisp, true
-    case "ndisp": return .NDisp, true
+    case "saddr": return .SAddr, true
+    case "faddr": return .FAddr, true
+    case "addr": return .Addr, true
     }
     fmt.eprintfln("Line %d: Unknown extra operand kind (%s)", line_no, eop_kind)
     return .None, false

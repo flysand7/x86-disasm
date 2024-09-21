@@ -176,6 +176,9 @@ VEX_Op :: struct {
 EOP_Kind :: enum {
     None,
     Imm,
+    SAddr,
+    FAddr,
+    Addr,
 }
 
 // At most a 16-byte value packed into two integers, so the values are split
@@ -192,6 +195,33 @@ eop_imm :: proc(size: u8, value: u64) -> EOP {
         kind = .Imm,
         size = 2,
         lo = value,
+        hi = 0,
+    }
+}
+
+eop_saddr :: proc(offset: i8) -> EOP {
+    return EOP {
+        kind = .SAddr,
+        size = 1,
+        lo = transmute(u64) cast(i64) offset,
+        hi = 0,
+    }
+}
+
+eop_faddr :: proc(size: u8, seg: u16, offset: i32) -> EOP {
+    return EOP {
+        kind = .FAddr,
+        size = size,
+        lo = cast(u64) offset,
+        hi = cast(u64) seg,
+    }
+}
+
+eop_addr :: proc(size: u8, offset: i32) -> EOP {
+    return EOP {
+        kind = .Addr,
+        size = size,
+        lo = cast(u64) offset,
         hi = 0,
     }
 }

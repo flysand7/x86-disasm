@@ -121,8 +121,8 @@ out e7 imm8
 out ee +rx=2 +ds=8
 out ef +rx=2
 
-call e8 disp
-call 9a fdisp
+call e8 addr
+call 9a faddr
 call ff/2
 call ff/3
 
@@ -144,30 +144,30 @@ int3 cc
 into ce
 iret cf
 
-jo  70 ndisp
-jno 71 ndisp
-jb  72 ndisp
-jae 73 ndisp
-je  74 ndisp
-jne 75 ndisp
-jbe 76 ndisp
-ja  77 ndisp
-js  78 ndisp
-jns 79 ndisp
-jp  7a ndisp
-jnp 7b ndisp
-jl  7c ndisp
-jge 7d ndisp
-jle 7e ndisp
-jg  7f ndisp
+jo  70 saddr
+jno 71 saddr
+jb  72 saddr
+jae 73 saddr
+je  74 saddr
+jne 75 saddr
+jbe 76 saddr
+ja  77 saddr
+js  78 saddr
+jns 79 saddr
+jp  7a saddr
+jnp 7b saddr
+jl  7c saddr
+jge 7d saddr
+jle 7e saddr
+jg  7f saddr
 
-jmp eb ndisp
-jmp e9 disp
+jmp eb saddr
+jmp e9 addr
 jmp ff/4
-jmp ea fdisp
+jmp ea faddr
 jmp ff/5
 
-jcxz e3 ndisp
+jcxz e3 saddr
 
 lahf 9d
 sahf 9e
@@ -179,9 +179,9 @@ lea 8d /gr
 
 lock f0
 
-loop   e1 ndisp
-loope  e2 ndisp
-loopne e0 ndisp
+loop   e1 saddr
+loope  e2 saddr
+loopne e0 saddr
 
 mov 88 /gr +ds=8
 mov 89 /gr

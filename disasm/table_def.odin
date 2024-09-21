@@ -20,8 +20,9 @@ Encoded_EOP_Kind :: enum {
     Imm,
     Imm8,
     Disp,
-    NDisp,
-    FDisp,
+    SAddr,
+    FAddr,
+    Addr,
 }
 
 Stage1_Encoding :: struct {

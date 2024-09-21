@@ -70,21 +70,14 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
         }
         eop = eop_imm(ds, imm)
         idx += int(ds)
-    case .NDisp:
+    case .SAddr:
         (len(bytes[idx:]) >= 1) or_return
-        disp := i32((cast(^u8) &bytes[idx])^)
-        idx += int(as)
-        implicit_rm = true
-        modrm = Parsed_ModRM {
-            size = 1,
-            base = REG_NONE,
-            index = REG_NONE,
-            scale = 1,
-            disp = disp,
-        }
-    case .FDisp:
+        offset := (cast(^i8) &bytes[idx])^
+        idx += 1
+        eop = eop_saddr(offset)
+    case .FAddr:
         (len(bytes[idx:]) >= 2+int(as)) or_return
-        seg := i32((cast(^i16le) &bytes[idx])^)
+        seg := u16((cast(^u16le) &bytes[idx])^)
         idx += 2
         disp: i32
         switch as {
@@ -93,14 +86,17 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
             case: panic("Unknown data size")
         }
         idx += int(as)
-        implicit_rm = true
-        modrm = Parsed_ModRM {
-            size = as,
-            base = REG_NONE,
-            index = REG_NONE,
-            scale = 1,
-            disp = disp,
+        eop = eop_faddr(as, seg, disp)
+    case .Addr:
+        (len(bytes[idx:]) >= int(as)) or_return
+        disp: i32
+        switch as {
+            case 2: disp = i32((cast(^i16le) &bytes[idx])^)
+            case 4: disp = i32((cast(^i32le) &bytes[idx])^)
+            case: panic("Unknown data size")
         }
+        idx += int(as)
+        eop = eop_addr(as, disp)
     case .Disp:
         (len(bytes[idx:]) >= int(as)) or_return
         disp: i32

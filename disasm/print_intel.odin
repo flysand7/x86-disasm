@@ -125,6 +125,21 @@ print_intel_eop :: proc(w: io.Writer, eop: EOP) -> (err: io.Error) {
         case 8: fmt.wprintf(w, "%#.16x", eop.lo)
         case: panic("Unkown extra operand size")
         }
+    case .SAddr:
+        fmt.wprintf(w, "%#.2x", u8(eop.lo))
+    case .Addr:
+        switch eop.size {
+        case 2: fmt.wprintf(w, "%#.4x", u16(eop.lo))
+        case 4: fmt.wprintf(w, "%#.8x", u32(eop.lo))
+        case: panic("Unknown extra operand size")
+        }
+    case .FAddr:
+        fmt.wprintf(w, "%#.2x:", eop.hi)
+        switch eop.size {
+        case 2: fmt.wprintf(w, "%#.4x", u16(eop.lo))
+        case 4: fmt.wprintf(w, "%#.8x", u32(eop.lo))
+        case: panic("Unknown extra operand size")
+        }
     }
     return nil
 }
