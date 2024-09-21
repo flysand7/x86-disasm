@@ -18,7 +18,10 @@ Encoding_Kind :: enum {
 Encoded_EOP_Kind :: enum {
     None,
     Imm,
+    Imm8,
     Disp,
+    NDisp,
+    FDisp,
 }
 
 Stage1_Encoding :: struct {

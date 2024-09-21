@@ -26,7 +26,10 @@ RM_Kind :: enum {
 EOP_Kind :: enum {
     None,
     Imm,
+    Imm8,
     Disp,
+    NDisp,
+    FDisp,
 }
 
 Table_Entry_Flag :: enum {

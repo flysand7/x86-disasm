@@ -1,4 +1,186 @@
 
+# -- 8086 --
+
+aaa 37
+aad d5 imm8 +ds=16
+aam d4 imm8 +ds=16
+aas 3f
+daa 27
+das 2f
+
+adc 14 imm +rx=0 +ds=8
+adc 15 imm +rx=0
+adc 80/2 imm +ds=8
+adc 81/2 imm
+adc 83/2 imm8
+adc 10 /gr +ds=8
+adc 11 /gr
+adc 12 /gr +d +ds=8
+adc 13 /gr +d
+
+add 04 imm +rx=0 +ds=8
+add 05 imm +rx=0
+add 80/0 imm +ds=8
+add 81/0 imm
+add 83/0 imm8
+add 00 /gr +ds=8
+add 01 /gr
+add 02 /gr +d +ds=8
+add 03 /gr +d
+
+and 24 imm8 +rx=0 +ds=8
+and 25 imm +rx=0
+and 80/4 imm +ds=8
+and 81/4 imm
+and 83/4 imm8
+and 20 /gr +ds=8
+and 21 /gr
+and 22 /gr +d +ds=8
+and 23 /gr +d
+
+sub 2c imm8 +rx=0 +ds=8
+sub 2d imm +rx=0
+sub 80/5 imm +ds=8
+sub 81/5 imm
+sub 83/5 imm8
+sub 28 /gr +ds=8
+sub 29 /gr
+sub 2a /gr +d +ds=8
+sub 2b /gr +d
+
+cmp 3c imm +rx=0 +ds=8
+cmp 3d imm +rx=0
+cmp 80/7 imm +ds=8
+cmp 81/7 imm
+cmp 83/7 imm8
+cmp 38 /gr +ds=8
+cmp 39 /gr
+cmp 3a /gr +d +ds=8
+cmp 3b /gr +d
+
+or  0c imm +rx=0 +ds=8
+or  0d imm +rx=0
+or  80/1 imm +ds=8
+or  81/1 imm
+or  83/1 imm8
+or  08 /gr +ds=8
+or  09 /gr
+or  0a /gr +d +ds-8
+or  0b /gr +d
+
+xor 34 imm +rx=0 +ds=8
+xor 35 imm +rx=0
+xor 80/6 imm +ds=8
+xor 81/6 imm
+xor 83/6 imm8
+xor 30 /gr +ds=8
+xor 31 /gr
+xor 32 /gr +d +ds-8
+xor 33 /gr +d
+
+sbb 1c imm +rx=0 +ds=8
+sbb 1d imm +rx=0
+sbb 80/3 imm +ds=8
+sbb 81/3 imm
+sbb 83/3 imm8
+sbb 18 /gr +ds=8
+sbb 19 /gr
+sbb 1a /gr +d +ds=8
+sbb 1b /gr +d
+
+dec fe/1 +ds=8
+inc fe/0 +ds=8
+dec ff/1
+inc ff/0
+dec 48+
+inc 40+
+
+not  f6/2 +ds=8
+neg  f6/3 +ds=8
+mul  f6/4 +ds=8
+imul f6/5 +ds=8
+div  f6/6 +ds=8
+idiv f6/7 +ds=8
+
+not  f7/2
+neg  f7/3
+mul  f7/4
+imul f7/5
+div  f7/6
+idiv f7/7
+
+imul 6b /gr imm8 +d
+imul 69 /gr imm +d
+
+in  e4 imm +ds=8
+in  e5 imm8
+out e6 imm +ds=8
+out e7 imm8
+out ee +rx=2 +ds=8
+out ef +rx=2
+
+call e8 disp
+call 9a fdisp
+call ff/2
+call ff/3
+
+cbw 98
+cwd 99
+
+clc f8
+stc f9
+cld fc
+std fd
+cli fa
+sti fb
+cmc f5
+
+hlt f4
+
+int cd imm8
+int3 cc
+into ce
+iret cf
+
+jo  70 ndisp
+jno 71 ndisp
+jb  72 ndisp
+jae 73 ndisp
+je  74 ndisp
+jne 75 ndisp
+jbe 76 ndisp
+ja  77 ndisp
+js  78 ndisp
+jns 79 ndisp
+jp  7a ndisp
+jnp 7b ndisp
+jl  7c ndisp
+jge 7d ndisp
+jle 7e ndisp
+jg  7f ndisp
+
+jmp eb ndisp
+jmp e9 disp
+jmp ff/4
+jmp ea fdisp
+jmp ff/5
+
+jcxz e3 ndisp
+
+lahf 9d
+sahf 9e
+
+lds c5 /gr
+les c4 /gr
+
+lea 8d /gr
+
+lock f0
+
+loop   e1 ndisp
+loope  e2 ndisp
+loopne e0 ndisp
+
 mov 88 /gr +ds=8
 mov 89 /gr
 mov 8a /gr +d +ds=8
@@ -13,3 +195,914 @@ mov b0+ imm +ds=8
 mov b8+ imm
 mov c6/0 imm +ds=8
 mov c7/0 imm
+
+
+movs a4 +ds=8
+cmps a6 +ds=8
+stos aa +ds=8
+stos ab
+scas ae +ds=8
+movs a5
+cmps a7
+scas af
+
+pop 8f/0
+pop 58+
+pop 07 +rx=sr0
+pop 1f +rx=sr3
+pop 17 +rx=sr2
+
+push ff/6
+push 50+
+push 06 +rx=sr0
+push 0e +rx=sr1
+push 16 +rx=sr2
+push 1e +rx=sr3
+
+popf  9d
+pushf 9c
+
+rol d0/0 +ds=8
+rol d2/0 +ds=8 +rx=1
+rol c0/0 imm8 +ds=8
+rol d1/0
+rol d3/0 +rx=1
+rol c1/0 imm8
+
+rol d0/1 +ds=8
+rol d2/1 +ds=8 +rx=1
+rol c0/1 imm8 +ds=8
+rol d1/1
+rol d3/1 +rx=1
+rol c1/1 imm8
+
+rcl d0/2 +ds=8
+rcl d2/2 +ds=8 +rx=1
+rcl c0/2 imm8 +ds=8
+rcl d1/2
+rcl d3/2 +rx=1
+rcl c1/2 imm8
+
+rcr d0/3 +ds=8
+rcr d2/3 +ds=8 +rx=1
+rcr c0/3 imm8 +ds=8
+rcr d1/3
+rcr d3/3 +rx=1
+rcr c1/3 imm8
+
+sal d0/4 +ds=8
+sal d2/4 +ds=8 +rx=1
+sal c0/4 imm8 +ds=8
+sal d1/4
+sal d3/4 +rx=1
+sal c1/4 imm8
+
+shr d0/5 +ds=8
+shr d2/5 +ds=8 +rx=1
+shr c0/5 imm8 +ds=8
+shr d1/5
+shr d3/5 +rx=1
+shr c1/5 imm8
+
+sar d0/7 +ds=8
+sar d2/7 +ds=8 +rx=1
+sar c0/7 imm8 +ds=8
+sar d1/7
+sar d3/7 +rx=1
+sar c1/7 imm8
+
+rep f3
+repne f2
+
+ret c3
+ret cb
+ret c2 imm +ds=16
+ret ca imm +ds=16
+
+test a8 imm +rx=0 +ds=8
+test a9 imm +rx=0
+test f6/0 imm +ds=8
+test f7/0 imm
+test 84 /gr +ds=8
+test 85 /gr
+
+wait 9b
+
+xchg 90+ +rx=0
+xchg 86 /gr +ds=8
+xchg 87 /gr
+
+xlat d7
+
+# -- 80186 --
+# outs
+# ins
+# bound
+# enter
+# inbs
+# insw
+# leave
+# outsb
+# outsw
+# popa
+# pusha
+# push imm
+# imul imm
+
+# -- 80286 --
+# lgdt
+# lidt
+# lmsw
+# clts
+# lldt
+# ltr
+# sgdt
+# sidt
+# smsw
+# sldt
+# str
+# arpl
+# lar
+# lsl
+# verr
+# verw
+# loadall
+# storeall
+
+# -- 80386 --
+# bt
+# bts
+# btr
+# btc
+# bsf
+# bsr
+# shld
+# shrd
+# movzx
+# setcc
+# jcc
+# imul
+# push fs
+# push gs
+# pop fs
+# pop gs
+# lfs
+# lgs
+# lss
+# mov CR
+# mov DR
+# mov TR
+# int1
+# umov
+# xbts
+# ibts
+# loadalld
+
+# -- 80486 --
+# bswap
+# cmpxchg
+# xadd
+# invlpg
+# invd
+# wbinvd
+
+# -- Pentium 5/6 --
+# cmovcc
+# rdmsr
+# wrmsr
+# rsm
+# cpuid
+# cmpxchg8b
+# rdtsc
+# rdpmc
+# ud2
+# ud1
+# ud0
+# syscall
+# sysret
+# sysenter
+# sysexit
+
+# -- x86-64 --
+# cmpxchg16b
+# iretq
+# jrcxz
+# lodsq
+# movsxd
+# movsq
+# popfq
+# pushfq
+# scasq
+# stosq
+# swapgs
+
+# FPU
+# f2xm1
+# fabs
+# fadd
+# faddp
+# fiadd
+# fbld
+# fbstp
+# fchs
+# fclex
+# fnclex
+# fcmovcc
+# fcom
+# fcomp
+# fcompp
+# fcomi
+# fcompi
+# fcomipp
+# fcos
+# fdecstp
+# fdiv
+# fdivp
+# fidiv
+# fdivr
+# fdivrp
+# ffree
+# ficom
+# ficom
+# ficomp
+# fild
+# fincstp
+# finit
+# fninit
+# fist
+# fistp
+# fisttp
+# fld
+# fld1
+# fldl2t
+# fldl2e
+# fldpi
+# fldlg2
+# fldln2
+# fldz
+# fldcw
+# fldenv
+# fmul
+# fmulp
+# fimul
+# fnop
+# fpatan
+# fprem
+# fprem1
+# fpatan
+# fprem
+# fprem1
+# fptan
+# frndint
+# frstor
+# fsave
+# fnsave
+# fscale
+# fsin
+# fsincos
+# fsqrt
+# fst
+# fstp
+# fstcw
+# fnstcw
+# fstenv
+# fnstenv
+# fstsw
+# fnstsw
+# fsub
+# fsubp
+# fisub
+# fsubr
+# fsubrp
+# fisubr
+# ftst
+# fucom
+# fucomp
+# fucompp
+# fxam
+# fxch
+# fxrstor
+# fxsave
+# fxtract
+# fyl2x
+# fyl2xp1
+
+# -- SSE / SSE2 / SSE3 / SSSE3 / SSE4 / AVX / AVX2 --
+# emms
+
+# addpd
+# addps
+# addsd
+# addss
+# addsubpd
+# addsubps
+
+# andpd
+# andps
+# andnpd
+# andnps
+
+# blendpd
+# blendps
+# blendvpd
+# blendvps
+
+# cmppd
+# cmpps
+# cmpsd
+# cmpss
+
+# comiss
+# comisd
+
+# clflush
+# clflushopt
+
+# crc32
+
+# cvtdq2pd
+# cvtdq2ps
+# cvtpd2dq
+# cvtpd2pi
+# cvtpd2ps
+# cvtpi2pd
+# cvtpi2ps
+# cvtps2dq
+# cvtps2pd
+# cvtps2pi
+# cvtsd2si
+# cvtsd2ss
+# cvtsi2sd
+# cvtsi2ss
+# cvttpd2dq
+# cvttpd2dq
+# cvttpd2pi
+# cvttps2dq
+# cvttps2pi
+# cvttsd2si
+# cvttss2si
+
+# divpd
+# divps
+# divsd
+# divss
+
+# dppd
+# dpps
+
+# extractps
+# insertps
+
+# haddpd
+# haddps
+# hsubpd
+# hsubps
+
+# lddqu
+# ldmxcsr
+# stmxcsr
+# lfence
+# sfence
+# mfence
+
+# maskmovdqu
+# maskmovq
+
+# maxpd
+# maxps
+# maxsd
+# maxss
+
+# minpd
+# minps
+# minsd
+# minss
+
+# movapd
+# movaps
+
+# movd
+# movq
+
+# movddup
+
+# movdqa
+# vmovdqa32
+# vmovdqa64
+# movdqu
+# vmovdqu8
+# vmovdqu16
+# vmovdqu32
+# vmovdqu64
+
+# movdq2q
+# movhlps
+# movhpd
+# movhps
+# movlhps
+# movlpd
+# movlps
+# movlpd
+# movlps
+
+# movmskpd
+# movmskps
+# movntdqa
+# movntdq
+# movnti
+# movntpd
+# movntps
+# movntq
+# movq
+# movq2dq
+
+# movsd
+# movss
+
+# movshdup
+# movsldup
+
+# movupd
+# movups
+
+# mpsadbw
+
+# mulpd
+# mulps
+# mulsd
+# mulss
+
+# orpd
+# orps
+
+# pabsb
+# pabsw
+# pabsd
+# pabsq
+# packsswb
+# packssdw
+# packusdw
+# packuswb
+
+# paddb
+# paddw
+# paddd
+# paddq
+# paddsb
+# paddsw
+# palignr
+# pand
+# pandn
+
+# pause
+
+# pavgb
+# pavgw
+# pblendvb
+# pblendw
+
+# pcmpeqb
+# pcmpeqw
+# pcmpeqd
+# pcmpeqq
+# pcmpgtb
+# pcmpgtw
+# pcmpgtd
+# pcmpgtq
+# pcmpestri
+# pcmpestrm
+# pcmpistri
+# pcmpistrm
+
+# pextrb
+# pextrd
+# pextrq
+# pextrw
+
+# phaddw
+# phaddd
+# phaddsw
+# phminposuw
+# phsubw
+# phsubd
+# phsubsw
+# pinsrb
+# pinsrd
+# pinsrq
+# pinsrw
+
+# pmaddubsw
+# pmaddwd
+# pmaxsb
+# pmaxsw
+# pmaxsd
+# pmaxsq
+# pmaxub
+# pmaxuw
+# pmaxud
+# pmaxuq
+# pminub
+# pminuw
+# pminud
+# pminuq
+
+# pmovmskb
+
+# pmovsx
+# pmovzx
+
+# pmuldq
+# pmulhrsw
+# pmulhuw
+# pmulhw
+# pmulld
+# pmullq
+# pmullw
+# pmuludq
+
+# por
+# prefetch0
+# prefetch1
+# prefetch2
+# prefetchnta
+# prefetchw
+
+# psadbw
+
+# pshufb
+# pshufd
+# shufhw
+# pshuflw
+# pshufw
+
+# psignb
+# psignw
+# psignd
+
+# ppslldq
+# psllw
+# pslld
+# psllq
+# psraw
+# psrad
+# psrlq
+
+# psubb
+# psubw
+# psubd
+# psubq
+# psubsb
+# psubsw
+# psubusb
+# psubusw
+
+# pest
+# ptwrite
+
+# punpckhbw
+# punpckhwd
+# punpckhdq
+# punpckhqdq
+# punpcklbw
+# punpcklwd
+# punpckldq
+# punpcklqdq
+
+# pxor
+
+# rcpps
+# rcpss
+
+# roundpd
+# roundps
+# roundsd
+# roundss
+
+# rsqrtps
+# rsqrtss
+
+# shufpd
+# shufps
+
+# sqrtpd
+# sqrtps
+# sqrtsd
+# sqrtss
+
+# subpd
+# subps
+# subsd
+# subss
+
+# ucomisd
+# ucomiss
+
+# unpckhpd
+# unpckhps
+# unpcklpd
+# unpcklps
+
+# vbroadcast
+# vextractf128
+# vextracti128
+
+# vgatherdpd
+# vgatherqpd
+# vgatherdps
+# vgatherqps
+
+# vinsertf128
+# vinserti128
+# vmaskmov
+
+# vblendd
+# vperm2i128
+# vpermd
+# vpermilpd
+# vpermilps
+# vpermpd
+# vpermps
+# vpermq
+
+# vgatherdd
+# vgatherqd
+# vgatherdq
+# vgatherqq
+
+# vpmaskmov
+
+# vpsllvw
+# vpsllvd
+# vpsllvq
+
+# vpsravd
+# vpsrlvd
+# vpsrlvq
+
+# vtestps
+# vtestpd
+
+# vzeroall
+# vzeroupper
+
+# xorpd
+# xorps
+
+# -- XSAVE --
+# xgetbv
+# xsetbv
+# xsave
+# xrstor
+
+# -- XSAVEOPT --
+# xsaveopt
+
+# -- XSAVEC --
+# xsavec
+
+# -- XSS --
+# xsaves
+
+# -- FMA --
+# vfmaddrnd231pd
+
+# vfmadd132pd
+# vfmadd213pd
+# vfmadd231pd
+# vfmadd132ps
+# vfmadd213ps
+# vfmadd231ps
+# vfmadd132sd
+# vfmadd213sd
+# vfmadd231sd
+# vfmadd132ss
+# vfmadd213ss
+# vfmadd231ss
+
+# vfmaddsub132pd
+# vfmaddsub213pd
+# vfmaddsub231pd
+# vfmaddsub132ps
+# vfmaddsub213ps
+# vfmaddsub231ps
+# vfmaddsub132pd
+# vfmaddsub213pd
+# vfmaddsub231pd
+
+# vfmsub132ps
+# vfmsub213ps
+# vfmsub231ps
+# vfmsub132sd
+# vfmsub213sd
+# vfmsub231sd
+# vfmsub132ss
+# vfmsub213ss
+# vfmsub231ss
+
+# vfmsubadd132pd
+# vfmsubadd213pd
+# vfmsubadd231pd
+# vfmsubadd132ph
+# vfmsubadd213ph
+# vfmsubadd231ph
+# vfmsubadd132ps
+# vfmsubadd213ps
+# vfmsubadd231ps
+
+# vfnmadd132pd
+# vfnmadd213pd
+# vfnmadd231pd
+# vfnmadd132ps
+# vfnmadd213ps
+# vfnmadd231ps
+# vfnmadd132sd
+# vfnmadd213sd
+# vfnmadd231sd
+# vfnmadd132ss
+# vfnmadd213ss
+# vfnmadd231ss
+
+# vfnmsub132pd
+# vfnmsub213pd
+# vfnmsub231pd
+# vfnmsub132ps
+# vfnmsub213ps
+# vfnmsub231ps
+# vfnmsub132sd
+# vfnmsub213sd
+# vfnmsub231sd
+# vfnmsub132ss
+# vfnmsub213ss
+# vfnmsub231ss
+
+# -- ADX --
+# adcx
+# adox
+
+# -- MPX --
+# bndcl
+# bndcu
+# bndcn
+# bndldx
+# bndmk
+# bndmov
+# bndstx
+
+# -- ABM --
+# popcnt
+# lzcnt
+
+# -- BMI --
+# andn
+# bextr
+# blsi
+# blsmsk
+# blsr
+# mulx
+# tzcnt
+
+# -- BMI2 --
+# bzhi
+# pdep
+# pext
+# rorx
+# sarx
+# shlx
+# shrx
+
+# -- AES --
+# aesdec
+# aesdec128kl
+# aesdec256kl
+# aesdeclast
+# aesdecwide128kl
+# aesdecwide256kl
+# aesenc
+# aesenc128kl
+# aesenc256kl
+# aesenclast
+# aesencwide128kl
+# aesencwide256kl
+# aesimc
+# aeskeygenassist
+# encodekey128
+# encodekey256
+
+# -- SHA --
+# sha1rnds4
+# sha1nexte
+# sha1msg1
+# sha1msg2
+# sha256rnds2
+# sha256msg1
+# sha256msg2
+
+# -- CET_SS --
+# clrssbsy
+# setssbsy
+
+# incsspd
+# incsspq
+# wrussd
+# wrussq
+
+# rdsspd
+# rdsspq
+# wrssd
+# wrssq
+
+# rstorssp
+# saveprevssp
+
+# -- CET_IBD
+# endbr32
+# endbr64
+
+# -- SMAP --
+# clac
+# stac
+
+# -- CLDEMOTE --
+# cldemote
+
+# -- CLWB --
+# clwb
+
+# -- UINTR --
+# clui
+# stui
+# testui
+# senduipi
+# uiret
+
+# -- SERIALIZE --
+# serialize
+
+# -- INVPCID --
+# invpcid
+
+# -- ENQCMD --
+# enqcmd
+# enqcmds
+
+# -- GFNI --
+# gf2p8affineinvqb
+# gf2p8affineqb
+# gf2p8mulb
+
+# -- HRESET --
+# hreset
+
+# -- MONITOR --
+# monitor
+# mwait
+
+# -- WAITPKG --
+# tpause
+# umonitor
+# umwait
+
+# -- MOVBE --
+# movbe
+
+# -- MOVDIR --
+# movdiri
+# movdir64b
+
+# -- PCLMULDQ --
+# pclmuldq
+
+# -- PCONFIG --
+# pconfig
+
+# -- FSGSBASE --
+# rdfsbase
+# rdgsbase
+# wrfsbase
+# wrgsbase
+
+# -- RDPID --
+# rdpid
+
+# -- OSPKE --
+# rdpkru
+# wrpkru
+
+# -- RDRAND --
+# rdrand
+# rdseed
+
+# -- WBNOINVD --
+# wbnoinvd
+
+# -- XABORT --
+# xabort
+
+# -- HLE --
+# xacquire
+# xrelease
+
+# -- RTM --
+# xbegin
+# xend
+# xtest

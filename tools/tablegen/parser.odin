@@ -16,6 +16,18 @@ Marked_Entry :: struct {
     flags: map[string]string,
 }
 
+is_oct_digit :: proc(d: u8) -> bool {
+    return '0' <= d && d <= '7'
+}
+
+is_digit :: proc(d: u8) -> bool {
+    return '0' <= d && d <= '9'
+}
+
+from_digit :: proc(d: u8) -> u8 {
+    return d - '0'
+}
+
 mark_fields :: proc(line_no: int, fields: []string) -> (Marked_Entry, bool) {
     // Parse mnemonic
     idx := 0
@@ -47,8 +59,8 @@ mark_fields :: proc(line_no: int, fields: []string) -> (Marked_Entry, bool) {
             fmt.eprintfln("Line %d: Opcode RX needs to be one character in length", line_no)
             return {}, false
         }
-        if !('0' <= rx_spec[0] && rx_spec[0] <= '7') {
-            fmt.eprintfln("Line %d: Opcode RX needs to be a digit", line_no)
+        if !is_oct_digit(rx_spec[0]) {
+            fmt.eprintfln("Line %d: Opcode RX needs to be an octal digit", line_no)
             return {}, false
         }
         encoding_kind = .Rx_Extend
@@ -65,7 +77,7 @@ mark_fields :: proc(line_no: int, fields: []string) -> (Marked_Entry, bool) {
             fmt.eprintfln("Line %d: Expected register type or digit after mod/rm specification", line_no)
             return {}, false
         }
-        if len(rx_spec) == 1 && '0' <= rx_spec[0] && rx_spec[0] <= '7' {
+        if len(rx_spec) == 1 && is_oct_digit(rx_spec[0]) {
             fmt.eprintfln("Line %d: Opcode RX needs to be adjacent to opcode", line_no)
             return {}, false
         }
@@ -157,14 +169,34 @@ parse_int :: proc(line_no: int, value: string) -> (u8, bool) {
     return u8(value), true
 }
 
-parse_rx_kind :: proc(line_no: int, rx_kind: string) -> (RX_Kind, bool) {
-    switch rx_kind {
-    case "":  return .None, true
-    case "gr": return .GPReg, true
-    case "sr": return .SReg, true
+parse_rx_kind :: proc(line_no: int, rx_spec: string) -> (RX_Kind, u8, bool) {
+    idx := 0
+    for b in transmute([]byte) rx_spec {
+        if is_digit(b) {
+            break
+        }
+        idx += 1
     }
-    fmt.eprintfln("Line %d: Unknown RX register kind (%s)", line_no, rx_kind)
-    return .None, false
+    rx_kind_str := rx_spec[0:idx]
+    rx_value_str := rx_spec[idx:]
+    rx_kind: RX_Kind
+    switch rx_kind_str {
+    case "":  rx_kind = .None
+    case "gr": rx_kind = .GPReg
+    case "sr": rx_kind = .SReg
+    case:
+        fmt.eprintfln("Line %d: Unknown RX register kind (%s)", line_no, rx_kind_str)
+        return .None, REG_NONE, false
+    }
+    rx_value := REG_NONE
+    if len(rx_value_str) > 0 {
+        if len(rx_value_str) != 1 {
+            fmt.eprintfln("Line %d: RX register index must be one digit (%s)", line_no, rx_value_str)
+            return rx_kind, REG_NONE, false
+        }
+        rx_value = from_digit(rx_value_str[0])
+    }
+    return rx_kind, rx_value, true
 }
 
 parse_rm_kind :: proc(line_no: int, rm_kind: string) -> (RM_Kind, bool) {
@@ -176,19 +208,22 @@ parse_rm_kind :: proc(line_no: int, rm_kind: string) -> (RM_Kind, bool) {
     return .None, false
 }
 
-rx_to_rm :: proc(line_no: int, rx_kind: RX_Kind) -> (RM_Kind, bool) {
-    #partial switch rx_kind {
+rm_to_rx :: proc(line_no: int, rm_kind: RM_Kind) -> (RX_Kind, bool) {
+    switch rm_kind {
+    case .None: panic("Unknown RM register kind")
     case .GPReg: return .GPReg, true
     }
-    fmt.eprintfln("Line %d: RX kind %v has no equivalent rm kind", line_no, rx_kind)
-    return .None, false
+    unreachable()
 }
 
 parse_eop_kind :: proc(line_no: int, eop_kind: string) -> (EOP_Kind, bool) {
     switch eop_kind {
     case "": return .None, true
     case "imm": return .Imm, true
+    case "imm8": return .Imm8, true
     case "disp": return .Disp, true
+    case "fdisp": return .FDisp, true
+    case "ndisp": return .NDisp, true
     }
     fmt.eprintfln("Line %d: Unknown extra operand kind (%s)", line_no, eop_kind)
     return .None, false
@@ -199,10 +234,10 @@ parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Table_Entry, o
     rm_kind := RM_Kind.None
     rx_value := REG_NONE
     if m.rx_spec != "" {
-        if len(m.rx_spec) == 1 && '0' <= m.rx_spec[0] && m.rx_spec[0] <= '9' {
-            rx_value = u8(m.rx_spec[0] - '0')
+        if len(m.rx_spec) == 1 && is_digit(m.rx_spec[0]) {
+            rx_value = from_digit(m.rx_spec[0])
         } else {
-            rx_kind = parse_rx_kind(m.line_no, m.rx_spec) or_return
+            rx_kind, rx_value = parse_rx_kind(m.line_no, m.rx_spec) or_return
         }
     }
     flags := bit_set[Table_Entry_Flag] {}
@@ -211,19 +246,21 @@ parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Table_Entry, o
         switch flag {
         case "d": flags += {.D}
         case "rx":
-            if len(value) == 1 && '0' <= value[0] && value[0] <= '9' {
-                rx_value = value[0] - '0'
+            if len(value) == 1 && is_digit(value[0]) {
+                rx_value = from_digit(value[0])
             } else {
-                rx_kind = parse_rx_kind(m.line_no, value) or_return
+                rx_kind, rx_value = parse_rx_kind(m.line_no, value) or_return
             }
         case "rm": rm_kind = parse_rm_kind(m.line_no, value) or_return
         case "ds": ds = (parse_int(m.line_no, value) or_return)/8
         }
     }
     if rm_kind == RM_Kind.None {
-        rm_kind = rx_to_rm(m.line_no, rx_kind) or_return
+        rm_kind = .GPReg
     }
-    assert(rm_kind != RM_Kind.None)
+    if rx_kind == RX_Kind.None {
+        rx_kind = rm_to_rx(m.line_no, rm_kind) or_return
+    }
     eop_kind := parse_eop_kind(m.line_no, m.eop) or_return
     start_opcode := parse_byte(m.line_no, m.opcode) or_return
     end_opcode := start_opcode + (8 if m.opcode_rx else 1)
