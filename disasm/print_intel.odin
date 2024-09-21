@@ -77,7 +77,7 @@ print_intel_rm_op :: proc(w: io.Writer, rm: RM_Op) -> (err: io.Error) {
     case .None: unreachable()
     case .GPReg:
         io.write_string(w, gpreg_name(rm.size, rm.reg)) or_return
-    case .Mem_Addr_16, .Mem_Addr_32:
+    case .Mem_Addr_8, .Mem_Addr_16, .Mem_Addr_32:
         reg_size := u8(2) if rm.kind == .Mem_Addr_16 else 4
         io.write_byte(w, '[')
         np := 0

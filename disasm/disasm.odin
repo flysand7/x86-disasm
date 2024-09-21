@@ -52,7 +52,14 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
         idx += sz
     }
     eop: EOP
-    if stage1_entry.eop == .Imm {
+    switch stage1_entry.eop  {
+    case .None:
+    case .Imm8:
+        (len(bytes[idx:]) >= 1) or_return
+        imm := u64((cast(^u8) &bytes[idx])^)
+        eop = eop_imm(1, imm)
+        idx += 1
+    case .Imm:
         (len(bytes[idx:]) >= int(ds)) or_return
         imm: u64
         switch ds {
@@ -61,11 +68,41 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
             case 4: imm = u64((cast(^u32le) &bytes[idx])^)
             case: panic("Unknown data size")
         }
-        idx += int(ds)
         eop = eop_imm(ds, imm)
-    }
-    if stage1_entry.eop == .Disp {
-        (len(bytes[idx:]) >= int(ds)) or_return
+        idx += int(ds)
+    case .NDisp:
+        (len(bytes[idx:]) >= 1) or_return
+        disp := i32((cast(^u8) &bytes[idx])^)
+        idx += int(as)
+        implicit_rm = true
+        modrm = Parsed_ModRM {
+            size = 1,
+            base = REG_NONE,
+            index = REG_NONE,
+            scale = 1,
+            disp = disp,
+        }
+    case .FDisp:
+        (len(bytes[idx:]) >= 2+int(as)) or_return
+        seg := i32((cast(^i16le) &bytes[idx])^)
+        idx += 2
+        disp: i32
+        switch as {
+            case 2: disp = i32((cast(^i16le) &bytes[idx])^)
+            case 4: disp = i32((cast(^i32le) &bytes[idx])^)
+            case: panic("Unknown data size")
+        }
+        idx += int(as)
+        implicit_rm = true
+        modrm = Parsed_ModRM {
+            size = as,
+            base = REG_NONE,
+            index = REG_NONE,
+            scale = 1,
+            disp = disp,
+        }
+    case .Disp:
+        (len(bytes[idx:]) >= int(as)) or_return
         disp: i32
         switch as {
             case 2: disp = i32((cast(^i16le) &bytes[idx])^)
@@ -98,6 +135,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
     if stage1_entry.kind == .Mod_Rm || stage1_entry.kind == .Rx_Extend {
         switch modrm.size {
         case 0: rm = rm_op(encoding.rm_kind, ds, modrm_byte.rm)
+        case 8: rm = rm_mem8(modrm.disp)
         case 2: rm = rm_mem16(ds, modrm.base, modrm.index, modrm.disp)
         case 4: rm = rm_mem32(ds, modrm.base, modrm.index, modrm.scale, modrm.disp)
         case: unreachable()

@@ -97,6 +97,7 @@ rx_op :: proc(kind: RX_Op_Kind, size: u8, reg: u8) -> RX_Op {
 
 RM_Op_Kind :: enum u8 {
     None,
+    Mem_Addr_8,
     Mem_Addr_16,
     Mem_Addr_32,
     GPReg,
@@ -126,6 +127,17 @@ rm_disp :: proc(size: u8, disp: i32) -> RM_Op {
     return RM_Op {
         kind = .Mem_Addr_32,
         size = size,
+        base_reg = REG_NONE,
+        index_reg = REG_NONE,
+        scale = 1,
+        disp = disp,
+    }
+}
+
+rm_mem8 :: proc(disp: i32) -> RM_Op {
+    return RM_Op {
+        kind = .Mem_Addr_8,
+        size = 1,
         base_reg = REG_NONE,
         index_reg = REG_NONE,
         scale = 1,
