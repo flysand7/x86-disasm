@@ -79,11 +79,13 @@ main :: proc() {
     if "print" in options {
         value := options["print"]
         do_print_table = true
-        if mnemonic, ok := value.(string); ok {
-            print_mnemonic = mnemonic
-        } else {
-            fmt.eprintfln("The -print option doesn't take a key-value pair")
-            os.exit(2)
+        if value != nil {
+            if mnemonic, ok := value.(string); ok {
+                print_mnemonic = mnemonic
+            } else {
+                fmt.eprintfln("Bad format -print:<mnemonic> or just -print expected")
+                os.exit(2)
+            }
         }
     }
     if "line" in options {
@@ -96,7 +98,7 @@ main :: proc() {
             }
             print_line = parsed_line-1
         } else {
-            fmt.eprintfln("Bad format: -line:<number>")
+            fmt.eprintfln("Bad format: -line:<number> expected")
             os.exit(2)
         }
     }
@@ -114,7 +116,7 @@ main :: proc() {
             }
             print_opcode = parsed_opcode
         } else {
-            fmt.eprintfln("Bad format: -opcode:<byte>")
+            fmt.eprintfln("Bad format: -opcode:<byte> expected")
             os.exit(2)
         }
     }
