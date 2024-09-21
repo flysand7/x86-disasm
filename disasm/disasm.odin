@@ -92,8 +92,10 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
     }
     rx: RX_Op
     rm: RM_Op
-    if stage1_entry.kind == .Mod_Rm || stage1_entry.kind == .Rx_Extend {
+    if stage1_entry.kind == .Mod_Rm {
         rx = rx_op(encoding.rx_kind, ds, modrm_byte.rx)
+    }
+    if stage1_entry.kind == .Mod_Rm || stage1_entry.kind == .Rx_Extend {
         switch modrm.size {
         case 0: rm = rm_op(encoding.rm_kind, ds, modrm_byte.rm)
         case 2: rm = rm_mem16(ds, modrm.base, modrm.index, modrm.disp)
