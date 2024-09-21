@@ -23,6 +23,7 @@ Options:
       the table.txt file.
 `
 
+do_print_table := false
 print_mnemonic := ""
 print_line := -1
 print_opcode := -1
@@ -33,36 +34,29 @@ print_flags :: proc(flags: bit_set[Table_Entry_Flag]) {
     }
 }
 
-print_table :: proc(table: []Table_Entry) {
-    for entry in table {
-        line_matches := print_line == -1 || entry.src_line == print_line
-        mnemonic_matches := print_mnemonic == "" || entry.mnemonic == print_mnemonic
-        opcode_matches := print_opcode == -1 || entry.opcode == u8(print_opcode)
-        if line_matches && mnemonic_matches && opcode_matches {
-            fmt.printf("%s %.2x", entry.mnemonic, entry.opcode)
-            #partial switch entry.encoding_kind {
-            case .Mod_Rm:    fmt.printf("/")
-            case .Rx_Extend: fmt.printf("/%d", entry.rx_value)
-            case .Rx_Embed:  fmt.printf("^%d", entry.rx_value)
-            }
-            fmt.printf(" rx=%v", entry.rx_kind)
-            if entry.rx_value != REG_NONE {
-                if entry.encoding_kind == .Rx_Embed || entry.encoding_kind == .None {
-                    fmt.printf("(%v)", entry.rx_value)
-                } 
-            }
-            fmt.printf(" rm=%v", entry.rm_kind)
-            if entry.eop != .None {
-                fmt.printf(" eop=%v", entry.eop)
-            }
-            if entry.force_ds != DS_DEFAULT {
-                fmt.printf(" ds=%v", entry.force_ds)
-            }
-            fmt.printf(" ")
-            print_flags(entry.flags)
-            fmt.println()
-        }
+print_entry :: proc(entry: Table_Entry) {
+    fmt.printf("%s %.2x", entry.mnemonic, entry.opcode)
+    #partial switch entry.encoding_kind {
+    case .Mod_Rm:    fmt.printf("/")
+    case .Rx_Extend: fmt.printf("/%d", entry.rx_value)
+    case .Rx_Embed:  fmt.printf("^%d", entry.rx_value)
     }
+    fmt.printf(" rx=%v", entry.rx_kind)
+    if entry.rx_value != REG_NONE {
+        if entry.encoding_kind == .Rx_Embed || entry.encoding_kind == .None {
+            fmt.printf("(%v)", entry.rx_value)
+        } 
+    }
+    fmt.printf(" rm=%v", entry.rm_kind)
+    if entry.eop != .None {
+        fmt.printf(" eop=%v", entry.eop)
+    }
+    if entry.force_ds != DS_DEFAULT {
+        fmt.printf(" ds=%v", entry.force_ds)
+    }
+    fmt.printf(" ")
+    print_flags(entry.flags)
+    fmt.println()
 }
 
 main :: proc() {
@@ -71,7 +65,6 @@ main :: proc() {
         fmt.eprintfln(HELP_TEMPLATE, os.args[0])
         os.exit(2)
     }
-    do_print_table := false
     if "help" in options {
         fmt.printfln(HELP_TEMPLATE, os.args[0])
         os.exit(0)
@@ -128,9 +121,6 @@ main :: proc() {
         os.exit(1)
     }
     table := parse_table(string(table_src))
-    if do_print_table {
-        print_table(table)
-    }
     if !output_tables(table, out_path){
         os.exit(1)
     }

@@ -50,6 +50,9 @@ output_tables :: proc(table: []Table_Entry, filename: string) -> (bool) {
             mnemonic_counter += 1
         }
         mnemonic_idx := mnemonic_table[entry.mnemonic]
+        stage1_idx := -1
+        stage2_idx := -1
+        rx_ext_idx := -1
         if entry.encoding_kind == .Rx_Extend {
             if stage1_encodings[entry.opcode].entry_idx == 0 {
                 stage1_encodings[entry.opcode] = Stage1_Encoding {
@@ -63,6 +66,7 @@ output_tables :: proc(table: []Table_Entry, filename: string) -> (bool) {
             stage1 := stage1_encodings[entry.opcode]
             exts := &rx_extensions[stage1.entry_idx]
             exts[entry.rx_value] = len(stage2_encodings)
+            rx_ext_idx = len(rx_extensions) - 1
         } else {
             stage1_encodings[entry.opcode] = Stage1_Encoding {
                 entry_idx = len(stage2_encodings),
@@ -71,6 +75,7 @@ output_tables :: proc(table: []Table_Entry, filename: string) -> (bool) {
                 force_ds = entry.force_ds,
             }
         }
+        stage1_idx = int(entry.opcode)
         append(&stage2_encodings, Encoding {
             mnemonic = entry.mnemonic,
             flags = entry.flags,
@@ -78,6 +83,24 @@ output_tables :: proc(table: []Table_Entry, filename: string) -> (bool) {
             rx_kind = entry.rx_kind,
             rx_value = entry.rx_value,
         })
+        stage2_idx = len(stage2_encodings) - 1
+        if do_print_table {
+            line_matches := print_line == -1 || entry.src_line == print_line
+            mnemonic_matches := print_mnemonic == "" || entry.mnemonic == print_mnemonic
+            opcode_matches := print_opcode == -1 || entry.opcode == u8(print_opcode)
+            if line_matches && mnemonic_matches && opcode_matches {
+                print_entry(entry)
+                if stage1_idx != -1 {
+                    fmt.printfln("+-> Stage1 [%#.2x] = %v", stage1_idx, stage1_encodings[stage1_idx])
+                }
+                if rx_ext_idx != -1 {
+                    fmt.printfln("+-> RX Ext: [%d] = %v", rx_ext_idx, rx_extensions[rx_ext_idx])
+                }
+                if stage2_idx != -1 {
+                    fmt.printfln("+-> Stage2: [%d] = %v", stage1_idx, stage2_encodings[stage2_idx])
+                }
+            }
+        }
     }
     fmt.sbprintfln(&builder, "package %s", PACKAGE)
     fmt.sbprintfln(&builder, "when !X86_USE_STUB {{")
