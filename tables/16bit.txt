@@ -224,53 +224,56 @@ push 1e +rx=sr3
 popf  9d
 pushf 9c
 
+## TODO(flysand): Opcodes d2 and d3 have an implicit RX operand which is the
+## CX register. Right now it can't be represented by the table, because it
+## interferes with RX opcode extension.
 rol d0/0 +ds=8
-rol d2/0 +ds=8 +rx=1
-rol c0/0 imm8 +ds=8
 rol d1/0
-rol d3/0 +rx=1
+rol d2/0 +ds=8
+rol d3/0
+rol c0/0 imm8 +ds=8
 rol c1/0 imm8
 
-rol d0/1 +ds=8
-rol d2/1 +ds=8 +rx=1
-rol c0/1 imm8 +ds=8
-rol d1/1
-rol d3/1 +rx=1
-rol c1/1 imm8
+ror d0/1 +ds=8
+ror d1/1
+ror d2/1 +ds=8
+ror d3/1
+ror c0/1 imm8 +ds=8
+ror c1/1 imm8
 
 rcl d0/2 +ds=8
-rcl d2/2 +ds=8 +rx=1
-rcl c0/2 imm8 +ds=8
 rcl d1/2
-rcl d3/2 +rx=1
+rcl d2/2 +ds=8
+rcl d3/2
+rcl c0/2 imm8 +ds=8
 rcl c1/2 imm8
 
 rcr d0/3 +ds=8
-rcr d2/3 +ds=8 +rx=1
-rcr c0/3 imm8 +ds=8
 rcr d1/3
-rcr d3/3 +rx=1
+rcr d2/3 +ds=8
+rcr d3/3
+rcr c0/3 imm8 +ds=8
 rcr c1/3 imm8
 
 sal d0/4 +ds=8
-sal d2/4 +ds=8 +rx=1
-sal c0/4 imm8 +ds=8
 sal d1/4
-sal d3/4 +rx=1
+sal d2/4 +ds=8
+sal d3/4
+sal c0/4 imm8 +ds=8
 sal c1/4 imm8
 
 shr d0/5 +ds=8
-shr d2/5 +ds=8 +rx=1
-shr c0/5 imm8 +ds=8
 shr d1/5
-shr d3/5 +rx=1
+shr d2/5 +ds=8
+shr d3/5
+shr c0/5 imm8 +ds=8
 shr c1/5 imm8
 
 sar d0/7 +ds=8
-sar d2/7 +ds=8 +rx=1
-sar c0/7 imm8 +ds=8
 sar d1/7
-sar d3/7 +rx=1
+sar d2/7 +ds=8
+sar d3/7
+sar c0/7 imm8 +ds=8
 sar c1/7 imm8
 
 rep f3
