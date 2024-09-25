@@ -264,8 +264,8 @@ parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Table_Entry, o
     }
     eop_kind := parse_eop_kind(m.line_no, m.eop) or_return
     start_opcode := parse_byte(m.line_no, m.opcode) or_return
-    end_opcode := start_opcode + (8 if m.opcode_rx else 1)
-    for opcode in start_opcode ..< end_opcode {
+    end_opcode := start_opcode + (7 if m.opcode_rx else 0)
+    for opcode in start_opcode ..= end_opcode {
         rx_value = opcode - start_opcode if m.opcode_rx else rx_value
         entry := Table_Entry {
             src_line = m.line_no,

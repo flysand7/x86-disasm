@@ -40,7 +40,7 @@ output_tables :: proc(table: []Table_Entry, filename: string) -> (bool) {
     builder: strings.Builder = ---
     mnemonic_counter := 0
     mnemonic_table := make(map[string]int)
-    stage1_encodings := make([]Stage1_Encoding, 0xff)
+    stage1_encodings := make([]Stage1_Encoding, 0x100)
     rx_extensions := make([dynamic][8]int, 1)
     stage2_encodings := make([dynamic]Encoding, 1)
     strings.builder_init(&builder)
