@@ -48,14 +48,14 @@ function build_tablegen(options)
     return odin_build('table-gen', 'tools/tablegen', options)
 end
 
-function generate_tables()
+function run_tablegen(table, options)
     local tablegen_path
     if is_windows() then
         tablegen_path = 'table-gen'
     else
         tablegen_path = './table-gen'
     end
-    run_command(tablegen_path..' ./tables/16bit.txt disasm/table_gen.odin')
+    run_command(tablegen_path .. ' ' .. table .. ' disasm/table_gen.odin ' .. options)
 end
 
 function build_disasm(flags)
@@ -64,6 +64,8 @@ function build_disasm(flags)
 end
 
 -------------------------------------------------------------------------------
+
+local TABLE_PATH = './tables/16bit.txt'
 
 local command = 'build'
 local build_mode = 'debug'
@@ -89,13 +91,13 @@ if command == 'build' then
         odin_flags = odin_flags .. ' -debug'
     end
     build_tablegen(odin_flags)
-    generate_tables()
+    run_tablegen(TABLE_PATH, '')
     build_disasm(odin_flags)
 elseif command == 'test' then
     local odin_flags = ''
     odin_flags = odin_flags .. ' -debug'
     build_tablegen(odin_flags)
-    generate_tables()
+    run_tablegen(TABLE_PATH, '')
     build_disasm(odin_flags)
     assemble('mov16')
     disasm_run('tmp/bin/mov16', '-cpu:16')
@@ -103,10 +105,24 @@ elseif command == 'test-inst' then
     local odin_flags = ''
     odin_flags = odin_flags .. ' -debug'
     build_tablegen(odin_flags)
-    generate_tables()
+    run_tablegen(TABLE_PATH, '')
     build_disasm(odin_flags)
     assemble('inst')
     disasm_run('tmp/bin/inst', '-cpu:16')
+elseif command == 'inspect' then
+    build_tablegen('-debug')
+    local tablegen_flags = ''
+    for i, flag in pairs(table.slice(arg, 2, #arg)) do
+        tablegen_flags = tablegen_flags .. ' ' .. flag
+    end
+    run_tablegen(TABLE_PATH, tablegen_flags)
+elseif command == 'inspect-inst' then
+    build_tablegen('-debug')
+    local tablegen_flags = ''
+    for i, flag in pairs(table.slice(arg, 2, #arg)) do
+        tablegen_flags = tablegen_flags .. ' ' .. flag
+    end
+    run_tablegen('./tables/entry.txt', tablegen_flags)
 else
     print('== INVALID COMMAND: "' .. command .. '"')
 end
