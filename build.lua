@@ -65,7 +65,7 @@ end
 
 -------------------------------------------------------------------------------
 
-local TABLE_PATH = './tables/16bit.txt'
+local TABLE_PATH = './tables/encodings.txt'
 
 local command = 'build'
 local build_mode = 'debug'
