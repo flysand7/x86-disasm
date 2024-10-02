@@ -5,22 +5,24 @@ import "core:strings"
 import "core:fmt"
 import "core:unicode"
 
+import "common:table"
+
 TAB  :: "    "
 PACKAGE :: "x86_disasm"
 
 Stage1_Encoding :: struct {
-    kind: Encoding_Kind,
+    kind: table.Encoding_Kind,
     entry_idx: int,
-    eop: EOP_Kind,
+    eop: table.EOP_Kind,
     force_ds: u8,
 }
 
 Encoding :: struct {
     mnemonic: string,
-    flags: bit_set[Table_Entry_Flag],
+    flags: bit_set[table.Flag],
     rx_value: u8,
-    rx_kind: RX_Kind,
-    rm_kind: RM_Kind,
+    rx_kind: table.RX_Kind,
+    rm_kind: table.RM_Kind,
 }
 
 capitalize_mnemonic :: proc(mnemonic: string) -> string {
@@ -36,7 +38,7 @@ capitalize_mnemonic :: proc(mnemonic: string) -> string {
     )
 }
 
-output_tables :: proc(table: []Table_Entry, filename: string) -> (bool) {
+output_tables :: proc(table: []table.Entry, filename: string) -> (bool) {
     builder: strings.Builder = ---
     mnemonic_counter := 0
     mnemonic_table := make(map[string]int)

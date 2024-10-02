@@ -1,137 +1,11 @@
-package tablegen
+package table
 
 import "core:strings"
 import "core:strconv"
 import "core:fmt"
 import "core:os"
 
-Marked_Entry :: struct {
-    line_no: int,
-    mnemonic: string,
-    opcode: string,
-    encoding_kind: Encoding_Kind,
-    opcode_rx: bool,
-    rx_spec: string,
-    eop: string,
-    flags: map[string]string,
-}
-
-is_oct_digit :: proc(d: u8) -> bool {
-    return '0' <= d && d <= '7'
-}
-
-is_digit :: proc(d: u8) -> bool {
-    return '0' <= d && d <= '9'
-}
-
-from_digit :: proc(d: u8) -> u8 {
-    return d - '0'
-}
-
-mark_fields :: proc(line_no: int, fields: []string) -> (Marked_Entry, bool) {
-    // Parse mnemonic
-    idx := 0
-    if idx >= len(fields) {
-        fmt.eprintfln("Line %d: Expected mnemonic", line_no)
-        return {}, false
-    }
-    mnemonic := fields[idx]
-    idx += 1
-    // Parse opcode byte
-    opcode := fields[idx]
-    encoding_kind := Encoding_Kind.None
-    opcode_rx := false
-    if opcode[len(opcode)-1] == '+' {
-        opcode_rx = true
-        opcode = opcode[0:len(opcode)-1]
-        encoding_kind = .Rx_Embed
-    }
-    rx_spec := ""
-    opcode_slash := strings.index_byte(opcode, '/')
-    if opcode_slash != -1 {
-        rx_spec = opcode[opcode_slash+1:]
-        opcode = opcode[0:opcode_slash]
-        if encoding_kind != .None {
-            fmt.eprintfln("Line %d: Cannot specify RX extend and RX embed in the same opcode", line_no)
-            return {}, false
-        }
-        if len(rx_spec) != 1 {
-            fmt.eprintfln("Line %d: Opcode RX needs to be one character in length", line_no)
-            return {}, false
-        }
-        if !is_oct_digit(rx_spec[0]) {
-            fmt.eprintfln("Line %d: Opcode RX needs to be an octal digit", line_no)
-            return {}, false
-        }
-        encoding_kind = .Rx_Extend
-    }
-    idx += 1
-    // Parse mod/rm specification
-    if idx < len(fields) && fields[idx][0] == '/' {
-        rx_spec = fields[idx][1:]
-        if encoding_kind != .None {
-            fmt.eprintfln("Line %d: Conflicting mod/rm behaviors", line_no)
-            return {}, false
-        }
-        if len(rx_spec) == 0 {
-            fmt.eprintfln("Line %d: Expected register type or digit after mod/rm specification", line_no)
-            return {}, false
-        }
-        if len(rx_spec) == 1 && is_oct_digit(rx_spec[0]) {
-            fmt.eprintfln("Line %d: Opcode RX needs to be adjacent to opcode", line_no)
-            return {}, false
-        }
-        encoding_kind = .Mod_Rm
-        idx += 1
-    }
-    // Parse extra operand
-    eop := ""
-    if idx < len(fields) && fields[idx][0] != '+' {
-        eop = fields[idx]
-        idx += 1
-    }
-    // Parse flags
-    flags := make(map[string]string)
-    for field in fields[idx:] {
-        if field[0] != '+' {
-            fmt.eprintfln("Line %d: Flags are expected to start with '+' (%s is not a valid flag)", line_no, field)
-            return {}, false
-        }
-        eq_pos := strings.index_byte(field, '=')
-        if eq_pos != -1 {
-            name := field[1:eq_pos]
-            value := field[eq_pos+1:]
-            if len(name) == 0 {
-                fmt.eprintfln("Line %d: Flags must have a name (%s)", line_no, field)
-                return {}, false
-            }
-            if len(value) == 0 {
-                fmt.eprintfln("Line %d: Expected flag value (%s)", line_no, field)
-                return {}, false
-            }
-            flags[name] = value
-        } else {
-            name := field[1:]
-            if len(name) == 0 {
-                fmt.eprintfln("Line %d: Flags must have a name (%s)", line_no, field)
-                return {}, false
-            }
-            flags[name] = name
-        }
-    }
-    entry := Marked_Entry {
-        line_no = line_no,
-        mnemonic = mnemonic,
-        opcode = opcode,
-        opcode_rx = opcode_rx,
-        encoding_kind = encoding_kind,
-        rx_spec = rx_spec,
-        eop = eop,
-        flags = flags,
-    }
-    return entry, true
-}
-
+@(private)
 parse_byte :: proc(line_no: int, byte_str: string) -> (u8, bool) {
     if len(byte_str) != 2 {
         fmt.eprintfln("Line %d: Byte needs to be 2 characters in length (%s)", line_no, byte_str)
@@ -156,6 +30,7 @@ parse_byte :: proc(line_no: int, byte_str: string) -> (u8, bool) {
     return hi<<4 | lo, true
 }
 
+@(private)
 parse_int :: proc(line_no: int, value: string) -> (u8, bool) {
     value, ok := strconv.parse_int(value)
     if !ok {
@@ -169,6 +44,7 @@ parse_int :: proc(line_no: int, value: string) -> (u8, bool) {
     return u8(value), true
 }
 
+@(private)
 parse_rx_kind :: proc(line_no: int, rx_spec: string) -> (RX_Kind, u8, bool) {
     idx := 0
     for b in transmute([]byte) rx_spec {
@@ -199,6 +75,7 @@ parse_rx_kind :: proc(line_no: int, rx_spec: string) -> (RX_Kind, u8, bool) {
     return rx_kind, rx_value, true
 }
 
+@(private)
 parse_rm_kind :: proc(line_no: int, rm_kind: string) -> (RM_Kind, bool) {
     switch rm_kind {
     case "": return .None, true
@@ -208,6 +85,7 @@ parse_rm_kind :: proc(line_no: int, rm_kind: string) -> (RM_Kind, bool) {
     return .None, false
 }
 
+@(private)
 rm_to_rx :: proc(line_no: int, rm_kind: RM_Kind) -> (RX_Kind, bool) {
     switch rm_kind {
     case .None: panic("Unknown RM register kind")
@@ -216,6 +94,7 @@ rm_to_rx :: proc(line_no: int, rm_kind: RM_Kind) -> (RX_Kind, bool) {
     unreachable()
 }
 
+@(private)
 parse_eop_kind :: proc(line_no: int, eop_kind: string) -> (EOP_Kind, bool) {
     switch eop_kind {
     case "": return .None, true
@@ -230,7 +109,8 @@ parse_eop_kind :: proc(line_no: int, eop_kind: string) -> (EOP_Kind, bool) {
     return .None, false
 }
 
-parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Table_Entry, ok: bool) {
+@(private)
+parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Entry, ok: bool) {
     rx_kind := RX_Kind.GPReg
     rm_kind := RM_Kind.None
     rx_value := REG_NONE
@@ -241,7 +121,7 @@ parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Table_Entry, o
             rx_kind, rx_value = parse_rx_kind(m.line_no, m.rx_spec) or_return
         }
     }
-    flags := bit_set[Table_Entry_Flag] {}
+    flags := bit_set[Flag] {}
     ds := DS_DEFAULT
     for flag, value in m.flags {
         switch flag {
@@ -267,7 +147,7 @@ parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Table_Entry, o
     end_opcode := start_opcode + (7 if m.opcode_rx else 0)
     for opcode in start_opcode ..= end_opcode {
         rx_value = opcode - start_opcode if m.opcode_rx else rx_value
-        entry := Table_Entry {
+        entry := Entry {
             src_line = m.line_no,
             mnemonic = m.mnemonic,
             opcode = opcode,
@@ -284,10 +164,10 @@ parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Table_Entry, o
     return entries, true
 }
 
-parse_table :: proc(table: string) -> []Table_Entry {
+parse :: proc(table: string) -> []Entry {
     table := table
     line_no := 0
-    entries := make([dynamic]Table_Entry)
+    entries := make([dynamic]Entry)
     for line in strings.split_lines_iterator(&table) {
         defer line_no += 1
         line := strings.trim(line, " ")

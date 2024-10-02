@@ -5,6 +5,7 @@ import "core:os"
 import "core:strconv"
 
 import "common:arg"
+import "common:table"
 
 HELP_TEMPLATE ::
 `tablegen: Table generator tool for x86-disasm.
@@ -31,13 +32,13 @@ print_mnemonic := ""
 print_line := -1
 print_opcode := -1
 
-print_flags :: proc(flags: bit_set[Table_Entry_Flag]) {
+print_flags :: proc(flags: bit_set[table.Flag]) {
     if .D in flags {
         fmt.printf("+d")
     }
 }
 
-print_entry :: proc(entry: Table_Entry) {
+print_entry :: proc(entry: table.Entry) {
     fmt.printf("%s %.2x", entry.mnemonic, entry.opcode)
     #partial switch entry.encoding_kind {
     case .Mod_Rm:    fmt.printf("/")
@@ -45,7 +46,7 @@ print_entry :: proc(entry: Table_Entry) {
     case .Rx_Embed:  fmt.printf("^%d", entry.rx_value)
     }
     fmt.printf(" rx=%v", entry.rx_kind)
-    if entry.rx_value != REG_NONE {
+    if entry.rx_value != table.REG_NONE {
         if entry.encoding_kind == .Rx_Embed || entry.encoding_kind == .None {
             fmt.printf("(%v)", entry.rx_value)
         } 
@@ -54,7 +55,7 @@ print_entry :: proc(entry: Table_Entry) {
     if entry.eop != .None {
         fmt.printf(" eop=%v", entry.eop)
     }
-    if entry.force_ds != DS_DEFAULT {
+    if entry.force_ds != table.DS_DEFAULT {
         fmt.printf(" ds=%v", entry.force_ds)
     }
     fmt.printf(" ")
@@ -123,8 +124,8 @@ main :: proc() {
         fmt.eprintfln("Error reading '%s'", table_path)
         os.exit(1)
     }
-    table := parse_table(string(table_src))
-    if !output_tables(table, out_path){
+    parsed_table := table.parse(string(table_src))
+    if !output_tables(parsed_table, out_path){
         os.exit(1)
     }
 }

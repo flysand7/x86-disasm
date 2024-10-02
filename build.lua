@@ -45,7 +45,7 @@ function disasm_run(file, options)
 end
 
 function build_tablegen(options)
-    return odin_build('table-gen', 'tools/tablegen', '-collection:common=common ' .. options)
+    return odin_build('table-gen', 'tools/table_gen', '-collection:common=common ' .. options)
 end
 
 function run_tablegen(table, options)

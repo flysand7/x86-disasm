@@ -1,4 +1,4 @@
-package tablegen
+package table
 
 DS_DEFAULT :: u8(0xff)
 
@@ -33,21 +33,21 @@ EOP_Kind :: enum {
     FAddr,
 }
 
-Table_Entry_Flag :: enum {
+Flag :: enum {
     D,
 }
 
 Encoding_Kind :: enum {
     None,
     Rx_Extend, // bb /[n]
-    Rx_Embed,  // bb^
+    Rx_Embed,  // bb+
     Mod_Rm,    // bb /rk
 }
 
-Table_Entry :: struct {
+Entry :: struct {
     src_line: int,
     mnemonic: string,
-    flags: bit_set[Table_Entry_Flag],
+    flags: bit_set[Flag],
     force_ds: u8,
     opcode: u8,
     encoding_kind: Encoding_Kind,
