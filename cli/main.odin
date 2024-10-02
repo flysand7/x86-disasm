@@ -37,7 +37,7 @@ Options:
 -function:<name>
     Disassemble a specific function. If this option is not specified, then
     the the entire section is disassembled. This option can not be used
-    together with -section option. 
+    together with -section option.
 `
 
 File_Format :: enum {
