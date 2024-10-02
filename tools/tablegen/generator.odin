@@ -4,23 +4,26 @@ import "core:fmt"
 import "core:os"
 import "core:strconv"
 
-HELP_TEMPLATE ::
+import "common:arg"
 
+HELP_TEMPLATE ::
 `tablegen: Table generator tool for x86-disasm.
+
 Usage:
   %s <table.txt> <output.odin> [options...]
+
 Options:
-  -help
-      Print a help message
-  -print
-      Print the parsed table to stdout.
-  -print:<mnemonic>
-      Print all entries of the parsed table for specified mnemonic.
-  -opcode:<byte>
-      Print all entries with the specified first opcode byte.
-  -line:<number>
-      Print the entry of the parsed table described on the specified line of
-      the table.txt file.
+-help
+    Print a help message
+-print
+    Print the parsed table to stdout.
+-print:<mnemonic>
+    Print all entries of the parsed table for specified mnemonic.
+-opcode:<byte>
+    Print all entries with the specified first opcode byte.
+-line:<number>
+    Print the entry of the parsed table described on the specified line of
+    the table.txt file.
 `
 
 do_print_table := false
@@ -60,7 +63,7 @@ print_entry :: proc(entry: Table_Entry) {
 }
 
 main :: proc() {
-    args, options := parse_args(os.args)
+    args, options := arg.parse(os.args)
     if len(args) < 2 {
         fmt.eprintfln(HELP_TEMPLATE, os.args[0])
         os.exit(2)

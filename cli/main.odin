@@ -5,35 +5,39 @@ import "core:os"
 import "format"
 import "../disasm"
 
+import "common:arg"
+
 HELP_TEMPLATE ::
 `x86-disasm: An x86 disassembler.
+
 Usage:
-  %s <file> [options...]
+    %s <file> [options...]
+
 Options:
-  -help
-      Print a help message
-  -verbose
-      Print verbose messages
-  -format:<format>
-      Specify the format of the input file. Options:
-        auto - Auto-detect a format (the default).
-        elf  - ELF file (Linux relocatable files, shared objects, executables)
-        pe   - PE file (Windows executables and shared objects)
-        coff - COFF file (Windows relocatable files)
-        raw  - Binary file containing assembly.
-  -cpu:<bits>
-      Specify the CPU Mode. Options:
-        auto - Auto-detect using the file format (default).
-        16   - A 16-bit CPU mode.
-        32   - A 32-bit CPU mode.
-        64   - A 64-bit CPU mode.
-  -section:<name>
-      Disassemble a specific section. If this option is not specified, then
-      .text (the default code section) is disassembled.
-  -function:<name>
-      Disassemble a specific function. If this option is not specified, then
-      the the entire section is disassembled. This option can not be used
-      together with -section option. 
+-help
+    Print a help message
+-verbose
+    Print verbose messages
+-format:<format>
+    Specify the format of the input file. Options:
+    * auto - Auto-detect a format (the default).
+    * elf  - ELF file (Linux relocatable files, shared objects, executables)
+    * pe   - PE file (Windows executables and shared objects)
+    * coff - COFF file (Windows relocatable files)
+    * raw  - Binary file containing assembly.
+-cpu:<bits>
+    Specify the CPU Mode. Options:
+    * auto - Auto-detect using the file format (default).
+    * 16   - A 16-bit CPU mode.
+    * 32   - A 32-bit CPU mode.
+    * 64   - A 64-bit CPU mode.
+-section:<name>
+    Disassemble a specific section. If this option is not specified, then
+    .text (the default code section) is disassembled.
+-function:<name>
+    Disassemble a specific function. If this option is not specified, then
+    the the entire section is disassembled. This option can not be used
+    together with -section option. 
 `
 
 File_Format :: enum {
@@ -54,7 +58,7 @@ verbose_print := false
 
 main :: proc() {
     mb_input_path := Maybe(string) {}
-    args, options := parse_args(os.args[1:])
+    args, options := arg.parse(os.args[1:])
     if len(args) == 0 {
         fmt.eprintfln(HELP_TEMPLATE, os.args[0])
         os.exit(2)
