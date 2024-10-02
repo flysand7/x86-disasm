@@ -8,7 +8,7 @@ import "common:arg"
 import "common:table"
 
 HELP_TEMPLATE ::
-`tablegen: Table generator tool for x86-disasm.
+`table-gen: Table generator tool for x86-disasm.
 
 Usage:
   %s <table.txt> <output.odin> [options...]
@@ -31,37 +31,6 @@ do_print_table := false
 print_mnemonic := ""
 print_line := -1
 print_opcode := -1
-
-print_flags :: proc(flags: bit_set[table.Flag]) {
-    if .D in flags {
-        fmt.printf("+d")
-    }
-}
-
-print_entry :: proc(entry: table.Entry) {
-    fmt.printf("%s %.2x", entry.mnemonic, entry.opcode)
-    #partial switch entry.encoding_kind {
-    case .Mod_Rm:    fmt.printf("/")
-    case .Rx_Extend: fmt.printf("/%d", entry.rx_value)
-    case .Rx_Embed:  fmt.printf("^%d", entry.rx_value)
-    }
-    fmt.printf(" rx=%v", entry.rx_kind)
-    if entry.rx_value != table.REG_NONE {
-        if entry.encoding_kind == .Rx_Embed || entry.encoding_kind == .None {
-            fmt.printf("(%v)", entry.rx_value)
-        } 
-    }
-    fmt.printf(" rm=%v", entry.rm_kind)
-    if entry.eop != .None {
-        fmt.printf(" eop=%v", entry.eop)
-    }
-    if entry.force_ds != table.DS_DEFAULT {
-        fmt.printf(" ds=%v", entry.force_ds)
-    }
-    fmt.printf(" ")
-    print_flags(entry.flags)
-    fmt.println()
-}
 
 main :: proc() {
     args, options := arg.parse(os.args)

@@ -34,7 +34,12 @@ function assemble(file)
     run_command('nasm ' .. in_file .. ' -o '..out_file)
 end
 
-function disasm_run(file, options)
+function build_disasm(flags)
+    flags = flags .. ' -define:X86_USE_STUB=false'
+    return odin_build('x86-disasm', 'cli', '-collection:common=common ' .. flags)
+end
+
+function run_disasm(file, options)
     local disasm_path
     if is_windows() then
         disasm_path = 'x86-disasm'
@@ -58,9 +63,18 @@ function run_tablegen(table, options)
     run_command(tablegen_path .. ' ' .. table .. ' disasm/table_gen.odin ' .. options)
 end
 
-function build_disasm(flags)
-    flags = flags .. ' -define:X86_USE_STUB=false'
-    return odin_build('x86-disasm', 'cli', '-collection:common=common ' .. flags)
+function build_table_inspect(options)
+    return odin_build('table-inspect', 'tools/table_inspect', '-collection:common=common ' .. options)
+end
+
+function run_table_inspect(table, options)
+    local tablegen_path
+    if is_windows() then
+        tablegen_path = 'table-inspect'
+    else
+        tablegen_path = './table-inspect'
+    end
+    run_command(tablegen_path .. ' ' .. table .. options)
 end
 
 -------------------------------------------------------------------------------
@@ -100,7 +114,7 @@ elseif command == 'test' then
     run_tablegen(TABLE_PATH, '')
     build_disasm(odin_flags)
     assemble('mov16')
-    disasm_run('tmp/bin/mov16', '-cpu:16')
+    run_disasm('tmp/bin/mov16', '-cpu:16')
 elseif command == 'test-inst' then
     local odin_flags = ''
     odin_flags = odin_flags .. ' -debug'
@@ -108,21 +122,21 @@ elseif command == 'test-inst' then
     run_tablegen(TABLE_PATH, '')
     build_disasm(odin_flags)
     assemble('inst')
-    disasm_run('tmp/bin/inst', '-cpu:16')
+    run_disasm('tmp/bin/inst', '-cpu:16')
 elseif command == 'inspect' then
-    build_tablegen('-debug')
+    build_table_inspect('-debug')
     local tablegen_flags = ''
     for i, flag in pairs(table.slice(arg, 2, #arg)) do
         tablegen_flags = tablegen_flags .. ' ' .. flag
     end
-    run_tablegen(TABLE_PATH, tablegen_flags)
+    run_table_inspect(TABLE_PATH, tablegen_flags)
 elseif command == 'inspect-inst' then
-    build_tablegen('-debug')
+    build_table_inspect('-debug')
     local tablegen_flags = ''
     for i, flag in pairs(table.slice(arg, 2, #arg)) do
         tablegen_flags = tablegen_flags .. ' ' .. flag
     end
-    run_tablegen('./tables/entry.txt', tablegen_flags)
+    run_table_inspect('./tables/entry.txt', tablegen_flags)
 else
     print('== INVALID COMMAND: "' .. command .. '"')
 end
