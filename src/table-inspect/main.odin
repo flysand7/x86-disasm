@@ -86,7 +86,7 @@ main :: proc() {
             fmt.printfln("+---------------------------------------------+")
             table.print_entry_detailed(entry)
             stage1 := mt.s1_table[entry.opcode]
-            stage2: table.Encoding
+            stage2: table.Stage2_Encoding
             stage2_idx := -1
             rx_stage: []int
             rx_stage_idx := -1

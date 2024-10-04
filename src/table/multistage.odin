@@ -8,7 +8,7 @@ Stage1_Encoding :: struct {
     force_ds: u8,
 }
 
-Encoding :: struct {
+Stage2_Encoding :: struct {
     mnemonic: string,
     flags: Flags,
     rx_value: u8,
@@ -21,7 +21,7 @@ Multistage_Tables :: struct {
     mnemonic_table: map[string]int,
     s1_table: []Stage1_Encoding,
     rx_table: [dynamic][8]int,
-    s2_table: [dynamic]Encoding,
+    s2_table: [dynamic]Stage2_Encoding,
 }
 
 mt_init :: proc(mt: ^Multistage_Tables) {
@@ -29,7 +29,7 @@ mt_init :: proc(mt: ^Multistage_Tables) {
     mt.mnemonic_table = make(map[string]int)
     mt.s1_table = make([]Stage1_Encoding, 0x100)
     mt.rx_table = make([dynamic][8]int, 1)
-    mt.s2_table = make([dynamic]Encoding, 1)
+    mt.s2_table = make([dynamic]Stage2_Encoding, 1)
 }
 
 mt_mnemonic :: proc(mt: ^Multistage_Tables, mnemonic: string) -> int {
@@ -48,9 +48,9 @@ s1_present :: proc(s1: ^Stage1_Encoding) -> bool {
     return s1.entry_idx != 0
 }
 
-mt_add_s2 :: proc(mt: ^Multistage_Tables) -> (^Encoding, int) {
+mt_add_s2 :: proc(mt: ^Multistage_Tables) -> (^Stage2_Encoding, int) {
     idx := len(mt.s2_table)
-    append(&mt.s2_table, Encoding {})
+    append(&mt.s2_table, Stage2_Encoding {})
     return &mt.s2_table[idx], idx
 }
 
