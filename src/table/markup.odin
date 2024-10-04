@@ -4,6 +4,7 @@ package table
 import "core:fmt"
 import "core:strings"
 
+@(private)
 Marked_Entry :: struct {
     line_no: int,
     mnemonic: string,
@@ -15,6 +16,7 @@ Marked_Entry :: struct {
     flags: map[string]string,
 }
 
+@(private)
 mark_fields :: proc(line_no: int, fields: []string) -> (Marked_Entry, bool) {
     // Parse mnemonic
     idx := 0

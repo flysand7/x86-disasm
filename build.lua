@@ -1,5 +1,10 @@
 #!/usr/bin/env lua
 
+COMMON_FLAGS = '-collection:disasm=src'
+DISASM_CLI_SRC_PATH = 'src/disasm-cli'
+TABLE_GEN_SRC_PATH = 'src/table-gen'
+TABLE_INSPECT_SRC_PATH = 'src/table-inspect'
+
 function table.slice(tbl, first, last, step)
     local sliced = {}
     for i = first or 1, last or #tbl, step or 1 do
@@ -25,7 +30,7 @@ function odin_build(out, dir, options)
     if is_windows() then
         out = out .. '.exe'
     end
-    run_command("odin build " .. dir .. " -out:"..out .. ' ' .. options)
+    run_command("odin build " .. dir .. " -out:"..out .. ' ' .. COMMON_FLAGS .. ' ' .. options)
 end
 
 function assemble(file)
@@ -36,7 +41,7 @@ end
 
 function build_disasm(flags)
     flags = flags .. ' -define:X86_USE_STUB=false'
-    return odin_build('x86-disasm', 'tools/disasm-cli', '-collection:lib=lib ' .. flags)
+    return odin_build('x86-disasm', DISASM_CLI_SRC_PATH, flags)
 end
 
 function run_disasm(file, options)
@@ -50,7 +55,7 @@ function run_disasm(file, options)
 end
 
 function build_tablegen(options)
-    return odin_build('table-gen', 'tools/table-gen', '-collection:lib=lib ' .. options)
+    return odin_build('table-gen', TABLE_GEN_SRC_PATH, options)
 end
 
 function run_tablegen(table, options)
@@ -64,7 +69,7 @@ function run_tablegen(table, options)
 end
 
 function build_table_inspect(options)
-    return odin_build('table-inspect', 'tools/table-inspect', '-collection:lib=lib ' .. options)
+    return odin_build('table-inspect', TABLE_INSPECT_SRC_PATH, options)
 end
 
 function run_table_inspect(table, options)

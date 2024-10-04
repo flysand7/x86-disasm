@@ -5,7 +5,7 @@ import "core:strings"
 import "core:fmt"
 import "core:unicode"
 
-import "lib:table"
+import "disasm:table"
 
 TAB  :: "    "
 PACKAGE :: "x86_disasm"

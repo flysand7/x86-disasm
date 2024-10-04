@@ -4,8 +4,8 @@ import "core:fmt"
 import "core:os"
 import "../../disasm"
 
-import "lib:arg"
-import "lib:format"
+import "disasm:arg"
+import "disasm:format"
 
 HELP_TEMPLATE ::
 `x86-disasm: An x86 disassembler.
