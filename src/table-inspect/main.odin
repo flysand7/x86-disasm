@@ -75,14 +75,47 @@ main :: proc() {
     }
     n_printed := 0
     entries := table.parse(string(table_src))
+    mt: table.Multistage_Tables = ---
+    table.mt_init(&mt)
     for entry in entries {
+        table.mt_add(&mt, entry)
         mnemonic_match := print_mnemonic == "" || entry.mnemonic == print_mnemonic
         line_match := print_line == -1 || entry.src_line == print_line
         opcode_match := print_opcode == -1 || int(entry.opcode) == print_opcode
         if mnemonic_match && line_match && opcode_match {
-            table.print_entry(entry)
+            fmt.printfln("+---------------------------------------------+")
+            table.print_entry_detailed(entry)
+            stage1 := mt.s1_table[entry.opcode]
+            stage2: table.Encoding
+            stage2_idx := -1
+            rx_stage: []int
+            rx_stage_idx := -1
+            if stage1.kind == .Rx_Extend {
+                rx_stage_idx = stage1.entry_idx
+                rx_stage = mt.rx_table[rx_stage_idx][:]
+                stage2_idx = rx_stage[entry.rx_value]
+                stage2 = mt.s2_table[stage2_idx]
+            } else {
+                stage2_idx = stage1.entry_idx
+                stage2 = mt.s2_table[stage2_idx]
+            }
+            fmt.println(" Encoding:")
+            if stage1.force_ds != table.DS_DEFAULT {
+                fmt.printfln("   Stage 1 [%#.2x]->[%d] (eop: %v, ds: %v)", entry.opcode, stage1.entry_idx, stage1.eop, stage1.force_ds)
+            } else {
+                fmt.printfln("   Stage 1 [%#.2x]->[%d] (eop: %v)", entry.opcode, stage1.entry_idx, stage1.eop)
+            }
+            if rx_stage_idx != -1 {
+                fmt.printfln("   RX stage [%d]->[%d]", rx_stage_idx, stage2_idx)
+            }
+            if stage2.rx_value != 0xff && stage1.kind != .Rx_Embed {
+                fmt.printfln("   Stage 2 [%d] (%s: rx: %v(%d), rm: %v)", stage2_idx, stage2.mnemonic, stage2.rx_kind, stage2.rx_value, stage2.rm_kind)
+            } else {
+                fmt.printfln("   Stage 2 [%d] (%s: rx: %v, rm: %v)", stage2_idx, stage2.mnemonic, stage2.rx_kind, stage2.rm_kind)
+            }
             n_printed += 1
         }
     }
-    fmt.printf("Printed %d entries", n_printed)
+    fmt.printfln("+---------------------------------------------+")
+    fmt.printfln("Printed %d entries", n_printed)
 }
