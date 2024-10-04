@@ -36,7 +36,7 @@ end
 
 function build_disasm(flags)
     flags = flags .. ' -define:X86_USE_STUB=false'
-    return odin_build('x86-disasm', 'cli', '-collection:common=common ' .. flags)
+    return odin_build('x86-disasm', 'cli', '-collection:lib=lib ' .. flags)
 end
 
 function run_disasm(file, options)
@@ -50,7 +50,7 @@ function run_disasm(file, options)
 end
 
 function build_tablegen(options)
-    return odin_build('table-gen', 'tools/table_gen', '-collection:common=common ' .. options)
+    return odin_build('table-gen', 'tools/table_gen', '-collection:lib=lib ' .. options)
 end
 
 function run_tablegen(table, options)
@@ -64,7 +64,7 @@ function run_tablegen(table, options)
 end
 
 function build_table_inspect(options)
-    return odin_build('table-inspect', 'tools/table_inspect', '-collection:common=common ' .. options)
+    return odin_build('table-inspect', 'tools/table_inspect', '-collection:lib=lib ' .. options)
 end
 
 function run_table_inspect(table, options)

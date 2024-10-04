@@ -4,8 +4,8 @@ import "core:fmt"
 import "core:os"
 import "core:strconv"
 
-import "common:arg"
-import "common:table"
+import "lib:arg"
+import "lib:table"
 
 HELP_TEMPLATE ::
 `table-gen: Table generator tool for x86-disasm.

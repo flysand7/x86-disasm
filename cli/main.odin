@@ -2,10 +2,10 @@ package cli
 
 import "core:fmt"
 import "core:os"
-import "format"
 import "../disasm"
 
-import "common:arg"
+import "lib:arg"
+import "lib:format"
 
 HELP_TEMPLATE ::
 `x86-disasm: An x86 disassembler.

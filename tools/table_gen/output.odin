@@ -5,7 +5,7 @@ import "core:strings"
 import "core:fmt"
 import "core:unicode"
 
-import "common:table"
+import "lib:table"
 
 TAB  :: "    "
 PACKAGE :: "x86_disasm"
@@ -38,7 +38,7 @@ capitalize_mnemonic :: proc(mnemonic: string) -> string {
     )
 }
 
-output_tables :: proc(table: []table.Entry, filename: string) -> (bool) {
+output_tables :: proc(entries: []table.Entry, filename: string) -> (bool) {
     builder: strings.Builder = ---
     mnemonic_counter := 0
     mnemonic_table := make(map[string]int)
@@ -46,7 +46,7 @@ output_tables :: proc(table: []table.Entry, filename: string) -> (bool) {
     rx_extensions := make([dynamic][8]int, 1)
     stage2_encodings := make([dynamic]Encoding, 1)
     strings.builder_init(&builder)
-    for entry in table {
+    for entry in entries {
         if entry.mnemonic not_in mnemonic_table {
             mnemonic_table[entry.mnemonic] = mnemonic_counter
             mnemonic_counter += 1
@@ -91,7 +91,7 @@ output_tables :: proc(table: []table.Entry, filename: string) -> (bool) {
             mnemonic_matches := print_mnemonic == "" || entry.mnemonic == print_mnemonic
             opcode_matches := print_opcode == -1 || entry.opcode == u8(print_opcode)
             if line_matches && mnemonic_matches && opcode_matches {
-                print_entry(entry)
+                table.print_entry(entry)
                 if stage1_idx != -1 {
                     fmt.printfln("+-> Stage1 [%#.2x] = %v", stage1_idx, stage1_encodings[stage1_idx])
                 }
