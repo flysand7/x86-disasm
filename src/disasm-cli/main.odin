@@ -18,16 +18,21 @@ Options:
     Print a help message
 -verbose
     Print verbose messages
+-flavor:<flavor>
+    Specify the assembly output flavor. Options:
+    * intel (default) - Print x86 disasm's intel-style assembly.
+    * att - Print AT&T style assembly, like in gas.
+    * nasm - Print assembly that tries to match ndisasm output as much as possible.
 -format:<format>
     Specify the format of the input file. Options:
-    * auto - Auto-detect a format (the default).
+    * auto (default) - Auto-detect a format (the default).
     * elf  - ELF file (Linux relocatable files, shared objects, executables)
     * pe   - PE file (Windows executables and shared objects)
     * coff - COFF file (Windows relocatable files)
     * raw  - Binary file containing assembly.
 -cpu:<bits>
     Specify the CPU Mode. Options:
-    * auto - Auto-detect using the file format (default).
+    * auto (default) - Auto-detect using the file format (default).
     * 16   - A 16-bit CPU mode.
     * 32   - A 32-bit CPU mode.
     * 64   - A 64-bit CPU mode.
@@ -238,6 +243,19 @@ main :: proc() {
     if verbose_print {
         fmt.printfln("Disassembly start: %08x (%d bytes)", disasm_vaddr, len(disasm_bytes))
     }
+    print_flavor := disasm.Syntax_Variant.Intel
+    if "flavor" in options {
+        if str, ok := options["flavor"].(string); ok {
+            switch str {
+            case "intel": print_flavor = .Intel
+            case "att": print_flavor = .ATT
+            case "nasm": print_flavor = .Nasm
+            }
+        } else {
+            fmt.eprintfln("The -flavor option expects a string")
+            os.exit(2)
+        }
+    }
     bytes := disasm_bytes
     vaddr := disasm_vaddr
     stdout := os.stream_from_handle(os.stdout)
@@ -251,7 +269,7 @@ main :: proc() {
             }
         }
         fmt.printf(" | ")
-        disasm.print_intel(stdout, inst) or_break
+        disasm.print_one(stdout, inst, print_flavor) or_break
         fmt.println()
         bytes = bytes[sz:]
         vaddr += u64(sz)
