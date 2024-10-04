@@ -36,7 +36,7 @@ end
 
 function build_disasm(flags)
     flags = flags .. ' -define:X86_USE_STUB=false'
-    return odin_build('x86-disasm', 'cli', '-collection:lib=lib ' .. flags)
+    return odin_build('x86-disasm', 'tools/disasm-cli', '-collection:lib=lib ' .. flags)
 end
 
 function run_disasm(file, options)
