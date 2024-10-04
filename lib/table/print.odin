@@ -2,7 +2,7 @@ package table
 
 import "core:fmt"
 
-print_flags :: proc(flags: bit_set[Flag]) {
+print_flags :: proc(flags: Flags) {
     if .D in flags {
         fmt.printf("+d")
     }

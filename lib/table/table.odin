@@ -37,6 +37,8 @@ Flag :: enum {
     D,
 }
 
+Flags :: bit_set[Flag]
+
 Encoding_Kind :: enum {
     None,
     Rx_Extend, // bb /[n]
@@ -47,7 +49,7 @@ Encoding_Kind :: enum {
 Entry :: struct {
     src_line: int,
     mnemonic: string,
-    flags: bit_set[Flag],
+    flags: Flags,
     force_ds: u8,
     opcode: u8,
     encoding_kind: Encoding_Kind,

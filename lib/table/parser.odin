@@ -121,7 +121,7 @@ parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Entry, ok: boo
             rx_kind, rx_value = parse_rx_kind(m.line_no, m.rx_spec) or_return
         }
     }
-    flags := bit_set[Flag] {}
+    flags := Flags {}
     ds := DS_DEFAULT
     for flag, value in m.flags {
         switch flag {
