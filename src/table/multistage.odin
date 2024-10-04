@@ -53,9 +53,21 @@ s1_present :: proc(s1: ^Stage1_Encoding) -> bool {
     return s1.entry_idx != 0
 }
 
-mt_add_s2 :: proc(mt: ^Multistage_Tables) -> (^Stage2_Encoding, int) {
+mt_ensure_s2 :: proc(mt: ^Multistage_Tables, entry: Entry) -> (^Stage2_Encoding, int) {
+    find_encoding := Stage2_Encoding {
+        flags = entry.flags,
+        rm_kind = entry.rm_kind,
+        rx_kind = entry.rx_kind,
+        rx_value = entry.rx_value,
+    }
+    for &e, i in mt.s2_table[1:] {
+        if e == find_encoding {
+            return &e, i
+        }
+    }
     idx := len(mt.s2_table)
     append(&mt.s2_table, Stage2_Encoding {})
+    mt.s2_table[idx] = find_encoding
     return &mt.s2_table[idx], idx
 }
 
@@ -67,12 +79,7 @@ mt_add_rx_ext :: proc(mt: ^Multistage_Tables) -> ([]RX_Ext_Encoding, int) {
 
 mt_add :: proc(mt: ^Multistage_Tables, entry: Entry) {
     mnemonic_idx := mt_mnemonic(mt, entry.mnemonic)
-    // Second stage comes first, since everything points into it
-    stage2, stage2_idx := mt_add_s2(mt)
-    stage2.flags = entry.flags
-    stage2.rm_kind = entry.rm_kind
-    stage2.rx_kind = entry.rx_kind
-    stage2.rx_value = entry.rx_value
+    stage2, stage2_idx := mt_ensure_s2(mt, entry)
     // Create the first stage, if it doesn't exist
     stage1 := mt_add_s1(mt, entry.opcode)
     if !s1_present(stage1) {
