@@ -50,7 +50,7 @@ function run_disasm(file, options)
 end
 
 function build_tablegen(options)
-    return odin_build('table-gen', 'tools/table_gen', '-collection:lib=lib ' .. options)
+    return odin_build('table-gen', 'tools/table-gen', '-collection:lib=lib ' .. options)
 end
 
 function run_tablegen(table, options)
@@ -64,7 +64,7 @@ function run_tablegen(table, options)
 end
 
 function build_table_inspect(options)
-    return odin_build('table-inspect', 'tools/table_inspect', '-collection:lib=lib ' .. options)
+    return odin_build('table-inspect', 'tools/table-inspect', '-collection:lib=lib ' .. options)
 end
 
 function run_table_inspect(table, options)
