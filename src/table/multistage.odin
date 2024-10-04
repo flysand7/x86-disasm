@@ -2,15 +2,20 @@ package table
 
 
 Stage1_Encoding :: struct {
+    mnemonic: string,
     kind: Encoding_Kind,
     entry_idx: int,
     eop: EOP_Kind,
     force_ds: u8,
 }
 
-Stage2_Encoding :: struct {
+RX_Ext_Encoding :: struct {
     mnemonic: string,
-    flags: Flags,
+    entry_idx: int,
+}
+
+Stage2_Encoding :: struct {
+    flags: bit_set[Flag],
     rx_value: u8,
     rx_kind: RX_Kind,
     rm_kind: RM_Kind,
@@ -20,7 +25,7 @@ Multistage_Tables :: struct {
     mnemonic_counter: int,
     mnemonic_table: map[string]int,
     s1_table: []Stage1_Encoding,
-    rx_table: [dynamic][8]int,
+    rx_table: [dynamic][8]RX_Ext_Encoding,
     s2_table: [dynamic]Stage2_Encoding,
 }
 
@@ -28,7 +33,7 @@ mt_init :: proc(mt: ^Multistage_Tables) {
     mt.mnemonic_counter = 0
     mt.mnemonic_table = make(map[string]int)
     mt.s1_table = make([]Stage1_Encoding, 0x100)
-    mt.rx_table = make([dynamic][8]int, 1)
+    mt.rx_table = make([dynamic][8]RX_Ext_Encoding, 1)
     mt.s2_table = make([dynamic]Stage2_Encoding, 1)
 }
 
@@ -54,9 +59,9 @@ mt_add_s2 :: proc(mt: ^Multistage_Tables) -> (^Stage2_Encoding, int) {
     return &mt.s2_table[idx], idx
 }
 
-mt_add_rx_ext :: proc(mt: ^Multistage_Tables) -> ([]int, int) {
+mt_add_rx_ext :: proc(mt: ^Multistage_Tables) -> ([]RX_Ext_Encoding, int) {
     idx := len(mt.rx_table)
-    append(&mt.rx_table, [8]int {})
+    append(&mt.rx_table, [8]RX_Ext_Encoding {})
     return mt.rx_table[idx][:], idx
 }
 
@@ -65,7 +70,6 @@ mt_add :: proc(mt: ^Multistage_Tables, entry: Entry) {
     // Second stage comes first, since everything points into it
     stage2, stage2_idx := mt_add_s2(mt)
     stage2.flags = entry.flags
-    stage2.mnemonic = entry.mnemonic
     stage2.rm_kind = entry.rm_kind
     stage2.rx_kind = entry.rx_kind
     stage2.rx_value = entry.rx_value
@@ -75,11 +79,14 @@ mt_add :: proc(mt: ^Multistage_Tables, entry: Entry) {
         stage1.eop = entry.eop
         stage1.force_ds = entry.force_ds
         stage1.kind = entry.encoding_kind
+        if entry.encoding_kind != .Rx_Extend {
+            stage1.mnemonic = entry.mnemonic
+        }
     }
     // If opcode has an rx extension, the intermediate table entry is generated
     // in the rx extensions table, otherwise stage1 connects to stage2 normally.
     if stage1.kind == .Rx_Extend {
-        rx_exts: []int
+        rx_exts: []RX_Ext_Encoding
         rx_exts_idx: int
         if stage1.entry_idx == 0 {
             rx_exts, rx_exts_idx = mt_add_rx_ext(mt)
@@ -88,8 +95,9 @@ mt_add :: proc(mt: ^Multistage_Tables, entry: Entry) {
             rx_exts_idx = stage1.entry_idx
             rx_exts = mt.rx_table[rx_exts_idx][:]
         }
-        assert(rx_exts[entry.rx_value] == 0, "Attempt to put 2 entires int he same table")
-        rx_exts[entry.rx_value] = stage2_idx
+        assert(rx_exts[entry.rx_value].entry_idx == 0, "Attempt to put 2 entires int he same table")
+        rx_exts[entry.rx_value].entry_idx = stage2_idx
+        rx_exts[entry.rx_value].mnemonic = entry.mnemonic
     } else {
         assert(stage1.entry_idx == 0, "Attempt to write two encodings to the same first stage")
         stage1.entry_idx = stage2_idx

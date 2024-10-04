@@ -117,11 +117,14 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
     }
     // Stage 2 decoding
     encoding := Encoding {}
+    mnemonic: Mnemonic
     if stage1_entry.kind == .Rx_Extend {
-        stage2_idx := rx_ext_table[stage1_entry.entry_idx][modrm_byte.rx]
-        encoding = stage2_table[stage2_idx]
+        rx_stage := rx_ext_table[stage1_entry.entry_idx][modrm_byte.rx]
+        encoding = stage2_table[rx_stage.entry_idx]
+        mnemonic = rx_stage.mnemonic
     } else {
         encoding = stage2_table[stage1_entry.entry_idx]
+        mnemonic = stage1_entry.mnemonic
     }
     rx: RX_Op
     rm: RM_Op
@@ -150,7 +153,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
         flags += {.Direction_Bit}
     }
     res = Instruction {
-        mnemonic = encoding.mnemonic,
+        mnemonic = stage1_entry.mnemonic,
         flags = flags,
         rx_op = rx,
         rm_op = rm,

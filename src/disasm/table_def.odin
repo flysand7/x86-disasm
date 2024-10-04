@@ -26,14 +26,19 @@ Encoded_EOP_Kind :: enum {
 }
 
 Stage1_Encoding :: struct {
+    mnemonic: Mnemonic,
     kind: Encoding_Kind,
     entry_idx: int,
     eop: Encoded_EOP_Kind,
     force_ds: u8,
 }
 
-Encoding :: struct {
+RX_Ext_Encoding :: struct {
     mnemonic: Mnemonic,
+    entry_idx: int,
+}
+
+Encoding :: struct {
     flags: bit_set[Encoding_Flag],
     rx_value: u8,
     rx_kind: RX_Op_Kind,

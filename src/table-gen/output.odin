@@ -53,6 +53,9 @@ output_tables :: proc(entries: []table.Entry, filename: string) -> (bool) {
     for entry, opcode in mt.s1_table {
         if entry.entry_idx != 0 {
             fmt.sbprintfln(&builder, TAB+"%#.2x = {{", opcode)
+            if entry.mnemonic != "" {
+                fmt.sbprintfln(&builder, TAB+TAB+"mnemonic = .%s,", capitalize_mnemonic(entry.mnemonic))
+            }
             fmt.sbprintfln(&builder, TAB+TAB+"entry_idx = %d,", entry.entry_idx)
             fmt.sbprintfln(&builder, TAB+TAB+"eop = .%v,", entry.eop)
             fmt.sbprintfln(&builder, TAB+TAB+"kind = .%v,", entry.kind)
@@ -63,13 +66,18 @@ output_tables :: proc(entries: []table.Entry, filename: string) -> (bool) {
     fmt.sbprintfln(&builder, "}}")
     fmt.sbprintln(&builder)
     // Print rx extensions
-    fmt.sbprintfln(&builder, "rx_ext_table := [?][8]int {{")
+    fmt.sbprintfln(&builder, "rx_ext_table := [?][8]RX_Ext_Encoding {{")
     fmt.sbprintfln(&builder, TAB+"0 = {{}},")
     for rx_ext, idx in mt.rx_table[1:] {
         idx := idx + 1
         fmt.sbprintf(&builder, TAB+"%d = {{", idx)
-        for stage2_idx in rx_ext {
-            fmt.sbprintf(&builder, "%d,", stage2_idx)
+        for entry in rx_ext {
+            if entry.entry_idx != 0 {
+                mnemonic := capitalize_mnemonic(entry.mnemonic)
+                fmt.sbprintf(&builder, "{{.%s, %d}},", mnemonic, entry.entry_idx)
+            } else {
+                fmt.sbprintf(&builder, "{{}},")
+            }
         }
         fmt.sbprintfln(&builder, "}},")
     }
@@ -81,7 +89,6 @@ output_tables :: proc(entries: []table.Entry, filename: string) -> (bool) {
     for entry, idx in mt.s2_table[1:] {
         idx := idx + 1
         fmt.sbprintfln(&builder, TAB+"%d = {{", idx)
-        fmt.sbprintfln(&builder, TAB+TAB+"mnemonic = .%s,", capitalize_mnemonic(entry.mnemonic))
         fmt.sbprintf(&builder, TAB+TAB+"flags = {{")
         if .D in entry.flags {
             fmt.sbprintf(&builder, ".D,")

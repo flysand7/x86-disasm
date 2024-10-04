@@ -27,7 +27,7 @@ when X86_USE_STUB {
     // First index is a reference to the extension group, stored in stage 1.
     // Second index is the `rx` field of the mod/rm byte.
     // The stored index is the index of the stage2 entry.
-    rx_ext_table := [?][8]int {}
+    rx_ext_table := [?][8]RX_Ext_Encoding {}
 
     // The second stage of the disassembly:
     // Contains information necessary to interpret the bytes of instruction.

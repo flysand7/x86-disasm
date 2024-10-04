@@ -88,31 +88,39 @@ main :: proc() {
             stage1 := mt.s1_table[entry.opcode]
             stage2: table.Stage2_Encoding
             stage2_idx := -1
-            rx_stage: []int
+            rx_stage: table.RX_Ext_Encoding
             rx_stage_idx := -1
             if stage1.kind == .Rx_Extend {
                 rx_stage_idx = stage1.entry_idx
-                rx_stage = mt.rx_table[rx_stage_idx][:]
-                stage2_idx = rx_stage[entry.rx_value]
+                rx_stage = mt.rx_table[rx_stage_idx][entry.rx_value]
+                stage2_idx = rx_stage.entry_idx
                 stage2 = mt.s2_table[stage2_idx]
             } else {
                 stage2_idx = stage1.entry_idx
                 stage2 = mt.s2_table[stage2_idx]
             }
             fmt.println(" Encoding:")
+            fmt.printf("   Stage 1 [%#.2x]->[%d] ", entry.opcode, stage1.entry_idx)
+            if stage1.kind != .Rx_Extend {
+                fmt.printf("%s ", stage1.mnemonic)
+            }
+            fmt.printf("(")
+            fmt.printf("eop: %v", stage1.eop)
             if stage1.force_ds != table.DS_DEFAULT {
-                fmt.printfln("   Stage 1 [%#.2x]->[%d] (eop: %v, ds: %v)", entry.opcode, stage1.entry_idx, stage1.eop, stage1.force_ds)
-            } else {
-                fmt.printfln("   Stage 1 [%#.2x]->[%d] (eop: %v)", entry.opcode, stage1.entry_idx, stage1.eop)
+                 fmt.printf(", ds: %v", stage1.force_ds)
             }
+            fmt.printfln(")")
             if rx_stage_idx != -1 {
-                fmt.printfln("   RX stage [%d]->[%d]", rx_stage_idx, stage2_idx)
+                fmt.printfln("   RX stage [%d]->[%d] %s", rx_stage_idx, stage2_idx, rx_stage.mnemonic)
+                
             }
+            fmt.printf("   Stage 2 [%d] (", stage2_idx)
+            fmt.printf("rx: %v", stage2.rx_kind)
             if stage2.rx_value != 0xff && stage1.kind != .Rx_Embed {
-                fmt.printfln("   Stage 2 [%d] (%s: rx: %v(%d), rm: %v)", stage2_idx, stage2.mnemonic, stage2.rx_kind, stage2.rx_value, stage2.rm_kind)
-            } else {
-                fmt.printfln("   Stage 2 [%d] (%s: rx: %v, rm: %v)", stage2_idx, stage2.mnemonic, stage2.rx_kind, stage2.rm_kind)
+                fmt.printf("(%d)", stage2.rx_value)
             }
+            fmt.printf(", rm: %v", stage2.rm_kind)
+            fmt.printfln(")")
             n_printed += 1
         }
     }
