@@ -169,8 +169,8 @@ jmp ff/5
 
 jcxz e3 saddr
 
-lahf 9d
 sahf 9e
+lahf 9f
 
 lds c5 /gr
 les c4 /gr
