@@ -2,8 +2,8 @@ package cli
 
 import "core:fmt"
 import "core:os"
-import "../../disasm"
 
+import "disasm:disasm"
 import "disasm:arg"
 import "disasm:format"
 

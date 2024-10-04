@@ -5,14 +5,15 @@ DISASM_CLI_SRC_PATH = 'src/disasm-cli'
 TABLE_GEN_SRC_PATH = 'src/table-gen'
 TABLE_INSPECT_SRC_PATH = 'src/table-inspect'
 
+TABLE_PATH = './tables/encodings.txt'
+
 function table.slice(tbl, first, last, step)
     local sliced = {}
     for i = first or 1, last or #tbl, step or 1 do
-      sliced[#sliced+1] = tbl[i]
+        sliced[#sliced+1] = tbl[i]
     end
     return sliced
-  end
-  
+end
 
 function is_windows()
     return package.config:sub(1,1) == '\\'
@@ -22,6 +23,7 @@ function run_command(command)
     print('> ' .. command)
     local ok = os.execute(command)
     if not ok then
+        print("!!! command failed")
         os.exit(1)
     end
 end
@@ -65,7 +67,7 @@ function run_tablegen(table, options)
     else
         tablegen_path = './table-gen'
     end
-    run_command(tablegen_path .. ' ' .. table .. ' disasm/table_gen.odin ' .. options)
+    run_command(tablegen_path .. ' ' .. table .. ' src/disasm/table_gen.odin ' .. options)
 end
 
 function build_table_inspect(options)
@@ -83,8 +85,6 @@ function run_table_inspect(table, options)
 end
 
 -------------------------------------------------------------------------------
-
-local TABLE_PATH = './tables/encodings.txt'
 
 local command = 'build'
 local build_mode = 'debug'
