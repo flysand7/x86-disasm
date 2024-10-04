@@ -269,7 +269,10 @@ main :: proc() {
             }
         }
         fmt.printf(" | ")
-        disasm.print_one(stdout, inst, print_flavor) or_break
+        err := disasm.print_one(stdout, inst, print_flavor)
+        if err != nil {
+            os.exit(1)
+        }
         fmt.println()
         bytes = bytes[sz:]
         vaddr += u64(sz)
