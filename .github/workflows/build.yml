@@ -1,0 +1,35 @@
+name: Build
+run-name: Build
+on: 
+  - push
+jobs:
+  build-linux:
+    name: Build (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: laytan/setup-odin@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release: latest
+          build-type: release
+      - uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.4.1"
+      - name: Build CLI
+        run: lua build.lua
+  build-windows:
+    name: Build (windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: laytan/setup-odin@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release: latest
+          build-type: release
+      - uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.4.1"
+      - name: Build CLI
+        run: lua build.lua
