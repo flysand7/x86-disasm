@@ -1,7 +1,13 @@
 name: Build
 run-name: Build
 on: 
-  - push
+  push:
+    paths:
+      - .github/workflows/**
+      - build.lua
+      - src/**
+      - tables/**
+      - test/**
 jobs:
   build-linux:
     name: Build (ubuntu)
