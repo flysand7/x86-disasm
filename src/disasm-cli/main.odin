@@ -22,7 +22,6 @@ Options:
     Specify the assembly output flavor. Options:
     * intel (default) - Print x86 disasm's intel-style assembly.
     * att - Print AT&T style assembly, like in gas.
-    * nasm - Print assembly that tries to match ndisasm output as much as possible.
 -format:<format>
     Specify the format of the input file. Options:
     * auto (default) - Auto-detect a format (the default).
@@ -249,7 +248,9 @@ main :: proc() {
             switch str {
             case "intel": print_flavor = .Intel
             case "att": print_flavor = .ATT
-            case "nasm": print_flavor = .Nasm
+            case:
+                fmt.eprintfln("Unknown syntax flavor: %s", str)
+                os.exit(2)
             }
         } else {
             fmt.eprintfln("The -flavor option expects a string")
