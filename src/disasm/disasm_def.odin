@@ -193,7 +193,7 @@ EOP :: struct {
 eop_imm :: proc(size: u8, value: u64) -> EOP {
     return EOP {
         kind = .Imm,
-        size = 2,
+        size = size,
         lo = value,
         hi = 0,
     }
