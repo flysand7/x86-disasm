@@ -3,64 +3,6 @@ package x86_disasm
 import "core:io"
 import "core:fmt"
 
-sreg_name :: proc(size: u8, reg: u8) -> string {
-    if size == 2 {
-        switch reg {
-        case REG_ES: return "es"
-        case REG_CS: return "cs"
-        case REG_SS: return "ss"
-        case REG_DS: return "ds"
-        case REG_FS: return "fs"
-        case REG_GS: return "gs"
-        case: panic("Unknown register name found")
-        }
-    } else {
-        panic("Registers of this size are not supported")
-    }
-}
-
-gpreg_name :: proc(size: u8, reg: u8) -> string {
-    if size == 1 {
-        switch reg {
-        case REG_AX: return "al"
-        case REG_CX: return "cl"
-        case REG_DX: return "dl"
-        case REG_BX: return "bl"
-        case REG_SP: return "ah"
-        case REG_BP: return "ch"
-        case REG_SI: return "dh"
-        case REG_DI: return "bh"
-        case: panic("Unknown register name found")
-        }
-    } else if size == 2 {
-        switch reg {
-        case REG_AX: return "ax"
-        case REG_CX: return "cx"
-        case REG_DX: return "dx"
-        case REG_BX: return "bx"
-        case REG_SP: return "sp"
-        case REG_BP: return "bp"
-        case REG_SI: return "si"
-        case REG_DI: return "di"
-        case: panic("Unknown register name found")
-        }
-    } else if size == 4 {
-        switch reg {
-        case REG_AX: return "eax"
-        case REG_CX: return "ecx"
-        case REG_DX: return "edx"
-        case REG_BX: return "ebx"
-        case REG_SP: return "esp"
-        case REG_BP: return "ebp"
-        case REG_SI: return "esi"
-        case REG_DI: return "edi"
-        case: panic("Unknown register name found")
-        }
-    } else {
-        panic("Registers of this size are not supported")
-    }
-}
-
 print_intel_rx_op :: proc(w: io.Writer, rx: RX_Op) -> (err: io.Error) {
     assert(rx.kind != .None, "Function must be called with rx operand present")
     switch rx.kind {
