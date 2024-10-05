@@ -127,7 +127,7 @@ elseif command == 'test-inst' then
     run_tablegen(TABLE_PATH, '')
     build_disasm(odin_flags)
     assemble('inst')
-    run_disasm('tmp/bin/inst', '-cpu:16 -flavor:nasm')
+    run_disasm('tmp/bin/inst', '-cpu:16')
 elseif command == 'inspect' then
     build_table_inspect('-debug')
     local tablegen_flags = ''
