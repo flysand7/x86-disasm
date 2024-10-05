@@ -4,6 +4,7 @@
 !*.*
 
 !/build
+!license
 
 # Windows binaries
 *.exe
