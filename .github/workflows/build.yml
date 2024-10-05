@@ -25,9 +25,10 @@ jobs:
           luaVersion: "5.4.1"
       - name: Build CLI
         run: lua build.lua
-      - name: Test disassembly
+      - name: Test table encodings
+        run: lua build.lua test-table
+      - name: Test against assembly
         run: |
-          lua build.lua test-table
           lua build.lua build-test-nasm
           ./test-nasm test/asm/mov16.asm
   build-windows:
@@ -47,8 +48,9 @@ jobs:
           luaVersion: "5.4.1"
       - name: Build CLI
         run: lua build.lua
-      - name: Test disassembly
+      - name: Test table encodings
+        run: lua build.lua test-table
+      - name: Test against assembly
         run: |
-          lua build.lua test-table
           lua build.lua build-test-nasm
           ./test-nasm test/asm/mov16.asm
