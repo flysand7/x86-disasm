@@ -127,7 +127,7 @@ elseif command == 'test-inst' then
     run_tablegen(TABLE_PATH, '')
     build_disasm(odin_flags)
     assemble('inst')
-    run_disasm('tmp/bin/inst', '-cpu:16')
+    run_disasm('tmp/bin/inst', '-cpu:16 -flavor:nasm')
 elseif command == 'inspect' then
     build_table_inspect('-debug')
     local tablegen_flags = ''
@@ -142,6 +142,17 @@ elseif command == 'inspect-inst' then
         tablegen_flags = tablegen_flags .. ' ' .. flag
     end
     run_table_inspect('./tables/entry.txt', tablegen_flags)
+elseif command == 'test-nasm' then
+    local odin_flags = ''
+    odin_flags = odin_flags .. ' -debug'
+    build_tablegen(odin_flags)
+    run_tablegen(TABLE_PATH, '')
+    odin_build('test-nasm', 'test/nasm-test', ' -define:X86_USE_STUB=false -debug')
+    local path = 'test-nasm'
+    if not is_windows() then
+        path = './test-nasmOP'
+    end
+    run_command(path .. ' ' .. arg[2])
 else
     print('== INVALID COMMAND: "' .. command .. '"')
 end

@@ -21,6 +21,12 @@ print_nasm_rm_op :: proc(w: io.Writer, rm: RM_Op) -> (err: io.Error) {
         io.write_string(w, gpreg_name(rm.size, rm.reg)) or_return
     case .Mem_Addr_8, .Mem_Addr_16, .Mem_Addr_32:
         reg_size := u8(2) if rm.kind == .Mem_Addr_16 else 4
+        switch rm.size {
+        case 1: io.write_string(w, "byte ")
+        case 2: io.write_string(w, "word ")
+        case 4: io.write_string(w, "dword ")
+        case 8: io.write_string(w, "oword ")
+        }
         io.write_byte(w, '[')
         np := 0
         if rm.base_reg != REG_NONE {
@@ -61,25 +67,25 @@ print_nasm_eop :: proc(w: io.Writer, eop: EOP) -> (err: io.Error) {
     case .None: unreachable()
     case .Imm:
         switch eop.size {
-        case 1: fmt.wprintf(w, "%#.2x", eop.lo)
-        case 2: fmt.wprintf(w, "%#.4x", eop.lo)
-        case 4: fmt.wprintf(w, "%#.8x", eop.lo)
-        case 8: fmt.wprintf(w, "%#.16x", eop.lo)
+        case 1: fmt.wprintf(w, "%#02x", eop.lo)
+        case 2: fmt.wprintf(w, "%#04x", eop.lo)
+        case 4: fmt.wprintf(w, "%#08x", eop.lo)
+        case 8: fmt.wprintf(w, "%#016x", eop.lo)
         case: panic("Unkown extra operand size")
         }
     case .SAddr:
-        fmt.wprintf(w, "%#.2x", u8(eop.lo))
+        fmt.wprintf(w, "%#02x", u8(eop.lo))
     case .Addr:
         switch eop.size {
-        case 2: fmt.wprintf(w, "%#.4x", u16(eop.lo))
-        case 4: fmt.wprintf(w, "%#.8x", u32(eop.lo))
+        case 2: fmt.wprintf(w, "%#04x", u16(eop.lo))
+        case 4: fmt.wprintf(w, "%#08x", u32(eop.lo))
         case: panic("Unknown extra operand size")
         }
     case .FAddr:
-        fmt.wprintf(w, "%#.2x:", eop.hi)
+        fmt.wprintf(w, "%#02x:", eop.hi)
         switch eop.size {
-        case 2: fmt.wprintf(w, "%#.4x", u16(eop.lo))
-        case 4: fmt.wprintf(w, "%#.8x", u32(eop.lo))
+        case 2: fmt.wprintf(w, "%#04x", u16(eop.lo))
+        case 4: fmt.wprintf(w, "%#08x", u32(eop.lo))
         case: panic("Unknown extra operand size")
         }
     }
