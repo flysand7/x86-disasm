@@ -18,6 +18,10 @@ jobs:
           luaVersion: "5.4.1"
       - name: Build CLI
         run: lua build.lua
+      - name: Test disassembly
+        run: |
+          lua build.lua build-test-nasm
+          ./test-nasm test/asm/mov16.asm
   build-windows:
     name: Build (windows)
     runs-on: windows-latest
@@ -34,3 +38,7 @@ jobs:
           luaVersion: "5.4.1"
       - name: Build CLI
         run: lua build.lua
+      - name: Test disassembly
+        run: |
+          lua build.lua build-test-nasm
+          ./test-nasm test/asm/mov16.asm
