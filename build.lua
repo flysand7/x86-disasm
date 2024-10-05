@@ -142,7 +142,7 @@ elseif command == 'inspect-inst' then
         tablegen_flags = tablegen_flags .. ' ' .. flag
     end
     run_table_inspect('./tables/entry.txt', tablegen_flags)
-elseif command == 'test-nasm' then
+elseif command == 'build-test-nasm' then
     local odin_flags = ''
     odin_flags = odin_flags .. ' -debug'
     build_tablegen(odin_flags)
@@ -150,9 +150,8 @@ elseif command == 'test-nasm' then
     odin_build('test-nasm', 'test/nasm-test', ' -define:X86_USE_STUB=false -debug')
     local path = 'test-nasm'
     if not is_windows() then
-        path = './test-nasmOP'
+        path = './test-nasm'
     end
-    run_command(path .. ' ' .. arg[2])
 else
     print('== INVALID COMMAND: "' .. command .. '"')
 end
