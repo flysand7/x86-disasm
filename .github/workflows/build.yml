@@ -7,7 +7,7 @@ jobs:
     name: Build (ubuntu)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: ilammy/setup-nasm@v1
       - uses: laytan/setup-odin@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -16,6 +16,7 @@ jobs:
       - uses: leafo/gh-actions-lua@v10
         with:
           luaVersion: "5.4.1"
+      - uses: actions/checkout@v2
       - name: Build CLI
         run: lua build.lua
       - name: Test disassembly
@@ -26,7 +27,7 @@ jobs:
     name: Build (windows)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: ilammy/setup-nasm@v1
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: laytan/setup-odin@v2
         with:
@@ -36,6 +37,7 @@ jobs:
       - uses: leafo/gh-actions-lua@v10
         with:
           luaVersion: "5.4.1"
+      - uses: actions/checkout@v2
       - name: Build CLI
         run: lua build.lua
       - name: Test disassembly
