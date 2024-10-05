@@ -4,6 +4,7 @@ COMMON_FLAGS = '-collection:disasm=src'
 DISASM_CLI_SRC_PATH = 'src/disasm-cli'
 TABLE_GEN_SRC_PATH = 'src/table-gen'
 TABLE_INSPECT_SRC_PATH = 'src/table-inspect'
+TABLE_CHECK_SRC_PATH = 'src/table-check'
 
 TABLE_PATH = './tables/encodings.txt'
 
@@ -84,6 +85,20 @@ function run_table_inspect(table, options)
     run_command(tablegen_path .. ' ' .. table .. options)
 end
 
+function build_table_check(options)
+    return odin_build('table-check', TABLE_CHECK_SRC_PATH, options)
+end
+
+function run_table_check(table)
+    local table_check_path
+    if is_windows() then
+        table_check_path = 'table-check'
+    else
+        table_check_path = './table-check'
+    end
+    run_command(table_check_path .. ' ' .. table)
+end
+
 -------------------------------------------------------------------------------
 
 local command = 'build'
@@ -142,6 +157,11 @@ elseif command == 'inspect-inst' then
         tablegen_flags = tablegen_flags .. ' ' .. flag
     end
     run_table_inspect('./tables/entry.txt', tablegen_flags)
+elseif command == 'test-table' then
+    local odin_flags = ''
+    odin_flags = odin_flags .. ' -debug'
+    build_table_check(odin_flags)
+    run_table_check(TABLE_PATH, '')
 elseif command == 'build-test-nasm' then
     local odin_flags = ''
     odin_flags = odin_flags .. ' -debug'

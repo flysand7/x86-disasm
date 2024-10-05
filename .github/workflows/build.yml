@@ -27,6 +27,7 @@ jobs:
         run: lua build.lua
       - name: Test disassembly
         run: |
+          lua build.lua test-table
           lua build.lua build-test-nasm
           ./test-nasm test/asm/mov16.asm
   build-windows:
@@ -48,5 +49,6 @@ jobs:
         run: lua build.lua
       - name: Test disassembly
         run: |
+          lua build.lua test-table
           lua build.lua build-test-nasm
           ./test-nasm test/asm/mov16.asm

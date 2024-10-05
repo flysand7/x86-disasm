@@ -9,9 +9,9 @@ print_flags :: proc(flags: Flags) {
 }
 
 print_entry :: proc(entry: Entry) {
-    fmt.printf("%s %.2x", entry.mnemonic, entry.opcode)
+    fmt.printf("(%d) %s %.2x", entry.src_line, entry.mnemonic, entry.opcode)
     #partial switch entry.encoding_kind {
-    case .Mod_Rm:    fmt.printf("/")
+    case .Mod_Rm:    fmt.printf("/rm")
     case .Rx_Extend: fmt.printf("/%d", entry.rx_value)
     case .Rx_Embed:  fmt.printf("+%d", entry.rx_value)
     }
@@ -38,7 +38,7 @@ print_entry_detailed :: proc(entry: Entry) {
     fmt.printfln(" Line: %d", entry.src_line)
     fmt.printf(" Opcode: %.2x", entry.opcode)
     #partial switch entry.encoding_kind {
-    case .Mod_Rm:    fmt.printf("/")
+    case .Mod_Rm:    fmt.printf("/rm")
     case .Rx_Extend: fmt.printf("/%d", entry.rx_value)
     }
     fmt.println("\n Operands:")
