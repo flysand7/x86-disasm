@@ -259,22 +259,22 @@ main :: proc() {
     bytes := disasm_bytes
     vaddr := disasm_vaddr
     stdout := os.stream_from_handle(os.stdout)
-    for inst, sz in disasm.disasm_one(bytes) {
+    for inst in disasm.disasm_one(bytes) {
         fmt.printf("%012x | ", vaddr)
         for i in 0 ..<8 {
-            if i < sz {
+            if i < inst.size {
                 fmt.printf("%02x", bytes[u64(i)])
             } else {
                 fmt.printf("  ")
             }
         }
         fmt.printf(" | ")
-        err := disasm.print_one(stdout, inst, print_flavor)
+        err := disasm.print_one(stdout, vaddr, inst, print_flavor)
         if err != nil {
             os.exit(1)
         }
         fmt.println()
-        bytes = bytes[sz:]
-        vaddr += u64(sz)
+        bytes = bytes[inst.size:]
+        vaddr += u64(inst.size)
     }
 }

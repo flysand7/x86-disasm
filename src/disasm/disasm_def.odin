@@ -73,6 +73,8 @@ Instruction_Flag :: enum {
     // If present, RX is follows RM (intel syntax).
     // For AT&T syntax the ordering is reversed. 
     Direction_Bit,
+    // Instruction is a far instruction.
+    Far,
 }
 
 RX_Op_Kind :: enum u8 {
@@ -178,7 +180,7 @@ EOP_Kind :: enum {
     Imm,
     SAddr,
     FAddr,
-    Addr,
+    NAddr,
 }
 
 // At most a 16-byte value packed into two integers, so the values are split
@@ -217,9 +219,9 @@ eop_faddr :: proc(size: u8, seg: u16, offset: i32) -> EOP {
     }
 }
 
-eop_addr :: proc(size: u8, offset: i32) -> EOP {
+eop_naddr :: proc(size: u8, offset: i32) -> EOP {
     return EOP {
-        kind = .Addr,
+        kind = .NAddr,
         size = size,
         lo = cast(u64) offset,
         hi = 0,
@@ -227,6 +229,7 @@ eop_addr :: proc(size: u8, offset: i32) -> EOP {
 }
 
 Instruction :: struct {
+    size: int,
     mnemonic: Mnemonic,
     flags: bit_set[Instruction_Flag],
     rx_op: RX_Op,

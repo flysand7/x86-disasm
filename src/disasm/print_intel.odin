@@ -113,7 +113,8 @@ print_intel_rm_op :: proc(w: io.Writer, rm: RM_Op) -> (err: io.Error) {
     return nil
 }
 
-print_intel_eop :: proc(w: io.Writer, eop: EOP) -> (err: io.Error) {
+print_intel_eop :: proc(w: io.Writer, addr: u64, inst: Instruction) -> (err: io.Error) {
+    eop := inst.extra_op
     assert(eop.kind != .None, "Function should be called when extra operand present")
     switch eop.kind {
     case .None: unreachable()
@@ -127,10 +128,10 @@ print_intel_eop :: proc(w: io.Writer, eop: EOP) -> (err: io.Error) {
         }
     case .SAddr:
         fmt.wprintf(w, "%#.2x", u8(eop.lo))
-    case .Addr:
+    case .NAddr:
         switch eop.size {
-        case 2: fmt.wprintf(w, "%#.4x", u16(eop.lo))
-        case 4: fmt.wprintf(w, "%#.8x", u32(eop.lo))
+        case 2: fmt.wprintf(w, "%#.4x", u16(addr+u64(inst.size)+eop.lo))
+        case 4: fmt.wprintf(w, "%#.8x", u32(addr+u64(inst.size)+eop.lo))
         case: panic("Unknown extra operand size")
         }
     case .FAddr:
@@ -144,8 +145,11 @@ print_intel_eop :: proc(w: io.Writer, eop: EOP) -> (err: io.Error) {
     return nil
 }
 
-print_intel :: proc(w: io.Writer, inst: Instruction) -> (err: io.Error) {
+print_intel :: proc(w: io.Writer, addr: u64, inst: Instruction) -> (err: io.Error) {
     io.write_string(w, mnemonic_table[inst.mnemonic]) or_return
+    if inst.flags >= {.Far} {
+        io.write_string(w, " far") or_return
+    }
     n := 0
     if .Direction_Bit not_in inst.flags {
         if inst.rm_op.kind != .None {
@@ -181,7 +185,7 @@ print_intel :: proc(w: io.Writer, inst: Instruction) -> (err: io.Error) {
             io.write_byte(w, ',') or_return
         }
         io.write_byte(w, ' ') or_return
-        print_intel_eop(w, inst.extra_op) or_return
+        print_intel_eop(w, addr, inst) or_return
         n += 1
     }
     return .None

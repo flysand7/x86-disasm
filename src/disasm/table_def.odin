@@ -22,7 +22,7 @@ Encoded_EOP_Kind :: enum {
     Disp,
     SAddr,
     FAddr,
-    Addr,
+    NAddr,
 }
 
 Stage1_Encoding :: struct {

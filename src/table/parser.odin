@@ -103,7 +103,7 @@ parse_eop_kind :: proc(line_no: int, eop_kind: string) -> (EOP_Kind, bool) {
     case "disp": return .Disp, true
     case "saddr": return .SAddr, true
     case "faddr": return .FAddr, true
-    case "addr": return .Addr, true
+    case "naddr": return .NAddr, true
     }
     fmt.eprintfln("Line %d: Unknown extra operand kind (%s)", line_no, eop_kind)
     return .None, false
@@ -176,11 +176,11 @@ parse :: proc(table: string) -> []Entry {
         }
         marked_entry, m_ok := mark_fields(line_no, strings.fields(line))
         if !m_ok {
-            continue
+            os.exit(1)
         }
         table_entries, t_ok := parse_marked_entry(marked_entry)
         if !t_ok {
-            continue
+            os.exit(1)
         }
         append_elems(&entries, ..table_entries[:])
     }

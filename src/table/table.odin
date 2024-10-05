@@ -31,6 +31,7 @@ EOP_Kind :: enum {
     Addr,
     SAddr,
     FAddr,
+    NAddr,
 }
 
 Flag :: enum {

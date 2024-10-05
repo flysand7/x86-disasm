@@ -148,10 +148,17 @@ elseif command == 'build-test-nasm' then
     build_tablegen(odin_flags)
     run_tablegen(TABLE_PATH, '')
     odin_build('test-nasm', 'test/nasm-test', ' -define:X86_USE_STUB=false -debug')
+elseif command == 'test-nasm' then
+    local odin_flags = ''
+    odin_flags = odin_flags .. ' -debug'
+    build_tablegen(odin_flags)
+    run_tablegen(TABLE_PATH, '')
+    odin_build('test-nasm', 'test/nasm-test', ' -define:X86_USE_STUB=false -debug')
     local path = 'test-nasm'
     if not is_windows() then
         path = './test-nasm'
     end
+    run_command(path .. ' ' .. arg[2])
 else
     print('== INVALID COMMAND: "' .. command .. '"')
 end

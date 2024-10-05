@@ -121,7 +121,7 @@ out e7 imm8
 out ee +rx=2 +ds=8
 out ef +rx=2
 
-call e8 addr
+call e8 naddr
 call 9a faddr
 call ff/2
 call ff/3
@@ -162,7 +162,7 @@ jle 7e saddr
 jg  7f saddr
 
 jmp eb saddr
-jmp e9 addr
+jmp e9 naddr
 jmp ff/4
 jmp ea faddr
 jmp ff/5

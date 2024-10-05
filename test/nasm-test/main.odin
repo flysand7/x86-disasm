@@ -38,12 +38,12 @@ main :: proc() {
         os2.exit(2)
     }
     instructions := bin_file
-    addr := 0
+    addr := u64(0)
     cpu_mode := disasm.CPU_Mode.Mode_16
     line_no := 1
     for line in strings.split_lines_iterator(transmute(^string) &asm_file) {
         defer line_no += 1
-        if len(line) == 0 || line[0] == ';' {
+        if len(line) == 0 || line[0] == ';' || line[len(line)-1] == ':'{
             continue
         }
         space_idx := strings.index_byte(line, ' ')
@@ -60,12 +60,12 @@ main :: proc() {
                 continue
             }
         }
-        inst, size, ok := disasm.disasm_one(instructions[addr:])
+        inst, ok := disasm.disasm_one(instructions[addr:])
         if !ok {
-            fmt.eprintfln("Error: Failed to disassemble instruction at offset %#.4x", addr)
+            fmt.eprintfln("Error: Failed to disassemble instruction at offset %#04x", addr)
             fmt.eprintfln("  Line: %d", line_no)
             fmt.eprintf("  First 8 bytes: [")
-            for i in 0 ..< min(8, len(instructions[addr:])) {
+            for i in 0 ..< min(8, u64(len(instructions[addr:]))) {
                 if i != 0 {
                     fmt.eprintf(" ")
                 }
@@ -77,17 +77,17 @@ main :: proc() {
         }
         sb := strings.builder_make()
         w := strings.to_writer(&sb)
-        err := disasm.print_one(w, inst, .Nasm)
+        err := disasm.print_one(w, addr, inst, .Nasm)
         if err != nil {
             os2.exit(1)
         }
         io.flush(w)
         printed := strings.to_string(sb)
         if printed != line {
-            fmt.eprintfln("Error: Disassembled instruction doesn't match the source at addr %#.4x", addr)
+            fmt.eprintfln("Error: Disassembled instruction doesn't match the source at addr %#04x", addr)
             fmt.eprintfln("  Line: %d", line_no)
             fmt.eprintf("  Instruction bytes: [")
-            for i in 0 ..< size {
+            for i in 0 ..< u64(inst.size) {
                 if i != 0 {
                     fmt.eprintf(" ")
                 }
@@ -98,7 +98,7 @@ main :: proc() {
             fmt.eprintfln("  Expected: %s", line)
             os2.exit(1)
         }
-        addr += size
+        addr += u64(inst.size)
     }
     fmt.printfln("[SUCCESS] Test passed")
 }

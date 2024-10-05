@@ -9,18 +9,17 @@ set_cpu_mode :: proc(mode: CPU_Mode) {
 disasm_all :: proc(bytes: []u8) -> [dynamic]Instruction {
     insts := make([dynamic]Instruction)
     bytes := bytes
-    for instruction, len in disasm_one(bytes) {
+    for instruction in disasm_one(bytes) {
         append(&insts, instruction)
-        bytes = bytes[len:]
+        bytes = bytes[instruction.size:]
     }
     return insts
 }
 
-import "core:fmt"
-
-disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
+disasm_one :: proc(bytes: []u8) -> (res: Instruction, ok: bool) {
+    idx := 0
     if len(bytes) == 0 {
-        return {}, 0, false
+        return {}, false
     }
     ds := u8(2)
     as := u8(2)
@@ -87,7 +86,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
         }
         idx += int(as)
         eop = eop_faddr(as, seg, disp)
-    case .Addr:
+    case .NAddr:
         (len(bytes[idx:]) >= int(as)) or_return
         disp: i32
         switch as {
@@ -96,7 +95,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
             case: panic("Unknown data size")
         }
         idx += int(as)
-        eop = eop_addr(as, disp)
+        eop = eop_naddr(as, disp)
     case .Disp:
         (len(bytes[idx:]) >= int(as)) or_return
         disp: i32
@@ -152,6 +151,14 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
     if .D in encoding.flags {
         flags += {.Direction_Bit}
     }
+    {
+        if opcode == 0xff && (modrm_byte.rx == 3 || modrm_byte.rx == 5) {
+            flags += {.Far}
+        }
+        if opcode == 0xcb || opcode == 0xca {
+            flags += {.Far}
+        }
+    }
     res = Instruction {
         mnemonic = mnemonic,
         flags = flags,
@@ -159,6 +166,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
         rm_op = rm,
         extra_op = eop,
     }
+    res.size = idx
     ok = true
     return
 }
