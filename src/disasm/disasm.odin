@@ -153,7 +153,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, idx: int, ok: bool) {
         flags += {.Direction_Bit}
     }
     res = Instruction {
-        mnemonic = stage1_entry.mnemonic,
+        mnemonic = mnemonic,
         flags = flags,
         rx_op = rx,
         rm_op = rm,
