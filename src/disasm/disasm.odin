@@ -23,10 +23,14 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, ok: bool) {
     }
     ds := u8(2)
     as := u8(2)
+    seg := REG_NONE
     parse_prefixes: for {
         switch bytes[idx] {
         case PREFIX_ADDR: as = 4
         case PREFIX_DATA: ds = 4
+        case PREFIX_DS: seg = REG_DS
+        case PREFIX_CS: seg = REG_CS
+        case PREFIX_ES: seg = REG_ES
         case: break parse_prefixes
         }
         idx += 1
@@ -161,6 +165,7 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, ok: bool) {
     }
     res = Instruction {
         mnemonic = mnemonic,
+        seg = seg,
         flags = flags,
         rx_op = rx,
         rm_op = rm,

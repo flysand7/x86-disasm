@@ -230,6 +230,7 @@ eop_naddr :: proc(size: u8, offset: i32) -> EOP {
 
 Instruction :: struct {
     size: int,
+    seg: u8,
     mnemonic: Mnemonic,
     flags: bit_set[Instruction_Flag],
     rx_op: RX_Op,

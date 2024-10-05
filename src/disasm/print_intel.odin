@@ -13,7 +13,7 @@ print_intel_rx_op :: proc(w: io.Writer, rx: RX_Op) -> (err: io.Error) {
     return nil
 }
 
-print_intel_rm_op :: proc(w: io.Writer, rm: RM_Op) -> (err: io.Error) {
+print_intel_rm_op :: proc(w: io.Writer, seg: u8, rm: RM_Op) -> (err: io.Error) {
     assert(rm.kind != nil, "Function must be called when rm operand present")
     switch rm.kind {
     case .None: unreachable()
@@ -26,6 +26,10 @@ print_intel_rm_op :: proc(w: io.Writer, rm: RM_Op) -> (err: io.Error) {
         case 2: io.write_string(w, "word ")
         case 4: io.write_string(w, "dword ")
         case 8: io.write_string(w, "oword ")
+        }
+        if seg != REG_NONE {
+            io.write_string(w, sreg_name(2, seg)) or_return
+            io.write_byte(w, ':') or_return
         }
         io.write_byte(w, '[')
         np := 0
@@ -102,7 +106,7 @@ print_intel :: proc(w: io.Writer, addr: u64, inst: Instruction) -> (err: io.Erro
     if .Direction_Bit not_in inst.flags {
         if inst.rm_op.kind != .None {
             io.write_byte(w, ' ') or_return
-            print_intel_rm_op(w, inst.rm_op) or_return
+            print_intel_rm_op(w, inst.seg, inst.rm_op) or_return
             n += 1
         }
         if inst.rx_op.kind != .None {
@@ -124,7 +128,7 @@ print_intel :: proc(w: io.Writer, addr: u64, inst: Instruction) -> (err: io.Erro
                 io.write_byte(w, ',') or_return
             }
             io.write_byte(w, ' ') or_return
-            print_intel_rm_op(w, inst.rm_op) or_return
+            print_intel_rm_op(w, inst.seg, inst.rm_op) or_return
             n += 1
         }
     }
