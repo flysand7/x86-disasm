@@ -62,7 +62,7 @@ mt_ensure_s2 :: proc(mt: ^Multistage_Tables, entry: Entry) -> (^Stage2_Encoding,
     }
     for &e, i in mt.s2_table[1:] {
         if e == find_encoding {
-            return &e, i
+            return &e, i+1
         }
     }
     idx := len(mt.s2_table)
@@ -77,9 +77,12 @@ mt_add_rx_ext :: proc(mt: ^Multistage_Tables) -> ([]RX_Ext_Encoding, int) {
     return mt.rx_table[idx][:], idx
 }
 
+import "core:fmt"
+
 mt_add :: proc(mt: ^Multistage_Tables, entry: Entry) {
     mnemonic_idx := mt_mnemonic(mt, entry.mnemonic)
     stage2, stage2_idx := mt_ensure_s2(mt, entry)
+    assert(stage2_idx != 0)
     // Create the first stage, if it doesn't exist
     stage1 := mt_add_s1(mt, entry.opcode)
     if !s1_present(stage1) {
