@@ -77,7 +77,7 @@ main :: proc() {
         }
         sb := strings.builder_make()
         w := strings.to_writer(&sb)
-        err := disasm.print_one(w, addr, inst, .Nasm)
+        err := disasm.print_one(w, addr, inst, .Intel)
         if err != nil {
             os2.exit(1)
         }
