@@ -111,7 +111,7 @@ parse_eop_kind :: proc(line_no: int, eop_kind: string) -> (EOP_Kind, bool) {
 
 @(private)
 parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Entry, ok: bool) {
-    rx_kind := RX_Kind.GPReg
+    rx_kind := RX_Kind.None
     rm_kind := RM_Kind.None
     rx_value := REG_NONE
     if m.rx_spec != "" {
@@ -136,10 +136,10 @@ parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Entry, ok: boo
         case "ds": ds = (parse_int(m.line_no, value) or_return)/8
         }
     }
-    if rm_kind == RM_Kind.None {
+    if rm_kind == RM_Kind.None && m.encoding_kind != .None {
         rm_kind = .GPReg
     }
-    if rx_kind == RX_Kind.None {
+    if rx_kind == RX_Kind.None && m.encoding_kind != .Rx_Extend && m.encoding_kind != .None {
         rx_kind = rm_to_rx(m.line_no, rm_kind) or_return
     }
     eop_kind := parse_eop_kind(m.line_no, m.eop) or_return

@@ -17,6 +17,14 @@ main :: proc() {
     }
     entries := table.parse(transmute(string) table_content)
     for e1 in entries {
+        if e1.encoding_kind == .Rx_Extend {
+            if e1.rx_kind != .None {
+                fmt.eprintfln("Error: Encoding can not have RX kind if its RX-extended")
+                fmt.printf("Entry: ")
+                table.print_entry(e1)
+                os.exit(1)
+            }
+        }
         for e2 in entries {
             if e1.src_line == e2.src_line {
                 continue
