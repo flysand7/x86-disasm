@@ -127,11 +127,7 @@ parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Entry, ok: boo
         switch flag {
         case "d": flags += {.D}
         case "rx":
-            if len(value) == 1 && is_digit(value[0]) {
-                rx_value = from_digit(value[0])
-            } else {
-                rx_kind, rx_value = parse_rx_kind(m.line_no, value) or_return
-            }
+            rx_kind, rx_value = parse_rx_kind(m.line_no, value) or_return
         case "rm": rm_kind = parse_rm_kind(m.line_no, value) or_return
         case "ds": ds = (parse_int(m.line_no, value) or_return)/8
         }

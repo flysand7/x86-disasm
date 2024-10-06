@@ -10,8 +10,8 @@ aas 3f
 daa 27
 das 2f
 
-adc 14 imm +rx=0 +ds=8
-adc 15 imm +rx=0
+adc 14 imm +rx=gr0 +ds=8
+adc 15 imm +rx=gr0
 adc 80/2 imm +ds=8
 adc 81/2 imm
 adc 83/2 imm8
@@ -20,8 +20,8 @@ adc 11 /gr
 adc 12 /gr +d +ds=8
 adc 13 /gr +d
 
-add 04 imm +rx=0 +ds=8
-add 05 imm +rx=0
+add 04 imm +rx=gr0 +ds=8
+add 05 imm +rx=gr0
 add 80/0 imm +ds=8
 add 81/0 imm
 add 83/0 imm8
@@ -30,8 +30,8 @@ add 01 /gr
 add 02 /gr +d +ds=8
 add 03 /gr +d
 
-and 24 imm8 +rx=0 +ds=8
-and 25 imm +rx=0
+and 24 imm8 +rx=gr0 +ds=8
+and 25 imm +rx=gr0
 and 80/4 imm +ds=8
 and 81/4 imm
 and 83/4 imm8
@@ -40,8 +40,8 @@ and 21 /gr
 and 22 /gr +d +ds=8
 and 23 /gr +d
 
-sub 2c imm8 +rx=0 +ds=8
-sub 2d imm +rx=0
+sub 2c imm8 +rx=gr0 +ds=8
+sub 2d imm +rx=gr0
 sub 80/5 imm +ds=8
 sub 81/5 imm
 sub 83/5 imm8
@@ -50,8 +50,8 @@ sub 29 /gr
 sub 2a /gr +d +ds=8
 sub 2b /gr +d
 
-cmp 3c imm +rx=0 +ds=8
-cmp 3d imm +rx=0
+cmp 3c imm +rx=gr0 +ds=8
+cmp 3d imm +rx=gr0
 cmp 80/7 imm +ds=8
 cmp 81/7 imm
 cmp 83/7 imm8
@@ -60,8 +60,8 @@ cmp 39 /gr
 cmp 3a /gr +d +ds=8
 cmp 3b /gr +d
 
-or  0c imm +rx=0 +ds=8
-or  0d imm +rx=0
+or  0c imm +rx=gr0 +ds=8
+or  0d imm +rx=gr0
 or  80/1 imm +ds=8
 or  81/1 imm
 or  83/1 imm8
@@ -70,8 +70,8 @@ or  09 /gr
 or  0a /gr +d +ds-8
 or  0b /gr +d
 
-xor 34 imm +rx=0 +ds=8
-xor 35 imm +rx=0
+xor 34 imm +rx=gr0 +ds=8
+xor 35 imm +rx=gr0
 xor 80/6 imm +ds=8
 xor 81/6 imm
 xor 83/6 imm8
@@ -80,8 +80,8 @@ xor 31 /gr
 xor 32 /gr +d +ds-8
 xor 33 /gr +d
 
-sbb 1c imm +rx=0 +ds=8
-sbb 1d imm +rx=0
+sbb 1c imm +rx=gr0 +ds=8
+sbb 1d imm +rx=gr0
 sbb 80/3 imm +ds=8
 sbb 81/3 imm
 sbb 83/3 imm8
@@ -189,10 +189,10 @@ mov 8a /gr +d +ds=8
 mov 8b /gr +d
 mov 8c /sr +rm=gr
 mov 8e /sr +rm=gr +d
-mov a0 disp +rx=0 +d +ds=8
-mov a1 disp +rx=0 +d
-mov a2 disp +rx=0 +ds=8
-mov a3 disp +rx=0
+mov a0 disp +rx=gr0 +d +ds=8
+mov a1 disp +rx=gr0 +d
+mov a2 disp +rx=gr0 +ds=8
+mov a3 disp +rx=gr0
 mov b0+ imm +ds=8
 mov b8+ imm
 mov c6/0 imm +ds=8
@@ -284,8 +284,8 @@ ret cb
 ret c2 imm +ds=16
 ret ca imm +ds=16
 
-test a8 imm +rx=0 +ds=8
-test a9 imm +rx=0
+test a8 imm +rx=gr0 +ds=8
+test a9 imm +rx=gr0
 test f6/0 imm +ds=8
 test f7/0 imm
 test 84 /gr +ds=8
@@ -293,7 +293,7 @@ test 85 /gr
 
 wait 9b
 
-xchg 90+ +rx=0
+xchg 90+ +rx=gr0
 xchg 86 /gr +ds=8
 xchg 87 /gr
 
