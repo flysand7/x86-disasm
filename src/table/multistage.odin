@@ -1,6 +1,5 @@
 package table
 
-
 Stage1_Encoding :: struct {
     mnemonic: string,
     kind: Encoding_Kind,
@@ -45,14 +44,17 @@ mt_mnemonic :: proc(mt: ^Multistage_Tables, mnemonic: string) -> int {
     return mt.mnemonic_table[mnemonic]
 }
 
+@(private="file")
 mt_add_s1 :: proc(mt: ^Multistage_Tables, opcode: u8) -> ^Stage1_Encoding {
     return &mt.s1_table[opcode]
 }
 
+@(private="file")
 s1_present :: proc(s1: ^Stage1_Encoding) -> bool {
     return s1.entry_idx != 0
 }
 
+@(private="file")
 mt_ensure_s2 :: proc(mt: ^Multistage_Tables, entry: Entry) -> (^Stage2_Encoding, int) {
     find_encoding := Stage2_Encoding {
         flags = entry.flags,
@@ -71,13 +73,12 @@ mt_ensure_s2 :: proc(mt: ^Multistage_Tables, entry: Entry) -> (^Stage2_Encoding,
     return &mt.s2_table[idx], idx
 }
 
+@(private="file")
 mt_add_rx_ext :: proc(mt: ^Multistage_Tables) -> ([]RX_Ext_Encoding, int) {
     idx := len(mt.rx_table)
     append(&mt.rx_table, [8]RX_Ext_Encoding {})
     return mt.rx_table[idx][:], idx
 }
-
-import "core:fmt"
 
 mt_add :: proc(mt: ^Multistage_Tables, entry: Entry) {
     mnemonic_idx := mt_mnemonic(mt, entry.mnemonic)

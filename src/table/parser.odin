@@ -6,6 +6,21 @@ import "core:fmt"
 import "core:os"
 
 @(private)
+is_oct_digit :: proc(d: u8) -> bool {
+    return '0' <= d && d <= '7'
+}
+
+@(private)
+is_digit :: proc(d: u8) -> bool {
+    return '0' <= d && d <= '9'
+}
+
+@(private)
+from_digit :: proc(d: u8) -> u8 {
+    return d - '0'
+}
+
+@(private)
 parse_byte :: proc(line_no: int, byte_str: string) -> (u8, bool) {
     if len(byte_str) != 2 {
         fmt.eprintfln("Line %d: Byte needs to be 2 characters in length (%s)", line_no, byte_str)
@@ -110,7 +125,124 @@ parse_eop_kind :: proc(line_no: int, eop_kind: string) -> (EOP_Kind, bool) {
 }
 
 @(private)
-parse_marked_entry :: proc(m: Marked_Entry) -> (entries: [dynamic]Entry, ok: bool) {
+Entry_Fields :: struct {
+    line_no: int,
+    mnemonic: string,
+    opcode: string,
+    encoding_kind: Encoding_Kind,
+    opcode_rx: bool,
+    rx_spec: string,
+    eop: string,
+    flags: map[string]string,
+}
+
+@(private)
+parse_entry_fields :: proc(line_no: int, fields: []string) -> (Entry_Fields, bool) {
+    // Parse mnemonic
+    idx := 0
+    if idx >= len(fields) {
+        fmt.eprintfln("Line %d: Expected mnemonic", line_no)
+        return {}, false
+    }
+    mnemonic := fields[idx]
+    idx += 1
+    // Parse opcode byte
+    opcode := fields[idx]
+    encoding_kind := Encoding_Kind.None
+    opcode_rx := false
+    if opcode[len(opcode)-1] == '+' {
+        opcode_rx = true
+        opcode = opcode[0:len(opcode)-1]
+        encoding_kind = .Rx_Embed
+    }
+    rx_spec := ""
+    opcode_slash := strings.index_byte(opcode, '/')
+    if opcode_slash != -1 {
+        rx_spec = opcode[opcode_slash+1:]
+        opcode = opcode[0:opcode_slash]
+        if encoding_kind != .None {
+            fmt.eprintfln("Line %d: Cannot specify RX extend and RX embed in the same opcode", line_no)
+            return {}, false
+        }
+        if len(rx_spec) != 1 {
+            fmt.eprintfln("Line %d: Opcode RX needs to be one character in length", line_no)
+            return {}, false
+        }
+        if !is_oct_digit(rx_spec[0]) {
+            fmt.eprintfln("Line %d: Opcode RX needs to be an octal digit", line_no)
+            return {}, false
+        }
+        encoding_kind = .Rx_Extend
+    }
+    idx += 1
+    // Parse mod/rm specification
+    if idx < len(fields) && fields[idx][0] == '/' {
+        rx_spec = fields[idx][1:]
+        if encoding_kind != .None {
+            fmt.eprintfln("Line %d: Conflicting mod/rm behaviors", line_no)
+            return {}, false
+        }
+        if len(rx_spec) == 0 {
+            fmt.eprintfln("Line %d: Expected register type or digit after mod/rm specification", line_no)
+            return {}, false
+        }
+        if len(rx_spec) == 1 && is_oct_digit(rx_spec[0]) {
+            fmt.eprintfln("Line %d: Opcode RX needs to be adjacent to opcode", line_no)
+            return {}, false
+        }
+        encoding_kind = .Mod_Rm
+        idx += 1
+    }
+    // Parse extra operand
+    eop := ""
+    if idx < len(fields) && fields[idx][0] != '+' {
+        eop = fields[idx]
+        idx += 1
+    }
+    // Parse flags
+    flags := make(map[string]string)
+    for field in fields[idx:] {
+        if field[0] != '+' {
+            fmt.eprintfln("Line %d: Flags are expected to start with '+' (%s is not a valid flag)", line_no, field)
+            return {}, false
+        }
+        eq_pos := strings.index_byte(field, '=')
+        if eq_pos != -1 {
+            name := field[1:eq_pos]
+            value := field[eq_pos+1:]
+            if len(name) == 0 {
+                fmt.eprintfln("Line %d: Flags must have a name (%s)", line_no, field)
+                return {}, false
+            }
+            if len(value) == 0 {
+                fmt.eprintfln("Line %d: Expected flag value (%s)", line_no, field)
+                return {}, false
+            }
+            flags[name] = value
+        } else {
+            name := field[1:]
+            if len(name) == 0 {
+                fmt.eprintfln("Line %d: Flags must have a name (%s)", line_no, field)
+                return {}, false
+            }
+            flags[name] = name
+        }
+    }
+    entry := Entry_Fields {
+        line_no = line_no,
+        mnemonic = mnemonic,
+        opcode = opcode,
+        opcode_rx = opcode_rx,
+        encoding_kind = encoding_kind,
+        rx_spec = rx_spec,
+        eop = eop,
+        flags = flags,
+    }
+    return entry, true
+}
+
+@(private)
+entries_from_fields :: proc(m: Entry_Fields) -> (entries: [dynamic]Entry, ok: bool) {
     rx_kind := RX_Kind.None
     rm_kind := RM_Kind.None
     rx_value := REG_NONE
@@ -170,11 +302,11 @@ parse :: proc(table: string) -> []Entry {
         if len(line) == 0 || line[0] == '#' {
             continue
         }
-        marked_entry, m_ok := mark_fields(line_no, strings.fields(line))
+        marked_entry, m_ok := parse_entry_fields(line_no, strings.fields(line))
         if !m_ok {
             os.exit(1)
         }
-        table_entries, t_ok := parse_marked_entry(marked_entry)
+        table_entries, t_ok := entries_from_fields(marked_entry)
         if !t_ok {
             os.exit(1)
         }
