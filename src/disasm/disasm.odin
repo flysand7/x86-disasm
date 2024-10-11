@@ -162,6 +162,12 @@ disasm_one :: proc(bytes: []u8) -> (res: Instruction, ok: bool) {
         if opcode == 0xcb || opcode == 0xca {
             flags += {.Far}
         }
+        if opcode == 0xd0 {
+            eop = eop_imm(1, 1)
+        }
+        if opcode == 0xd2 {
+            rx = rx_op(.GPReg, 1, REG_CX)
+        }
     }
     res = Instruction {
         mnemonic = mnemonic,
